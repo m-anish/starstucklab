@@ -6,7 +6,7 @@ const {
   description = 'Where science met poetry and regretted nothing.',
 } = Astro.props;
 
-const base = Astro.site?.pathname || Astro.base || '';
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
 ---
 <!DOCTYPE html>
 <html lang="en">
