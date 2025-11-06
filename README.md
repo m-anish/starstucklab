@@ -42,3 +42,4 @@ Optimism optional.
 ## ⚡ License
 
 This project is released under the **“Do What You Want But Don’t Blame Me” License** (DWYWBDBM 1.0).
+    

@@ -20,9 +20,9 @@
 
 ## Visual Style
 
-- Background: deep space black `#0b0c10`
-- Text: near-white `#f4f4f4`
-- Accent: sapling green `#4ec57a`, melancholy purple `#7d5fff`
+- Background: deep space black `#0B0C10`
+- Text: near-white `#F4F4F4`
+- Accent: sapling green `#4EC57A`, melancholy purple `#7D5FFF`
 - Fonts:
   - Headers: Orbitron or Audiowide
   - Body: Space Grotesk

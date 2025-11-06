@@ -1,0 +1,51 @@
+# === Starstuck Lab .gitattributes ===
+# Enforces consistent line endings, diff rules, and text handling
+# because the universe may be chaotic, but our repo doesn't have to be.
+
+# Default behavior: treat all text files as UTF-8 with LF line endings
+* text=auto eol=lf
+
+# Handle line endings for specific file types explicitly
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Enforce UTF-8 for code and markdown
+*.js text working-tree-encoding=UTF-8
+*.ts text working-tree-encoding=UTF-8
+*.astro text working-tree-encoding=UTF-8
+*.css text working-tree-encoding=UTF-8
+*.html text working-tree-encoding=UTF-8
+*.json text working-tree-encoding=UTF-8
+*.md text working-tree-encoding=UTF-8
+*.yml text working-tree-encoding=UTF-8
+*.yaml text working-tree-encoding=UTF-8
+*.py text working-tree-encoding=UTF-8
+
+# Prevent Git from attempting to diff or merge binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.mp4 binary
+*.mp3 binary
+*.zip binary
+*.svg binary
+
+# SVGs are technically text, but diffs are noisy — treat them as binary.
+# (You can change this if you like text diffs later.)
+
+# Mark documentation and markdown files for linguistic diff
+*.md diff=markdown
+
+# Configuration files
+.gitignore text
+.gitattributes text
+
+# Always use LF for shell scripts
+*.sh text eol=lf
+
+# Add pleasant diff behavior for Markdown and CSS
+[diff "markdown"]
+  xfuncname = "^#{1,6} "
