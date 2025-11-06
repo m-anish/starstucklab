@@ -1,0 +1,16 @@
+[
+  {
+    "id": "about_intro",
+    "target": "about_intro.md",
+    "prompt": "Write a short, witty introduction to Starstuck Lab in the tone of a weary cosmic engineer.",
+    "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "temperature": 0.8
+  },
+  {
+    "id": "footer_quote",
+    "target": "footer_poem.md",
+    "prompt": "Generate a poetic, one-line footer about entropy, humor, and telescopes.",
+    "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "temperature": 0.7
+  }
+]

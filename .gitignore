@@ -37,3 +37,6 @@ Thumbs.db
 __pycache__/
 *.pyc
 tools/__pycache__/
+
+# Ignore site environment file
+site/.env
