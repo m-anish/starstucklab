@@ -18,26 +18,33 @@ import Layout from "../layouts/Layout.astro";
 
   <!-- The slider will appear right below this -->
   <script type="module">
+    import { loadMoodLevel, saveMoodLevel, sliderToLevel } from '/scripts/mood.js';
+
     window.addEventListener('DOMContentLoaded', () => {
-      const slider = document.createElement('input');
-      slider.type = 'range';
-      slider.min = 0;
-      slider.max = 100;
-      slider.value = 50;
-      slider.style.width = '100%';
-      slider.style.marginTop = '1rem';
-      slider.style.marginBottom = '1rem';
+      // create slider (if not already in DOM)
+      let slider = document.getElementById('mood-slider');
+      if (!slider) {
+        slider = document.createElement('input');
+        slider.id = 'mood-slider';
+        slider.type = 'range';
+        slider.min = 0; slider.max = 100; slider.value = 50;
+        slider.style.width = '100%';
+        document.querySelector('main').insertBefore(slider, document.querySelector('main').firstChild);
+      }
+
+      // initialize from storage
+      const stored = loadMoodLevel();
+      slider.value = (stored - 1) * 25 + 12; // center of band
 
       slider.addEventListener('input', (e) => {
-        const v = e.target.value;
-        document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
+        const level = sliderToLevel(e.target.value);
+        saveMoodLevel(level);
+        // fire an event so pages can react
+        window.dispatchEvent(new CustomEvent('mood:change', { detail: { level } }));
       });
 
-      // Append it just below the "Adjust the Mood" header
-      const moodSection = document.querySelector('h2');
-      if (moodSection && moodSection.parentNode) {
-        moodSection.parentNode.insertBefore(slider, moodSection.nextSibling);
-      }
+      // initial dispatch
+      window.dispatchEvent(new CustomEvent('mood:change', { detail: { level: sliderToLevel(slider.value) } }));
     });
   </script>
 

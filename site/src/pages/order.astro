@@ -1,20 +1,162 @@
 ---
 import Layout from "../layouts/Layout.astro";
+const FORM_ACTIVE = true; // 👈 flip this to false to disable
+const FORMSPREE_URL = "https://formspree.io/f/yourFormID"; // 👈 replace with your real endpoint
 ---
-<Layout title="Order">
-  <h1>Order Guidelines</h1>
-  <p>Please read carefully before attempting to part with your money:</p>
-  <ol>
-    <li>Each product is handmade or otherwise cobbled together.</li>
-    <li>Customization is allowed — within reason and sanity.</li>
-    <li>Expect minor imperfections. We call them <em>personality features</em>.</li>
-  </ol>
 
-  <form style="margin-top: 2rem;">
-    <label><input type="checkbox" /> I acknowledge that science is an imperfect art.</label><br />
-    <label><input type="checkbox" /> I accept that my telescope may develop consciousness.</label><br />
-    <label><input type="checkbox" /> I agree to take credit if it works and blame entropy if it doesn’t.</label><br />
-    <button type="submit" style="margin-top:1rem;">Submit Order (maybe)</button>
-  </form>
+<Layout title="Order a Telescope">
+  <main class="order-container">
+    <h1>Order a Telescope (or Your Personal Slice of Futility)</h1>
+    <p>
+      Fill this form if you want a handcrafted telescope, weather widget, or just an excuse to email a robot.
+    </p>
+
+    {FORM_ACTIVE ? (
+      <form id="order-form" action={FORMSPREE_URL} method="POST" class="order-form">
+        <label>
+          Name<br />
+          <input type="text" name="name" required placeholder="Your full name" />
+        </label>
+
+        <label>
+          Email<br />
+          <input type="email" name="_replyto" required placeholder="you@somewhere.com" />
+        </label>
+
+        <label>
+          Telescope Model<br />
+          <select name="model">
+            <option>Hadley Variant</option>
+            <option>Digital Finderscope</option>
+            <option>Weather Node</option>
+            <option>Cast Dome Hub</option>
+          </select>
+        </label>
+
+        <label>
+          Custom text or engraving<br />
+          <input type="text" name="custom" placeholder="Optional inscription" />
+        </label>
+
+        <label>
+          Level of Optimism<br />
+          <input type="range" name="optimism" min="0" max="100" id="optimism-range" />
+        </label>
+
+        <!-- hidden metadata -->
+        <input type="hidden" name="_subject" value="New Starstuck Lab Order" />
+        <input type="hidden" name="_template" value="table" />
+
+        <button type="submit">Submit Order</button>
+      </form>
+    ) : (
+      <div class="disabled-message">
+        <p>
+          🚧 The order portal is temporarily offline.<br />
+          We are either out of starlight, sanity, or both.
+        </p>
+      </div>
+    )}
+
+    <p id="form-status" class="form-status"></p>
+  </main>
+
+  <script type="module">
+    const form = document.getElementById("order-form");
+    const status = document.getElementById("form-status");
+
+    if (form) {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = new FormData(form);
+        status.textContent = "Sending your order into the void…";
+
+        try {
+          const res = await fetch(form.action, {
+            method: form.method,
+            body: data,
+            headers: { Accept: "application/json" },
+          });
+          if (res.ok) {
+            status.textContent = "✨ Order received! Check your inbox.";
+            form.reset();
+          } else {
+            status.textContent = "😔 Problem submitting form. Try later.";
+          }
+        } catch (err) {
+          status.textContent = "🚨 Network error. Possibly cosmic rays.";
+          console.error(err);
+        }
+      });
+
+      window.addEventListener("mood:change", (e) => {
+        const range = document.getElementById("optimism-range");
+        if (range) range.value = (e.detail.level - 1) * 25 + 50;
+      });
+    }
+  </script>
+
+  <style>
+    @media (prefers-color-scheme: light) {
+      .order-container {
+        background: #fafafa;
+        color: #222;
+      }
+    }
+
+    .order-container {
+      max-width: 640px;
+      margin: 2rem auto;
+      padding: 1.5rem;
+      background: rgba(255, 255, 255, 0.07); /* faint translucent card on dark mode */
+      color: var(--text-color, #fff);         /* ensure visible text */
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    h1 { text-align: center; margin-bottom: 1rem; }
+    .order-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .order-form input,
+    .order-form select {
+      background-color: rgba(255,255,255,0.1);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    .order-form input::placeholder {
+      color: rgba(255,255,255,0.5);
+    }
+    .order-form textarea {
+      width: 100%;
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+    button {
+      padding: 0.6rem 1.2rem;
+      background: var(--accent-purple, #635bff);
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.9; }
+    .form-status {
+      text-align: center;
+      margin-top: 1rem;
+      font-style: italic;
+    }
+    .disabled-message {
+      text-align: center;
+      background: #222;
+      color: #eee;
+      padding: 2rem;
+      border-radius: 1rem;
+    }
+  </style>
 </Layout>
-

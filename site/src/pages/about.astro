@@ -7,6 +7,16 @@ import AboutIntro from "../../generated/about_intro.md";
   <section>
     <AboutIntro />
   </section>
+  <section>
+  <p id="about-intro">Loading introduction…</p>
+  <script is:inline type="module">
+  import '/scripts/mood.js';
+  import { attachGenerated } from '/scripts/render-generated.js';
+  attachGenerated('#about-intro', '/data/about_intro.json');
+</script>
+</section>
 </Layout>
+
+
 
 
