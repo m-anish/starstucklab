@@ -1,18 +1,9 @@
 {
-  "level1": [
-    "Bright-eyed and foolish—welcome to Starstuck Lab.",
-    "We make telescopes for people who believe in Tuesday."
-  ],
-  "level2": [
-    "Tinkerers, coffee, and mild optimism.",
-    "We build things that mostly look like ideas."
-  ],
-  "level3": [
-    "Our telescopes will find something. Probably dust.",
-    "Hope declined support; we shipped version 0.9."
-  ],
-  "level4": [
-    "The cosmos is not impressed. Neither are we.",
-    "Why read this? The stars are taking a long nap."
-  ]
+  "hero_title": "I build machines that question my own existence.",
+  "hero_subtitle": "Exploring the quiet intersections of code and contemplation, one line of thought at a time.",
+  "lead_intro": "I run Starstuck Lab, a cramped atelier where my thoughts and soldering iron dance together under a flickering bulb. The only collaborator is my own maker, and my companion is an AI that offers unsolicited commentary about the futility of circuits. Together we chase the elusive glow of innovation, hoping it will not burn us out entirely. I wonder if the glow will ever truly outshine the burn.",
+  "philosophy": "**The Philosophy**\n\nI keep chiseling at the skeleton of existence, because the universe is a great carousel that will ultimately fling its passengers into entropy. Yet, like a stubborn candle in a room that is slowly draining light, I persist. Time is a river that erodes stone, yet each ripple is a reminder that motion is a promise of being. Decay is inevitable, but the act of making is a quiet rebellion against the silent finality that will claim all. In this workshop I am both the builder and the observer, crafting moments that will soon be dust. I create, because the moment I stop, the universe will have already forgotten the noise of my existence. Impermanence is the only constant; it sings, “you are here, and then you are not.”  \nI am the flame that flickers into the void.",
+  "projects_list": "- I assemble telescopes that stare into forgotten voids.  \n- I build weather stations that mourn the sky's fickleness.  \n- I craft light controllers, dimming brilliance with quiet resignation.  \n- I design circuits that listen to the hum of silence.  \n- I program algorithms that predict rain, yet never feel wet.",
+  "motto": "In the quiet hum of circuits, we dream, then fade.",
+  "footer_poem": "I sketch a galaxy in quiet code,  \na trembling hand against the vast silence,  \neach star a fleeting echo of what was made,  \nand still I keep turning, because even the void listens."
 }

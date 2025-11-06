@@ -1,16 +1,79 @@
 [
   {
-    "id": "about_intro",
-    "target": "about_intro.md",
-    "prompt": "Write a short, witty introduction to Starstuck Lab in the tone of a weary cosmic engineer.",
-    "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
-    "temperature": 0.8
+    "id": "about.hero_title",
+    "page": "about",
+    "block": "hero_title",
+    "prompt": "Write a short hero title (6–10 words) for the About page of Starstuck Lab. Tone: dry, poetic, melancholic. Speak in first-person singular. Do not imply a team. Output only the title line.",
+    "target": "about_hero_title.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "hero_title",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.3
   },
   {
-    "id": "footer_quote",
-    "target": "footer_poem.md",
-    "prompt": "Generate a poetic, one-line footer about entropy, humor, and telescopes.",
-    "model": "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free",
+    "id": "about.hero_subtitle",
+    "page": "about",
+    "block": "hero_subtitle",
+    "prompt": "Write a single subtitle line (10–18 words) that complements the hero title of the About page. Tone: weary curiosity, understated optimism. Output only one sentence.",
+    "target": "about_hero_subtitle.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "hero_subtitle",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.4
+  },
+  {
+    "id": "about.lead_intro",
+    "page": "about",
+    "block": "lead_intro",
+    "prompt": "Write the lead introduction paragraph (2–4 sentences, 40–80 words) for the About page. Describe what Starstuck Lab is: a small, single-human workshop assisted by an AI companion. Tone: poetic, wry, introspective. Use 'I' instead of 'we'.",
+    "target": "about_lead_intro.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "lead_intro",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.6
+  },
+  {
+    "id": "about.philosophy",
+    "page": "about",
+    "block": "philosophy",
+    "prompt": "Write a reflective essay-style section (80–150 words) titled 'The Philosophy'. Focus on why I keep creating despite entropy. Avoid describing projects. Use metaphors about time, decay, and persistence. End with a poetic one-liner about impermanence.",
+    "target": "about_philosophy.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "philosophy",
+    "model": "openai/gpt-oss-20b",
     "temperature": 0.7
+  },
+  {
+    "id": "about.projects_list",
+    "page": "about",
+    "block": "projects_list",
+    "prompt": "List 5 short bullet points (6–12 words each) describing what I build: telescopes, weather stations, light controllers, etc. Each bullet should be wry, melancholic, and written in first-person tone. Output as a Markdown bullet list.",
+    "target": "about_projects_list.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "projects_list",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.6
+  },
+  {
+    "id": "about.motto",
+    "page": "about",
+    "block": "motto",
+    "prompt": "Write a one-line motto (max 12 words) for Starstuck Lab. It should sound like a poetic sigh. Tone: melancholic, resigned hope. Output only the line.",
+    "target": "about_motto.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "motto",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.5
+  },
+  {
+    "id": "about.footer_poem",
+    "page": "about",
+    "block": "footer_poem",
+    "prompt": "Write a short 3–4 line free verse poem to appear at the bottom of the About page. Theme: creation, futility, stars, and persistence. Keep it subtle and reflective.",
+    "target": "about_footer_poem.md",
+    "public_json_path": "public/data/about_intro.json",
+    "public_json_key": "footer_poem",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.75
   }
 ]

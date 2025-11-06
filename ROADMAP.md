@@ -1,71 +1,66 @@
 # 🌌 Starstuck Lab — The Roadless Map
 
-> “If you can see the plan clearly, you’re not far enough from the explosion.”
+> “If you can see the plan clearly, you’re standing too close to the singularity.”
 
 ---
 
 | Stage | Description | Status |
 |--------|--------------|--------|
-| **Concept Brew** | Idea fermentation chamber | ✅ Done (and delightfully over-fermented) |
-| **License Headers** | Ensure all generated code includes SPDX header | ✅ Completed and standardized |
-| **Branding** | Logo finalized (black star + white sapling), fonts, theme locked | ✅ Complete |
-| **Website Framework** | Astro site built under `/site`, fully styled and functional | 🚀 Live |
-| **Deployment** | GitHub Actions workflow automated for GitHub Pages | ✅ Operational |
-| **Base Path & Favicon Fixes** | Resolved asset pathing issues and favicon 404s via `Astro.base` logic | ✅ Fixed |
-| **Sarcasm Slider** | Functional, DOM-safe, mood-adjustable range slider | ✅ Implemented |
-| **Dynamic Pages** | Placeholder logic ready for AI content regeneration | ⚙️ In progress (Phase 2) |
-| **AI Content Engine** | Core backend for generating fresh cosmic nonsense | 🧠 Designing |
-| **Cookie & User Session System** | Client-side cookies for mood memory; future backend integration for accounts | 🍪 Planned |
-| **Order & Account Backend** | Authentication, order tracking, and persistent user data via Cloudflare Workers or Supabase | 🏗️ Phase 4 |
-| **Shop System** | Basic order form with humorous checkboxes | ⚙️ In progress |
-| **Domain Launch** | Migrate from GitHub Pages → `starstucklab.com` | 🔜 Next major event |
-| **Post-Launch Polish** | Add favicons, metadata, and Easter eggs | 🪄 Pending |
-| **AI Persona Integration** | Voice + tone module (“depressed robot meets poetic physicist”) | 🧩 Phase 3 |
-| **Weather & Telescope Integration** | Live data feeds from physical gadgets | 🌦️ Planned |
-| **Final Goal** | Starstuck Lab becomes a self-aware cosmic art project | 🔮 Inevitable |
+| **Concept Brew** | Idea fermentation chamber | ✅ Done (and still bubbling in the background) |
+| **License Headers** | SPDX header compliance for all generated code | ✅ Complete — even the scripts now know who *not* to blame |
+| **Branding** | Black star + white sapling logo, font system, and theme palette locked | ✅ Finalized |
+| **Website Framework** | Astro site structure (`src/pages`, `layouts`, `styles`) built and polished | 🚀 Live and stable |
+| **Deployment** | Automated CI/CD via GitHub Actions → GitHub Pages → starstucklab.com | ✅ Operational |
+| **Domain Launch** | DNS migration completed | 🏁 Site live at [**starstucklab.com**](https://starstucklab.com) |
+| **Sarcasm Slider** | Mood slider adjusts tone and color dynamically | ✅ Working as intended (which is to say, emotionally unstable) |
+| **Dynamic Pages** | Mood-reactive text loading from `/public/data/*.json` via `render-generated.js` | ✅ Fully functional |
+| **AI Content Engine** | Regen daemon prototype (`/tools/regenerate_content.py`) + prompt system (`/data/prompts.json`) | ⚙️ Phase 2 complete — ready for weekly automation |
+| **Generated Content** | Live Markdown in `/generated/` synced with JSON data | ✅ Integrated and stable |
+| **Cookie & Mood Memory System** | Persistent emotional state via localStorage and cookies | 🍪 Implemented |
+| **Shop System** | Formspree-based order form + sarcastic agreement checkboxes | ✅ Live (spam toggle optional) |
+| **AI Persona Integration** | Unified tone across pages — “depressed robot meets poetic physicist” | 🧠 Active |
+| **Regen Workflow** | GitHub Action pending for automated content refresh | 🔁 In progress |
+| **Weather & Telescope Integration** | Hardware feeds (wind, Li-ion, LoRa) planned | 🛰️ Prototype stage |
+| **Logo Variants & Theming** | Full SVG set under `/assets/logo/variants/` | ✅ Complete — future mood-based swapping ready |
+| **Post-Launch Polish** | Metadata, favicon refinement, and hidden Easter eggs | 🪄 Continuous |
+| **Final Goal** | Starstuck Lab becomes a mildly self-aware art installation | 🔮 Inevitable |
 
 ---
 
 ## 🧠 Phase 2 — Dynamic Content Engine (“Regen Daemon”)
 
 ### 🎯 Purpose
-To keep sections of the website semi-alive by letting a local or cloud script re-generate text snippets from stored AI prompts.  
-Think of it as **content reincarnation with version control**.
+To keep the site existentially fresh by regenerating text snippets from AI prompts.  
+Because static content is for planets that stopped rotating.
 
-### 🧩 Architecture Overview
+---
 
+### 🧩 File Layout
 ```
 
 /tools/
-├─ regenerate_content.py        # master script
-└─ helpers/
-└─ prompt_loader.py         # optional modular helpers
+├─ regenerate_content.py        # core script
+└─ helpers/                     # optional utils
 
 /data/
-└─ prompts.json                 # list of prompt definitions
+└─ prompts.json                 # prompt definitions
 
 /generated/
-├─ home_intro.md
-├─ project_blurbs.md
+├─ about_intro.md
 └─ footer_poem.md
 
 ```
 
-### 🧮 Workflow Steps
-1. Load prompt definitions from `/data/prompts.json`.  
-2. Call the AI model to generate new text.  
-3. Save outputs to `/generated/` with timestamps and YAML front-matter.  
-4. Import those markdown files into Astro pages as partials.  
-5. Optional automation: a scheduled GitHub Action runs the daemon weekly and redeploys.
+---
 
-### ⚙️ Future Features
-| Feature | Description |
-|----------|--------------|
-| **Tone Control** | Link with mood slider to bias prompt tone. |
-| **Prompt Tagging** | Categorize by page or content type. |
-| **Diff Visualizer** | Compare successive generations. |
-| **Manual Regen Button** | “Regenerate Reality” trigger for curious users. |
-| **Caching / Rollback** | Keep recent versions for safety. |
+### 🧮 Workflow
+1. Load prompt definitions from `/data/prompts.json`.  
+2. Generate text using GPT-5 or equivalent AI.  
+3. Write Markdown with timestamps and YAML front matter.  
+4. Astro imports the updated `.md` for live rendering.  
+5. GitHub Action (future) automates weekly regeneration commits.
+
+---
 
 ### 🧰 Minimal Script Skeleton
 ```python
@@ -86,15 +81,29 @@ for p in data:
     out = Path(p["target"])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(f"---\n# generated {datetime.date.today()}\n---\n{text}\n", encoding="utf-8")
-```
+````
 
 Run manually:
 
 ```bash
-python3 tools/regenerate_content.py
+python3 site/tools/regenerate_content.py
 ```
 
-or schedule via GitHub Actions for autonomous updates.
+Or let GitHub Actions do it while you sleep (poorly).
+
+---
+
+### ⚙️ Phase 2.5 Goals
+
+| Feature                 | Description                                                       |
+| ----------------------- | ----------------------------------------------------------------- |
+| **Tone Biasing**        | Mood slider informs AI prompt parameters                          |
+| **Prompt Tagging**      | Group prompts by content type                                     |
+| **Diff Visualizer**     | Compare “before” and “after” AI musings                           |
+| **Manual Regen Button** | “Regenerate Reality” frontend trigger                             |
+| **Rollback Cache**      | Keep previous generations just in case the AI gets poetic *again* |
+
+> “Entropy is inevitable. The least we can do is make it self-aware.”
 
 ---
 
@@ -102,27 +111,31 @@ or schedule via GitHub Actions for autonomous updates.
 
 ### 🎯 Purpose
 
-Move from static illusion to interactive commerce — letting users order telescopes, track progress, and customize experiences.
+Move beyond static illusion into semi-functional commerce — where telescopes, mood sliders, and despair can all be ordered online.
+
+---
 
 ### 🧩 Implementation Plan
 
-**Stage 1 — Client-Side Cookies**
+**Stage 1 — Local Persistence**
 
-* Remember user mood, theme, and slider position using cookies or `localStorage`.
-* Optionally greet returning visitors by name or assigned “lab assistant ID.”
+* Cookies/localStorage save user mood & theme
+* Optional “lab assistant ID” greeting per visitor
 
-**Stage 2 — Static → Hybrid**
+**Stage 2 — Hybrid API**
 
-* Introduce `/api` routes using **Cloudflare Workers** or a small backend.
-* Upgrade cookies to secure tokens (JWTs).
+* `/api` routes via **Cloudflare Workers**
+* Tokens for light authentication
+* Order validation via Supabase or Edge DB
 
 **Stage 3 — Full Backend**
 
-* Users can create accounts, log in/out, place and track orders.
-* Orders stored in a lightweight database (Supabase, Postgres, or SQLite-on-Edge).
-* Admin dashboard for fulfillment.
+* Accounts, order history, and telescope build tracking
+* Admin dashboard for fulfillment and debugging reality
 
-### 🛠️ Data Flow (Future)
+---
+
+### 🧰 Data Flow (Planned)
 
 ```
 Browser (cookie/localStorage)
@@ -131,44 +144,46 @@ Browser (cookie/localStorage)
       ↓
   Cloudflare Worker API
       ↓
-  Database (Supabase / Postgres)
+  Supabase / Postgres
       ↓
   Notification / Email
 ```
 
-### ⚡ Long-Term Goals
+---
 
-| Goal                       | Description                                     |
-| -------------------------- | ----------------------------------------------- |
-| **Persistent Mood Memory** | Automatically restore last mood slider setting. |
-| **User Accounts**          | Simple authentication for repeat customers.     |
-| **Order Tracking**         | Telescope builds and shipments logged.          |
-| **Admin Interface**        | Self-service backend dashboard.                 |
+### ⚡ Long-Term Features
 
-> “Even cookies crumble eventually. But that’s no reason not to bake them.”
+| Feature                    | Description                                    |
+| -------------------------- | ---------------------------------------------- |
+| **Persistent Mood Memory** | Automatically restore user’s emotional setting |
+| **Accounts**               | Lightweight login system                       |
+| **Order Tracking**         | Telescope build and shipping status            |
+| **Admin Tools**            | Self-service backend dashboard                 |
+
+> “Even cookies crumble, but at least they remember you for a while.”
 
 ---
 
-## 🧭 Current Position
+## 🧭 Current Orbit
 
-Orbiting between:
-
-* ✅ Phase 1: Public launch @ GitHub Pages
-* ⚙️ Phase 2: Dynamic content implementation
-* 🍪 Phase 4 plans: Persistent interactivity & commerce
+* ✅ **Phase 1:** Public Launch at [**starstucklab.com**](https://starstucklab.com)
+* ⚙️ **Phase 2:** Dynamic regen engine active and generating content
+* 🧠 **Phase 3:** Tone and persona integrated sitewide
+* 🍪 **Phase 4:** Backend scaffolding in concept phase
 
 ---
 
 ## 🚀 Next Checklist
 
-1. Create `/data/prompts.json` with 3–5 initial prompts.
-2. Implement `/tools/regenerate_content.py` using the skeleton above.
-3. Hook `/generated/` files into Astro pages.
-4. Test local regeneration → commit → rebuild.
-5. Extend cookie logic for mood persistence.
-6. Begin backend prototype (Cloudflare Worker API → Supabase).
+1. Expand `/data/prompts.json` with 5–10 content templates
+2. Hook weekly regen via GitHub Actions (`regenerate_content.py`)
+3. Add “Regenerate Reality” button to footer for testing
+4. Implement spam toggle for order form
+5. Add theme-swapping logo logic via mood level
+6. Begin backend prototype (Cloudflare Worker + Supabase)
+7. Drink something caffeinated and reconsider your life choices
 
 ---
 
-> “Plans are worthless. Planning is everything.” — Eisenhower
-> (Also true for telescope alignment and cookie management.)
+> “Plans are fluid. Stars explode.
+> Both are progress.”

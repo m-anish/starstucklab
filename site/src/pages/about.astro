@@ -1,22 +1,102 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import AboutIntro from "../../generated/about_intro.md";
+import "../styles/global.css";
+import markdownIt from "markdown-it";
+
+const md = markdownIt({ breaks: true, html: true });
+const render = (content) => (content ? md.render(content) : "");
+
+const pageTitle = "About | Starstuck Lab";
+const pageDescription = "A single human and a weary AI build curious things under indifferent stars.";
+
+import allVariants from "../../public/data/about.json";
+
+// Pick a random variant between 1 and 5
+const variantKeys = Object.keys(allVariants);
+const randomKey = variantKeys[Math.floor(Math.random() * variantKeys.length)];
+const data = allVariants[randomKey];
+
+const {
+  hero_title,
+  hero_subtitle,
+  lead_intro,
+  philosophy,
+  projects_list,
+  motto,
+  footer_poem
+} = data;
 ---
 
-<Layout title="About Starstuck Lab">
-  <section>
-    <AboutIntro />
-  </section>
-  <section>
-  <p id="about-intro">Loading introduction…</p>
-  <script is:inline type="module">
-  import '/scripts/mood.js';
-  import { attachGenerated } from '/scripts/render-generated.js';
-  attachGenerated('#about-intro', '/data/about_intro.json');
-</script>
-</section>
+<Layout title={pageTitle} description={pageDescription}>
+  <main
+    id="about-page"
+    class="container mx-auto px-6 py-16 text-left space-y-16"
+  >
+    <!-- HERO -->
+    <section id="about-hero" class="text-center space-y-4">
+      <h1 class="text-5xl md:text-6xl font-semibold tracking-tight text-primary">
+        {hero_title || "I build machines that question my own existence."}
+      </h1>
+      <p class="text-lg text-muted-foreground italic">
+        {hero_subtitle ||
+          "Exploring the quiet intersections of code and contemplation, one line of thought at a time."}
+      </p>
+    </section>
+
+    <!-- LEAD INTRO -->
+    <section
+      id="about-lead"
+      class="max-w-3xl mx-auto leading-relaxed text-lg space-y-4 prose prose-invert"
+    >
+      <Fragment
+        set:html={render(
+          lead_intro || "_Still waiting for the robot to introduce itself._"
+        )}
+      />
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section
+      id="about-philosophy"
+      class="max-w-3xl mx-auto space-y-6 prose prose-invert"
+    >
+      <Fragment
+        set:html={render(
+          philosophy || "### The Philosophy\n\nEverything decays. I build anyway."
+        )}
+      />
+    </section>
+
+    <!-- MOTTO -->
+    <section id="about-motto" class="text-center py-8">
+      <blockquote class="italic text-lg text-muted-foreground">
+        “{motto || "In the quiet hum of circuits, we dream, then fade."}”
+      </blockquote>
+    </section>
+
+    <!-- PROJECTS -->
+    <section
+      id="about-projects"
+      class="max-w-3xl mx-auto space-y-4 prose prose-invert"
+    >
+      <h2 class="text-2xl font-semibold text-primary">Things I Build</h2>
+      <Fragment
+        set:html={render(
+          projects_list || "- Circuits that hum softly to themselves."
+        )}
+      />
+    </section>
+
+    <!-- FOOTER POEM -->
+    <section
+      id="about-footer"
+      class="text-center text-sm text-muted-foreground pt-16 border-t border-border prose prose-invert"
+    >
+      <Fragment
+        set:html={render(
+          footer_poem || "_I sketch a galaxy in quiet code..._"
+        )}
+      />
+    </section>
+  </main>
 </Layout>
-
-
-
-
