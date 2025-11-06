@@ -45,7 +45,3 @@
 
 # Always use LF for shell scripts
 *.sh text eol=lf
-
-# Add pleasant diff behavior for Markdown and CSS
-[diff "markdown"]
-  xfuncname = "^#{1,6} "
