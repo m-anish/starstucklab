@@ -104,6 +104,7 @@ The slider sets a tone variable passed into the prompt or the AI post-processor,
 * **Language model**: pick a model capable of maintaining tone consistency (i.e., *not one that secretly dreams of becoming Shakespeare*).
 * **Scheduling**: a cron job, GitHub Action, or Cloudflare Worker could trigger regeneration.
 * **Safety**: validate and lint generated Markdown before merging (the AI will gleefully break tables if unsupervised).
+* All generated code or templates must begin with the SPDX license header. The regeneration daemon will insert this automatically before writing files.
 
 ---
 
