@@ -15,42 +15,33 @@ import Layout from "../layouts/Layout.astro";
 
   <h2>Adjust the Mood</h2>
   <p>Because emotions are best left to machines.</p>
-  <astro-island>
-    <script type="module">
+
+  <!-- The slider will appear right below this -->
+  <script type="module">
+    window.addEventListener('DOMContentLoaded', () => {
       const slider = document.createElement('input');
       slider.type = 'range';
-      slider.min = 0; slider.max = 100; slider.value = 50;
+      slider.min = 0;
+      slider.max = 100;
+      slider.value = 50;
       slider.style.width = '100%';
-      slider.addEventListener('input', e => {
+      slider.style.marginTop = '1rem';
+      slider.style.marginBottom = '1rem';
+
+      slider.addEventListener('input', (e) => {
         const v = e.target.value;
         document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
       });
-      <script type="module">
-        window.addEventListener('DOMContentLoaded', () => {
-          const slider = document.createElement('input');
-          slider.type = 'range';
-          slider.min = 0;
-          slider.max = 100;
-          slider.value = 50;
-          slider.style.width = '100%';
 
-          slider.addEventListener('input', (e) => {
-            const v = e.target.value;
-            document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
-          });
-
-          // append the slider somewhere safe
-          const main = document.querySelector('main');
-          if (main) {
-            main.appendChild(slider);
-          }
-        });
-      </script>
-    </script>
-  </astro-island>
+      // Append it just below the "Adjust the Mood" header
+      const moodSection = document.querySelector('h2');
+      if (moodSection && moodSection.parentNode) {
+        moodSection.parentNode.insertBefore(slider, moodSection.nextSibling);
+      }
+    });
+  </script>
 
   <p>
     <em>Hint:</em> Slide left for despair, right for delusion.
   </p>
 </Layout>
-
