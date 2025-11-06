@@ -45,3 +45,12 @@ jobs:
             git commit -m "🤖 Auto-regenerated content ($(date -u +%Y-%m-%d))"
             git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:main
           fi
+
+      - name: 🚀 Trigger deploy workflow
+        if: success()
+        uses: peter-evans/workflow-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          workflow: deploy.yml        # 👈 name of your deploy workflow file
+          ref: main
