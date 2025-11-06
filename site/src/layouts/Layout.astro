@@ -1,0 +1,36 @@
+---
+const { title = 'Starstuck Lab', description = 'Where science met poetry and regretted nothing.' } = Astro.props;
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/assets/icons/starstucklab_logo_black_white.svg" />
+    <link rel="stylesheet" href="/src/styles/global.css" />
+  </head>
+  <body>
+    <header>
+      <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab Logo" />
+      <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/projects">Projects</a>
+        <a href="/order">Order</a>
+        <a href="/contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer>
+      <hr style="border: 0; border-top: 1px solid var(--accent-purple); width: 60%; margin: 2rem auto;" />
+      <p>© {new Date().getFullYear()} Starstuck Lab — Where the void blooms.</p>
+    </footer>
+  </body>
+</html>
+

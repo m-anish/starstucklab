@@ -1,0 +1,57 @@
+:root {
+  --bg-color: #0b0c10;
+  --text-color: #f4f4f4;
+  --accent-green: #4ec57a;
+  --accent-purple: #7d5fff;
+  --font-header: 'Orbitron', sans-serif;
+  --font-body: 'Space Grotesk', sans-serif;
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Space+Grotesk:wght@400;500&display=swap');
+
+body {
+  margin: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+a {
+  color: var(--accent-green);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--accent-purple);
+}
+
+header {
+  text-align: center;
+  padding: 2rem 0 1rem;
+}
+header img {
+  width: 120px;
+  height: auto;
+  filter: drop-shadow(0 0 5px var(--accent-green));
+}
+nav {
+  margin-top: 1rem;
+}
+nav a {
+  margin: 0 1rem;
+  font-weight: 500;
+}
+
+main {
+  max-width: 700px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+footer {
+  text-align: center;
+  font-size: 0.85rem;
+  color: #888;
+  margin: 3rem 0 2rem;
+}
+

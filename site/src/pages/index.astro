@@ -1,0 +1,36 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+<Layout title="Starstuck Lab">
+  <h1>Welcome to Starstuck Lab</h1>
+  <p>
+    “Where science met poetry, had a brief fling with engineering, and now raises mildly disillusioned but talented offspring.”
+  </p>
+  <p>
+    This is the digital home of handmade telescopes, weather contraptions, and cosmic humor. If you came here for meaning,
+    you might find it in a solder joint.
+  </p>
+
+  <hr />
+
+  <h2>Adjust the Mood</h2>
+  <p>Because emotions are best left to machines.</p>
+  <astro-island>
+    <script type="module">
+      const slider = document.createElement('input');
+      slider.type = 'range';
+      slider.min = 0; slider.max = 100; slider.value = 50;
+      slider.style.width = '100%';
+      slider.addEventListener('input', e => {
+        const v = e.target.value;
+        document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
+      });
+      document.currentScript.replaceWith(slider);
+    </script>
+  </astro-island>
+
+  <p>
+    <em>Hint:</em> Slide left for despair, right for delusion.
+  </p>
+</Layout>
+
