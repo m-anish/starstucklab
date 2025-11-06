@@ -158,5 +158,3 @@ You are orbiting between:
 
 > “Plans are worthless. Planning is everything.” — Eisenhower
 > (Also true for telescope alignment and content generation.)
-
-```
