@@ -1,5 +1,10 @@
 ---
-const { title = 'Starstuck Lab', description = 'Where science met poetry and regretted nothing.' } = Astro.props;
+import '../layouts/styles/global.css';
+
+const {
+  title = 'Starstuck Lab',
+  description = 'Where science met poetry and regretted nothing.',
+} = Astro.props;
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -9,7 +14,6 @@ const { title = 'Starstuck Lab', description = 'Where science met poetry and reg
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/assets/icons/starstucklab_logo_black_white.svg" />
-    <link rel="stylesheet" href="/src/styles/global.css" />
   </head>
   <body>
     <header>
