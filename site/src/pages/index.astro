@@ -25,7 +25,27 @@ import Layout from "../layouts/Layout.astro";
         const v = e.target.value;
         document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
       });
-      document.currentScript.replaceWith(slider);
+      <script type="module">
+        window.addEventListener('DOMContentLoaded', () => {
+          const slider = document.createElement('input');
+          slider.type = 'range';
+          slider.min = 0;
+          slider.max = 100;
+          slider.value = 50;
+          slider.style.width = '100%';
+
+          slider.addEventListener('input', (e) => {
+            const v = e.target.value;
+            document.body.style.filter = `hue-rotate(${v * 1.2}deg)`;
+          });
+
+          // append the slider somewhere safe
+          const main = document.querySelector('main');
+          if (main) {
+            main.appendChild(slider);
+          }
+        });
+      </script>
     </script>
   </astro-island>
 
