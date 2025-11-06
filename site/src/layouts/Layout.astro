@@ -5,6 +5,8 @@ const {
   title = 'Starstuck Lab',
   description = 'Where science met poetry and regretted nothing.',
 } = Astro.props;
+
+const base = Astro.site?.pathname || Astro.base || '';
 ---
 <!DOCTYPE html>
 <html lang="en">
@@ -13,17 +15,17 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/assets/icons/starstucklab_logo_black_white.svg" />
+    <link rel="icon" type="image/svg+xml" href={`${base}assets/icons/starstucklab_logo_black_white.svg`} />
   </head>
   <body>
     <header>
-      <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab Logo" />
+      <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab Logo" />
       <nav>
-        <a href="/">Home</a>
-        <a href="/about">About</a>
-        <a href="/projects">Projects</a>
-        <a href="/order">Order</a>
-        <a href="/contact">Contact</a>
+        <a href={`${base}`}>Home</a>
+        <a href={`${base}about`}>About</a>
+        <a href={`${base}projects`}>Projects</a>
+        <a href={`${base}order`}>Order</a>
+        <a href={`${base}contact`}>Contact</a>
       </nav>
     </header>
 
@@ -37,4 +39,3 @@ const {
     </footer>
   </body>
 </html>
-
