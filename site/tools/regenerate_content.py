@@ -4,19 +4,20 @@
 # See COPYING or https://starstucklab.com/license for details.
 
 """
-AI Multi-Pass Regeneration Daemon — v6
---------------------------------------
+AI Multi-Page Round-Robin Regeneration Daemon — v7
+--------------------------------------------------
 
-Enhancements:
-- Maintains a rolling "variant buffer" (max 20)
-- Appends new variants until MAX_VARIANTS reached
-- Then overwrites oldest ones in round-robin fashion
-- Still supports CLI flags (--num-variants, --model)
-- Output: /public/data/about.json
+Now page-aware:
+- Groups prompts by their `"page"` field
+- Generates multiple variants per page (default 5)
+- Maintains rolling buffers (max 20 per page)
+- Writes /public/data/<page>.json for each
+- Supports CLI options: --page, --num-variants, --model
 
 Usage:
     python3 site/tools/regenerate_content.py
-    python3 site/tools/regenerate_content.py --num-variants 5
+    python3 site/tools/regenerate_content.py --page about --num-variants 3
+    python3 site/tools/regenerate_content.py --page all --num-variants 10
 """
 
 import os
@@ -25,13 +26,14 @@ import uuid
 import argparse
 import datetime
 from pathlib import Path
+from collections import defaultdict
 from dotenv import load_dotenv
 
 # ---- Setup ----
 try:
     from openai import OpenAI
 except ImportError:
-    raise SystemExit("❌ Missing dependency: install with 'pip install openai python-dotenv'.")
+    raise SystemExit("❌ Missing dependency: pip install openai python-dotenv")
 
 load_dotenv()
 
@@ -45,9 +47,9 @@ client = OpenAI(api_key=API_KEY, base_url=BASE_URL) if BASE_URL else OpenAI(api_
 ROOT = Path(__file__).resolve().parent.parent
 persona_file = ROOT / "data" / "persona_preamble.txt"
 prompts_file = ROOT / "data" / "prompts.json"
-OUTPUT_PATH = ROOT / "public" / "data" / "about.json"
+DATA_DIR = ROOT / "public" / "data"
 
-MAX_VARIANTS = 20  # hard ceiling for stored variants
+MAX_VARIANTS = 20
 
 if not persona_file.exists() or not prompts_file.exists():
     raise SystemExit("❌ Missing persona_preamble.txt or prompts.json")
@@ -56,57 +58,81 @@ persona = persona_file.read_text(encoding="utf-8").strip()
 prompts = json.loads(prompts_file.read_text(encoding="utf-8"))
 
 # ---- CLI arguments ----
-parser = argparse.ArgumentParser(description="Starstuck Lab AI Regenerator (Round-Robin)")
-parser.add_argument("--num-variants", type=int, default=5, help="Number of new variants to generate (default 5)")
+parser = argparse.ArgumentParser(description="Starstuck Lab Multi-Page Regenerator")
+parser.add_argument("--page", type=str, default="all", help="Page name to regenerate (or 'all')")
+parser.add_argument("--num-variants", type=int, default=5, help="Number of new variants to generate")
 parser.add_argument("--model", type=str, default=None, help="Override model name")
 args = parser.parse_args()
 
 NUM_NEW = args.num_variants
 MODEL_OVERRIDE = args.model
+PAGE_FILTER = args.page.lower()
 
-print(f"🤖 Starstuck Lab — Round-Robin Regenerator")
-print(f"📘 Loaded persona ({len(persona.split())} words) + {len(prompts)} prompts")
-print(f"🔁 Max variants stored: {MAX_VARIANTS}")
-print(f"🧩 Generating {NUM_NEW} new variants...\n")
+# ---- Group prompts by page ----
+page_prompts = defaultdict(list)
+for p in prompts:
+    page = p.get("page", "misc").lower()
+    page_prompts[page].append(p)
 
-# ---- Load existing data if present ----
-if OUTPUT_PATH.exists():
-    try:
-        existing = json.loads(OUTPUT_PATH.read_text(encoding="utf-8"))
-        print(f"📂 Loaded existing variants ({len(existing)} total)")
-    except Exception:
+target_pages = (
+    list(page_prompts.keys())
+    if PAGE_FILTER == "all"
+    else [PAGE_FILTER] if PAGE_FILTER in page_prompts else []
+)
+
+if not target_pages:
+    raise SystemExit(f"❌ No prompts found for page '{PAGE_FILTER}'")
+
+print(f"🤖 Starstuck Lab — Multi-Page Round-Robin Generator")
+print(f"💫 Persona: {len(persona.split())} words")
+print(f"🧩 Target pages: {', '.join(target_pages)}")
+print(f"🔁 Max variants per page: {MAX_VARIANTS}")
+print(f"➕ Generating {NUM_NEW} new variants per page\n")
+
+# ---- Helper: round-robin variant selection ----
+def next_variant_indexes(existing_len: int, max_variants: int, num_new: int):
+    if existing_len < max_variants:
+        start = existing_len + 1
+        return [(start + i) for i in range(num_new)]
+    else:
+        # overwrite oldest N
+        return [((i) % max_variants) + 1 for i in range(1, num_new + 1)]
+
+# ---- Process each page ----
+for page_name in target_pages:
+    output_path = DATA_DIR / f"{page_name}.json"
+    prompts_for_page = page_prompts[page_name]
+
+    # Load existing variants
+    if output_path.exists():
+        try:
+            existing = json.loads(output_path.read_text(encoding="utf-8"))
+            print(f"📂 Loaded existing {page_name}.json ({len(existing)} variants)")
+        except Exception:
+            existing = {}
+    else:
         existing = {}
-else:
-    existing = {}
 
-# Ensure keys are sorted numerically as strings
-existing = {str(k): v for k, v in sorted(((int(k), v) for k, v in existing.items()))}
+    # Determine which variants to overwrite/append
+    current_count = len(existing)
+    variant_indices = next_variant_indexes(current_count, MAX_VARIANTS, NUM_NEW)
+    print(f"🌌 {page_name.upper()}: Generating variants {variant_indices}")
 
-# Determine next variant index(es)
-current_count = len(existing)
-if current_count < MAX_VARIANTS:
-    # append mode
-    start_index = current_count + 1
-else:
-    # round-robin overwrite mode
-    start_index = 1  # overwrite from the oldest
-    print(f"♻️  Variant buffer full ({MAX_VARIANTS}). Overwriting from 1 upward.")
+    # Generate each new variant
+    for idx in variant_indices:
+        key = str(idx)
+        page_data = {}
 
-# ---- Main generation ----
-for i in range(NUM_NEW):
-    variant_index = ((start_index + i - 1) % MAX_VARIANTS) + 1
-    variant_key = str(variant_index)
-    print(f"\n🌌 Generating variant {variant_key}/{MAX_VARIANTS}")
-    page_data = {}
+        print(f"   ➜ Variant {key}/{MAX_VARIANTS}")
 
-    for p in prompts:
-        pid = p.get("id", "<no-id>")
-        block = p.get("block")
-        model = MODEL_OVERRIDE or p.get("model", "gpt-5")
-        temperature = p.get("temperature", 0.7)
-        seed = uuid.uuid4().hex[:8]
+        for p in prompts_for_page:
+            pid = p.get("id", "<no-id>")
+            block = p.get("block")
+            model = MODEL_OVERRIDE or p.get("model", "gpt-5")
+            temperature = p.get("temperature", 0.7)
+            seed = uuid.uuid4().hex[:8]
 
-        prompt_text = f"""
+            prompt_text = f"""
 {persona}
 
 ---
@@ -114,7 +140,7 @@ for i in range(NUM_NEW):
 Prompt ID: {pid}
 Page: {p.get('page')}
 Block: {block}
-Variant: {variant_key}
+Variant: {key}
 Seed: {seed}
 
 {p['prompt']}
@@ -124,31 +150,28 @@ Respond only with the content for this block. Avoid repetition.
 ---
 """
 
-        print(f"  🌀 {pid} ({block}) ...")
-        try:
-            res = client.chat.completions.create(
-                model=model,
-                temperature=temperature,
-                messages=[
-                    {"role": "system", "content": persona},
-                    {"role": "user", "content": prompt_text},
-                ],
-            )
-            text = res.choices[0].message.content.strip()
-            page_data[p["public_json_key"]] = text
-        except Exception as e:
-            print(f"  ❌ Error in {pid}: {e}")
-            page_data[p["public_json_key"]] = f"(generation error for {pid})"
+            print(f"      🌀 {pid} ({block}) ...")
+            try:
+                res = client.chat.completions.create(
+                    model=model,
+                    temperature=temperature,
+                    messages=[
+                        {"role": "system", "content": persona},
+                        {"role": "user", "content": prompt_text},
+                    ],
+                )
+                text = res.choices[0].message.content.strip()
+                page_data[p["public_json_key"]] = text
+            except Exception as e:
+                print(f"      ❌ Error: {e}")
+                page_data[p["public_json_key"]] = f"(generation error for {pid})"
 
-    # save variant in memory
-    existing[variant_key] = page_data
-    print(f"✅  Variant {variant_key} complete ({len(page_data)} blocks).")
-    print("-" * 60)
+        existing[key] = page_data
+        print(f"      ✅ Completed variant {key}")
 
-# ---- Write combined JSON ----
-OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-OUTPUT_PATH.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+    # Write combined file back
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"✨ Updated {page_name}.json with {len(existing)} variants\n")
 
-print(f"\n✨ Stored {len(existing)} total variants (max {MAX_VARIANTS}).")
-print(f"📁 Output: {OUTPUT_PATH.relative_to(ROOT)}")
-print(f"🗓️  Timestamp: {datetime.datetime.now().isoformat(timespec='seconds')}")
+print(f"🗓️  Done at {datetime.datetime.now().isoformat(timespec='seconds')}")
