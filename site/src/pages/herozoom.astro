@@ -1,6 +1,7 @@
 ---
 // site/src/pages/herozoom.astro
-// GH-Pages-safe hero zoom: build-time only, uses src/data/images.json
+// GH-Pages-safe hero zoom with sticky nav after it appears
+// Build-time only: reads site/src/data/images.json
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -38,7 +39,6 @@ function findVariantFilename(sceneKey: string, opts: { id?: string; type?: strin
 
 /** Build deterministic static URL for "prefixed-only" filenames:
  *  /assets/<scene>/<manifestFilename>
- *  (we do not attempt runtime existence checks — Astro will bake this URL into HTML)
  */
 function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null): string | null {
   if (!manifestFilename) return null;
@@ -79,16 +79,90 @@ const MEDIA = {
 };
 ---
 <style>
-:root { --page-bg:#05060a; --starry-white:#f8f4e8; }
+:root { --page-bg:#05060a; --starry-white:#f8f4e8; --nav-bg: rgba(6,10,12,0.6); --nav-compact-bg: rgba(6,10,12,0.85); }
 html,body { background: var(--page-bg); margin:0; height:100%; }
+
+/* layout */
 .herozoom-root { position: relative; width:100%; }
 .herozoom-spacer { height: calc(var(--stage-vh) * 1vh); width:100%; }
 .hero-layer { position: fixed; inset: 0; width:100%; height:100vh; display:block; object-fit: cover; object-position: 50% 65%; transform-origin: 50% 65%; will-change: transform, opacity; pointer-events: none; z-index: 20; }
+
+/* layering */
 .layer-forest { z-index:15; opacity:1; transform: scale(1) translateY(0); transition: transform 160ms linear, opacity 180ms linear; transform-origin: 50% 65%; }
 .layer-interior { z-index:10; opacity:0; transition: opacity 220ms linear; transform-origin: 50% 65%; }
+
+/* overlay */
 .hero-overlay { position: fixed; top: 12vh; left: 0; right: 0; display:flex; flex-direction:column; align-items:center; text-align:center; z-index:30; pointer-events:none; color:var(--starry-white); padding:0 1rem; }
 .post-zoom { background:var(--page-bg); color:#ddd; padding:48px 24px; min-height:40vh; }
-@media (prefers-reduced-motion: reduce) { .layer-interior, .layer-forest { transition: none !important; } }
+
+/* Top nav — hidden until inside workshop, then becomes sticky/compact */
+#pageNav {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-10px);
+  z-index: 60;
+  backdrop-filter: blur(6px);
+  border-radius: 12px;
+  transition:
+    opacity 260ms ease,
+    transform 260ms ease,
+    pointer-events 260ms ease,
+    padding 260ms ease,
+    background-color 260ms ease,
+    width 260ms ease;
+  opacity: 0;
+  pointer-events: none;
+  width: min(1100px, calc(100% - 40px));
+  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+  background: var(--nav-bg);
+}
+#pageNav .nav-inner {
+  display:flex; align-items:center; justify-content:space-between;
+  padding: 10px 16px; gap: 12px;
+  color: var(--starry-white);
+  font-family: Inter, system-ui;
+  font-size: 0.95rem;
+}
+#pageNav .nav-links { list-style:none; margin:0; padding:0; display:flex; gap:14px; }
+#pageNav .nav-links a { color: var(--starry-white); text-decoration:none; opacity:0.96; }
+#pageNav .nav-logo { font-weight:700; letter-spacing:0.6px; text-decoration:none; color:var(--starry-white); }
+
+/* override base state — MUST match ID selector specificity */
+#pageNav.nav-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0px);
+}
+
+#pageNav.nav-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(-10px);
+}
+
+/* sticky compact mode */
+#pageNav.nav-sticky {
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(0);
+  width: 100%;
+  border-radius: 0;
+  padding: 6px 8px;
+  background: var(--nav-compact-bg);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.55);
+}
+#pageNav.nav-sticky .nav-inner {
+  padding: 8px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* reduced motion safety */
+@media (prefers-reduced-motion: reduce) {
+  .layer-interior, .layer-forest, #pageNav { transition: none !important; }
+}
 </style>
 
 <div class="herozoom-root" id="herozoomRoot">
@@ -101,12 +175,24 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
     data-cross-end="1.0"
   ></div>
 
+  <!-- Top navigation: appears when inside workshop and becomes sticky -->
+  <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
+    <div class="nav-inner">
+      <a href="/" class="nav-logo">STARSTUCK LAB</a>
+      <ul class="nav-links">
+        <li><a href="#workbench">Workbench</a></li>
+        <li><a href="#projects">Projects</a></li>
+        <li><a href="#shop">Shop</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
   <!-- Workshop (back layer) -->
   <picture>
     {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
     {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
     {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
-    <!-- Always emit a src (fallback order) so browser never gets an omitted/undefined src -->
     <img class="hero-layer layer-interior"
          id="hzInterior"
          src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
@@ -146,6 +232,16 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
       <h2>Inside the Workshop</h2>
       <p>Welcome — this is where your workbench / featured products / logs begin.</p>
     </section>
+    <section id="projects" style="height:800px;">
+      <h3>Projects</h3>
+      <p>Project tiles go here.</p>
+    </section>
+    <section id="shop" style="height:600px;">
+      <h3>Shop</h3>
+    </section>
+    <section id="contact" style="height:500px;">
+      <h3>Contact</h3>
+    </section>
     <section style="height:1200px;"></section>
   </main>
 </div>
@@ -156,7 +252,9 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   const forestEl = document.getElementById('hzForest');
   const interiorEl = document.getElementById('hzInterior');
   const overlayEl = document.getElementById('hzOverlay');
-  if (!spacerEl || !forestEl || !interiorEl || !overlayEl) return;
+  const navEl = document.getElementById('pageNav');
+
+  if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
   const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
   const ds = spacer.dataset;
@@ -167,8 +265,13 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   let ticking = false;
   const BASE_SCALE = 1;
 
+  // once visible, keep sticky until we leave the workshop area (interiorOpacity falls below threshold)
+  let navShownOnce = false;
+  const NAV_SHOW_THRESHOLD = 0.5; // tune this: when interiorOpacity > 0.5 show nav
+
   function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
   function spacerHeight(){ return spacer.getBoundingClientRect().height; }
+
   function computeProgress(){
     const top = spacerTopAbsolute();
     const duration = spacerHeight() - window.innerHeight;
@@ -177,17 +280,29 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
     const p = (window.scrollY - top) / duration;
     return Math.max(0, Math.min(1, p));
   }
-  function easeInOutCubic(t: number) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
-  function applyInitialFrame(){ forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`; forestImg.style.opacity = '1'; interiorImg.style.opacity = '0'; overlay.style.opacity = '1'; }
+
+  function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
+
+  function applyInitialFrame(){ 
+    forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`; 
+    forestImg.style.opacity = '1'; 
+    interiorImg.style.opacity = '0'; 
+    overlay.style.opacity = '1'; 
+  }
+
   function update(){
-    const p = computeProgress(); const eased = easeInOutCubic(p);
+    const p = computeProgress();
+    const eased = easeInOutCubic(p);
     const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
-    const translateY = - Math.round(p * 30);
+    const translateY = - Math.round(p * 40); // slightly stronger pan towards lower third
+
     let interiorOpacity = 0;
     if (p <= CROSS_START) interiorOpacity = 0;
     else if (p >= CROSS_END) interiorOpacity = 1;
     else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
+
     const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
+
     if (!prefersReduced) {
       forestImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
       forestImg.style.opacity = `${forestOpacity}`;
@@ -199,14 +314,43 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
       interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
       overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
     }
+
+    // NAV: show when crossing threshold. Once shown, make it sticky (compact).
+    if (interiorOpacity > NAV_SHOW_THRESHOLD) {
+      navShownOnce = true;
+      // make visible
+      navEl.classList.add('nav-visible');
+      navEl.classList.remove('nav-hidden');
+      navEl.setAttribute('aria-hidden', 'false');
+      // compact/sticky style
+      navEl.classList.add('nav-sticky');
+    } else {
+      // if we haven't ever shown the nav, keep it hidden; if we had and interior is now below threshold, hide again.
+      navEl.classList.remove('nav-sticky');
+      if (navShownOnce && interiorOpacity > 0.15) {
+        // If we showed it but still somewhat inside, keep it visible (but not sticky)
+        navEl.classList.add('nav-visible');
+        navEl.classList.remove('nav-hidden');
+        navEl.setAttribute('aria-hidden', 'false');
+      } else {
+        navEl.classList.remove('nav-visible');
+        navEl.classList.add('nav-hidden');
+        navEl.setAttribute('aria-hidden', 'true');
+        if (interiorOpacity <= 0.05) navShownOnce = false; // reset when fully out
+      }
+    }
+
     ticking = false;
   }
+
   function requestTick(){ if (!ticking) { window.requestAnimationFrame(update); ticking = true; } }
   function onScroll(){ requestTick(); }
+
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ applyInitialFrame(); update(); }));
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', () => { requestTick(); }, { passive: true });
 
+  // fallback for very-short pages
   function pageIsScrollable(){ return document.documentElement.scrollHeight > window.innerHeight + 10; }
   if (!pageIsScrollable()) {
     const reveal = () => {
@@ -214,6 +358,8 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
       forestImg.style.opacity = '0';
       interiorImg.style.opacity = '1';
       overlay.style.opacity = '0';
+      navEl.classList.add('nav-visible');
+      navEl.classList.add('nav-sticky');
       window.removeEventListener('wheel', onFirstInput);
       window.removeEventListener('touchstart', onFirstInput);
       window.removeEventListener('keydown', onFirstInput);
