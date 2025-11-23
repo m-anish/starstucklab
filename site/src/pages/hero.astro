@@ -1,0 +1,328 @@
+---
+import LogoUrl from "../assets/logo/starstucklab_logo_black_white.svg?url";
+const heroImage = `${import.meta.env.BASE_URL}assets/hero/hero-master.png`;
+const heroAlt = "A warm wooden cabin in a forest clearing at night with a wooden STARSTUCKLAB sign.";
+---
+
+<style>
+:root{
+  --bg-dark: #0b0c10;
+  --text-light: #f4f4f4;
+  --starry-white: #f8f4e8;
+  --accent: #4ec57a;
+  --muted: rgba(244,244,244,0.75);
+}
+
+/* Reset basics (ensure no white border) */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background-color: #05060a;
+}
+
+/* Layout */
+.hero-viewport{
+  position:relative;
+  width:100%;
+  min-height:100vh;
+  height:100vh;
+  overflow:hidden;
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+}
+.hero-bg{
+  position:absolute;
+  inset:0;
+  background-color:var(--bg-dark);
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  filter:contrast(0.95) saturate(0.9);
+  min-height:100vh;
+}
+.hero-overlay{
+  position:relative;
+  z-index:5;
+  width:100%;
+  max-width:1600px;
+  padding:18vh 4vw 6vh 4vw; /* moved down */
+  box-sizing:border-box;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:1.6rem;
+}
+.hero-title{
+  color:var(--starry-white);
+  font-family: 'Playfair Display', Georgia, serif;
+  letter-spacing:0.02em;
+  text-align:center;
+  text-shadow:0 6px 18px rgba(0,0,0,0.65), 0 1px 0 rgba(14,18,28,0.06);
+}
+
+/* Fluid headline: min 2rem on smallest phones, scales with viewport, max 3.6rem on large screens */
+.hero-title h1 {
+  font-size: clamp(2rem, 5.8vw, 3.6rem);
+  line-height: 1.06;
+  letter-spacing: 0.01em;
+}
+
+/* Subhead fluid */
+.hero-title p {
+  font-size: clamp(0.95rem, 3.6vw, 2.15rem);
+}
+
+/* Fluid CTA */
+.cta {
+    
+  padding: clamp(0.55rem, 2.4vw, 0.9rem) clamp(1rem, 4.8vw, 1.6rem);
+  border-radius: 28px;
+  background: rgba(78,197,122,0.06);
+  border: 1px solid rgba(78,197,122,0.18);
+  color: var(--starry-white);
+  text-decoration: none;
+  display: inline-block;
+  box-shadow: 0 6px 20px rgba(12,18,22,0.45);
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+
+.cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(12,18,22,0.55);
+}
+
+/* Slightly larger hit-target for small devices */
+@media (max-width: 480px) {
+  .cta {
+    border-width: 1.5px;
+  }
+}
+
+/* sentinel positioned inside hero viewport — not visible but present for observing */
+#heroSentinel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 72vh;        /* move sentinel down so nav appears after meaningful scroll */
+  height: 4px;      /* thin line; doesn't affect layout */
+  pointer-events: none;
+  opacity: 0;
+}
+
+/* Sticky Nav */
+.sticky-nav{
+  position:fixed; left:0; right:0; top:0; z-index:40;
+  height:64px; display:flex; align-items:center; justify-content:center; pointer-events:none;
+}
+.sticky-inner{width:100%; max-width:1200px; display:flex; align-items:center; justify-content:space-between; padding:0 1rem; box-sizing:border-box; pointer-events:auto;}
+.brand{display:flex; align-items:center; gap:0.75rem; color:var(--text-light);}
+.brand img{height:36px; width:auto; display:block}
+.nav-links{display:flex; gap:1.25rem; align-items:center}
+.nav-links a{color:var(--muted); text-decoration:none; font-weight:600; font-size:.98rem}
+
+/* Hidden by default; visible after scroll */
+.sticky-nav.hidden{opacity:0; transform:translateY(-8px); transition:all .22s ease-in-out; pointer-events:none}
+.sticky-nav.visible{opacity:1; transform:translateY(0); transition:all .28s cubic-bezier(.2,.9,.3,1); pointer-events:auto}
+
+/* NAVBAR 50% BIGGER — FLUID */
+
+/* Increase navbar height */
+.sticky-nav {
+  height: 96px; /* was 64px */
+}
+
+/* Navbar inner padding to match scale */
+.sticky-inner {
+  padding: 0 1.5rem; /* was 1rem */
+}
+
+/* Logo scaled 1.5x */
+.brand img {
+  height: clamp(36px, 7vw, 60px);  /* previously ~24–40px */
+  width: auto;
+}
+
+/* Brand text scaled 1.5x */
+.brand div {
+  font-size: clamp(1.5rem, 3.6vw, 2.1rem); /* was ~1–1.4rem */
+  letter-spacing: 0.05em;
+}
+
+/* Nav link text scaled ~1.5x */
+.nav-links a {
+  font-size: clamp(1.35rem, 2.8vw, 1.7rem); /* was ~0.9–1.15rem */
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  color: var(--muted);
+}
+
+/* Slightly increase gap between nav links */
+.nav-links {
+  gap: 2rem; /* was 1.25rem */
+}
+
+/* Mobile refinement: hide links as before */
+@media (max-width: 768px) {
+  .nav-links {
+    display: none;
+  }
+  .brand img {
+    height: clamp(30px, 8vw, 48px);
+  }
+  .brand div {
+    font-size: clamp(1.3rem, 4.8vw, 1.8rem);
+  }
+}
+
+/* Accessibility helpers */
+.visually-hidden{position:absolute!important;height:1px;width:1px;overflow:hidden;clip:rect(1px,1px,1px,1px);white-space:nowrap}
+
+/* Mobile hero text improvements */
+@media (max-width: 480px) {
+  .hero-title h1 {
+    font-size: 3.4rem !important;  /* strong override */
+    line-height: 1.15 !important;
+  }
+  .hero-title p {
+    font-size: 1.1rem !important;
+  }
+  .cta {
+    font-size: 1.05rem !important;
+    padding: 0.7rem 1.2rem !important;
+  }
+  .hero-overlay {
+    padding-top: 14vh !important;
+  }
+}
+
+/* Small tablets (portrait) */
+@media (min-width: 481px) and (max-width: 768px) {
+  .hero-title h1 {
+    font-size: 2.5rem !important;
+  }
+  .hero-title p {
+    font-size: 1.1rem !important;
+  }
+  .cta {
+    font-size: 1.05rem !important;
+  }
+  .hero-overlay {
+    padding-top: 16vh;
+  }
+}
+
+</style>
+
+<section class="hero-viewport" aria-label="Starstuck Lab hero">
+  <!-- Background: master image used as CSS background -->
+  <div class="hero-bg" role="img" aria-label={heroAlt} style={`background-image: url('${heroImage}')`}></div>
+
+  <!-- Sticky nav (hidden until scrolled) -->
+  <header id="stickyNav" class="sticky-nav hidden" aria-hidden="true">
+    <div class="sticky-inner">
+      <div class="brand" role="banner">
+        <img src={LogoUrl} alt="Starstuck Lab logo" />
+        <div style="font-weight:700;color:var(--starry-white);letter-spacing:0.04em;font-family:'Inter',system-ui;">STARSTUCKLAB</div>
+      </div>
+      <nav class="nav-links" role="navigation" aria-label="Primary">
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/projects">Projects</a>
+        <a href="/order">Order</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- UI overlay content -->
+  <div class="hero-overlay">
+    <div class="hero-title" role="heading" aria-level="1">
+      <h1>"I assemble dreams, and they dissolve."</h1>
+      <p>A hillside workshop where starlight meets solder.</p>
+    </div>
+
+    <div id="heroSentinel" aria-hidden="true"></div>
+
+    <div>
+      <a class="cta" href="#workbench">Enter the Workshop</a>
+    </div>
+  </div>
+</section>
+
+<script>
+(() => {
+  const sentinel = document.getElementById('heroSentinel');
+  const nav = document.getElementById('stickyNav');
+  if (!sentinel || !nav) return;
+
+  const showNav = () => {
+    nav.classList.remove('hidden');
+    nav.classList.add('visible');
+    nav.setAttribute('aria-hidden', 'false');
+  };
+  const hideNav = () => {
+    nav.classList.remove('visible');
+    nav.classList.add('hidden');
+    nav.setAttribute('aria-hidden', 'true');
+  };
+
+  // IntersectionObserver watches the sentinel as before
+  const observer = new IntersectionObserver((entries) => {
+    const entry = entries[0];
+    if (!entry) return;
+    if (!entry.isIntersecting) {
+      showNav();
+    } else {
+      hideNav();
+    }
+  }, {
+    root: null,
+    rootMargin: '0px',
+    threshold: 0.01
+  });
+
+  observer.observe(sentinel);
+
+  // FALLBACK: if page isn't scrollable, allow the nav to appear on user intent.
+  const pageScrollable = () => {
+    return document.documentElement.scrollHeight > window.innerHeight + 2; // small tolerance
+  };
+
+  if (!pageScrollable()) {
+    // Show nav when user attempts to scroll / swipe / interact
+    const onFirstInteraction = (e) => {
+      showNav();
+      // remove the listeners after first interaction
+      window.removeEventListener('wheel', onFirstInteraction);
+      window.removeEventListener('touchstart', onFirstInteraction);
+      window.removeEventListener('keydown', onFirstInteraction);
+    };
+
+    window.addEventListener('wheel', onFirstInteraction, { passive: true });
+    window.addEventListener('touchstart', onFirstInteraction, { passive: true });
+    window.addEventListener('keydown', onFirstInteraction, { passive: true });
+
+    // Optional: auto show nav after a small delay so that a user with no interaction can still reach navigation
+    const AUTO_SHOW_MS = 2200; // 2.2s — adjust to taste
+    const autoTimeout = setTimeout(() => {
+      // double-check that nothing else changed (still not scrollable)
+      if (!pageScrollable()) showNav();
+    }, AUTO_SHOW_MS);
+
+    // optional: if the page later becomes scrollable (content injected), clear the timeout
+    const resizeObserver = new ResizeObserver(() => {
+      if (pageScrollable()) {
+        clearTimeout(autoTimeout);
+        // keep current observer controlling show/hide
+      }
+    });
+    resizeObserver.observe(document.documentElement);
+  }
+
+  // Accessibility: respect prefers-reduced-motion
+  const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+  if (media.matches) nav.style.transition = 'none';
+})();
+
+</script>
