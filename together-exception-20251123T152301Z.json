@@ -1,0 +1,8 @@
+{
+  "error": "Error code: 403 - {\"message\": \"You are on tier Build Tier 1 tier. Access to this model is not available for tier Limited,Free,Build Tier 1. You're currently on Build Tier 1. To unlock access, please upgrade your tier by purchasing credits at https://api.together.ai/settings/billing and ensure your account has a positive credit balance.\", \"type_\": \"request_blocked\"}",
+  "model": "black-forest-labs/FLUX.1-kontext-max",
+  "w": 1344,
+  "h": 1280,
+  "steps": 14,
+  "cfg": 5.5
+}

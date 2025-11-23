@@ -1,0 +1,72 @@
+{
+  "version": "1.1",
+  "shared_variants": [
+    {
+      "id": "master-16_10",
+      "type": "master",
+      "aspect": "16:10",
+      "width": 3840,
+      "height": 2400,
+      "filename": "master.png",
+      "note": "Authoritative master resolution for interior."
+    },
+    {
+      "id": "generated-2k",
+      "type": "generate",
+      "prompt_file": "site/data/inside_workshop.md",
+      "width": 2048,
+      "height": 1280,
+      "steps": 28,
+      "guidance": 7.0,
+      "filename": "generated-2048x1280.png"
+    },
+     {
+      "id": "wide-21_10",
+      "type": "crop",
+      "aspect": "21:10",
+      "width": 2560,
+      "height": 1219,
+      "centered": true,
+      "filename": "wide-2560x1219.png"
+    },
+
+    {
+      "id": "desktop-16_9",
+      "type": "crop",
+      "aspect": "16:9",
+      "width": 3840,
+      "height": 2160,
+      "centered": true,
+      "filename": "desktop-3840x2160.png"
+    },
+    {
+      "id": "mobile-9_16",
+      "type": "crop",
+      "aspect": "9:16",
+      "width": 1080,
+      "height": 1920,
+      "centered": true,
+      "filename": "mobile-1080x1920.png"
+    },
+    {
+      "id": "thumb",
+      "type": "resize",
+      "width": 600,
+      "height": 338,
+      "filename": "thumb-600x338.jpg",
+      "quality": 85
+    }
+  ],
+  "scenes": {
+    "hero": {
+      "description": "Forest hero ...",
+      "master": "assets/hero/master/hero-master.png",
+      "variants": "shared_variants"
+    },
+    "workshop": {
+      "description": "Workshop interior ...",
+      "master": "assets/hero/master/workshop-master.png",
+      "variants": "shared_variants"
+    }
+  }
+}

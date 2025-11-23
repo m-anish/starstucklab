@@ -1,0 +1,228 @@
+---
+// site/src/pages/herozoom.astro
+// GH-Pages-safe hero zoom: build-time only, uses src/data/images.json
+
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+
+// Read manifest relative to this file (site/src/data/images.json)
+const manifestPath = new URL('../data/images.json', import.meta.url);
+let images: any;
+try {
+  images = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+} catch (err) {
+  throw new Error(`Failed to read manifest at ${manifestPath.pathname}: ${err}`);
+}
+
+const BASE_URL = String(import.meta.env.BASE_URL || '/') + 'assets/';
+const SCENES: Record<string, any> = images.scenes || {};
+
+/** Get filename from manifest by id/aspect/type heuristics */
+function findVariantFilename(sceneKey: string, opts: { id?: string; type?: string; aspect?: string } = {}): string | null {
+  const scene = SCENES[sceneKey];
+  if (!scene || !Array.isArray(scene.variants)) return null;
+  if (opts.id) {
+    const byId = scene.variants.find((v: any) => v.id === opts.id && v.filename);
+    if (byId) return byId.filename;
+  }
+  if (opts.aspect) {
+    const byAspect = scene.variants.find((v: any) => v.aspect === opts.aspect && v.filename);
+    if (byAspect) return byAspect.filename;
+  }
+  if (opts.type) {
+    const byType = scene.variants.find((v: any) => v.type === opts.type && v.filename);
+    if (byType) return byType.filename;
+  }
+  return null;
+}
+
+/** Build deterministic static URL for "prefixed-only" filenames:
+ *  /assets/<scene>/<manifestFilename>
+ *  (we do not attempt runtime existence checks — Astro will bake this URL into HTML)
+ */
+function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null): string | null {
+  if (!manifestFilename) return null;
+  return path.posix.join(BASE_URL, sceneKey, manifestFilename);
+}
+
+/** Build canonical source URLs for a scene (hero / workshop) */
+function buildSceneSources(sceneKey: string) {
+  const byAspect = (aspect: string) => findVariantFilename(sceneKey, { aspect });
+  const byId    = (id: string) => findVariantFilename(sceneKey, { id });
+  const byType  = (type: string) => findVariantFilename(sceneKey, { type });
+
+  const filenames: Record<string, string | null> = {
+    wide_21_10: byAspect('21:10') || byId(`${sceneKey}-wide-2560x1219`) || byId('wide-2560x1219'),
+    desktop_16_10: byAspect('16:10') || byId(`${sceneKey}-master`) || byId('master') || byId(`${sceneKey}-desktop-3840x2400`),
+    desktop_16_9: byAspect('16:9') || byId(`${sceneKey}-desktop-3840x2160`),
+    tablet_3_4: byAspect('3:4') || byId(`${sceneKey}-tablet-1200x1600`),
+    mobile_9_16: byAspect('9:16') || byId(`${sceneKey}-mobile-1080x1920`),
+    generated_2k: byType('generate') || byId(`${sceneKey}-generated-2048x1280`),
+    thumb: byType('resize') || byId(`${sceneKey}-thumb-600x338.jpg`)
+  };
+
+  const urls: Record<string, string | null> = {};
+  for (const [k, fname] of Object.entries(filenames)) {
+    urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
+  }
+  return urls;
+}
+
+const hero = buildSceneSources('hero');
+const workshop = buildSceneSources('workshop');
+
+const MEDIA = {
+  ultra_wide: '(min-width:1400px)',
+  desktop: '(min-width:1000px)',
+  laptop: '(min-width:820px)',
+  tablet: '(min-width:640px)'
+};
+---
+<style>
+:root { --page-bg:#05060a; --starry-white:#f8f4e8; }
+html,body { background: var(--page-bg); margin:0; height:100%; }
+.herozoom-root { position: relative; width:100%; }
+.herozoom-spacer { height: calc(var(--stage-vh) * 1vh); width:100%; }
+.hero-layer { position: fixed; inset: 0; width:100%; height:100vh; display:block; object-fit: cover; object-position: 50% 65%; transform-origin: 50% 65%; will-change: transform, opacity; pointer-events: none; z-index: 20; }
+.layer-forest { z-index:15; opacity:1; transform: scale(1) translateY(0); transition: transform 160ms linear, opacity 180ms linear; transform-origin: 50% 65%; }
+.layer-interior { z-index:10; opacity:0; transition: opacity 220ms linear; transform-origin: 50% 65%; }
+.hero-overlay { position: fixed; top: 12vh; left: 0; right: 0; display:flex; flex-direction:column; align-items:center; text-align:center; z-index:30; pointer-events:none; color:var(--starry-white); padding:0 1rem; }
+.post-zoom { background:var(--page-bg); color:#ddd; padding:48px 24px; min-height:40vh; }
+@media (prefers-reduced-motion: reduce) { .layer-interior, .layer-forest { transition: none !important; } }
+</style>
+
+<div class="herozoom-root" id="herozoomRoot">
+  <div
+    class="herozoom-spacer"
+    id="herozoomSpacer"
+    style={`--stage-vh: 140`}
+    data-zoom-scale="1.9"
+    data-cross-start="0.45"
+    data-cross-end="1.0"
+  ></div>
+
+  <!-- Workshop (back layer) -->
+  <picture>
+    {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
+    {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
+    {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
+    <!-- Always emit a src (fallback order) so browser never gets an omitted/undefined src -->
+    <img class="hero-layer layer-interior"
+         id="hzInterior"
+         src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+         alt="Workshop interior"
+         loading="eager" />
+  </picture>
+
+  <!-- Forest hero (front layer) -->
+  <picture>
+    {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
+    {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
+    {hero.desktop_16_9 ? <source media={MEDIA.laptop} srcset={hero.desktop_16_9} /> : null}
+    {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
+    <img class="hero-layer layer-forest"
+         id="hzForest"
+         src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
+         alt="Forest hero with cabin and STARSTUCKLAB sign"
+         loading="eager" />
+  </picture>
+
+  <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
+    <h1 style="margin:0;padding:0;font-family:'Playfair Display',serif;font-size:clamp(2rem,5.8vw,3.6rem);">
+      "I assemble dreams, and they dissolve."
+    </h1>
+    <p style="margin-top:10px;opacity:0.92;font-family:Inter,system-ui;font-size:clamp(.95rem,2.6vw,1.1rem);">
+      A hillside workshop where starlight meets solder.
+    </p>
+    <div style="margin-top:22px;">
+      <a href="#workbench" class="cta" style="background:rgba(78,197,122,0.06);border:1px solid rgba(78,197,122,0.18);padding:0.6rem 1rem;border-radius:28px;color:var(--starry-white);text-decoration:none;font-size:clamp(1rem,3.2vw,1.2rem);">
+        Enter the Workshop
+      </a>
+    </div>
+  </div>
+
+  <main class="post-zoom" id="postZoomContent" aria-live="polite">
+    <section id="workbench">
+      <h2>Inside the Workshop</h2>
+      <p>Welcome — this is where your workbench / featured products / logs begin.</p>
+    </section>
+    <section style="height:1200px;"></section>
+  </main>
+</div>
+
+<script>
+(() => {
+  const spacerEl = document.getElementById('herozoomSpacer');
+  const forestEl = document.getElementById('hzForest');
+  const interiorEl = document.getElementById('hzInterior');
+  const overlayEl = document.getElementById('hzOverlay');
+  if (!spacerEl || !forestEl || !interiorEl || !overlayEl) return;
+
+  const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
+  const ds = spacer.dataset;
+  const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
+  const CROSS_START = parseFloat(ds.crossStart ?? '0.45');
+  const CROSS_END = parseFloat(ds.crossEnd ?? '1.0');
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let ticking = false;
+  const BASE_SCALE = 1;
+
+  function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
+  function spacerHeight(){ return spacer.getBoundingClientRect().height; }
+  function computeProgress(){
+    const top = spacerTopAbsolute();
+    const duration = spacerHeight() - window.innerHeight;
+    if (window.scrollY <= top) return 0;
+    if (duration <= 0) return 1;
+    const p = (window.scrollY - top) / duration;
+    return Math.max(0, Math.min(1, p));
+  }
+  function easeInOutCubic(t: number) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
+  function applyInitialFrame(){ forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`; forestImg.style.opacity = '1'; interiorImg.style.opacity = '0'; overlay.style.opacity = '1'; }
+  function update(){
+    const p = computeProgress(); const eased = easeInOutCubic(p);
+    const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
+    const translateY = - Math.round(p * 30);
+    let interiorOpacity = 0;
+    if (p <= CROSS_START) interiorOpacity = 0;
+    else if (p >= CROSS_END) interiorOpacity = 1;
+    else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
+    const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
+    if (!prefersReduced) {
+      forestImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
+      forestImg.style.opacity = `${forestOpacity}`;
+      interiorImg.style.opacity = `${interiorOpacity}`;
+      overlay.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+    } else {
+      forestImg.style.transform = `scale(${BASE_SCALE})`;
+      forestImg.style.opacity = `${Math.round(1 - interiorOpacity)}`;
+      interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
+      overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
+    }
+    ticking = false;
+  }
+  function requestTick(){ if (!ticking) { window.requestAnimationFrame(update); ticking = true; } }
+  function onScroll(){ requestTick(); }
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{ applyInitialFrame(); update(); }));
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', () => { requestTick(); }, { passive: true });
+
+  function pageIsScrollable(){ return document.documentElement.scrollHeight > window.innerHeight + 10; }
+  if (!pageIsScrollable()) {
+    const reveal = () => {
+      forestImg.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
+      forestImg.style.opacity = '0';
+      interiorImg.style.opacity = '1';
+      overlay.style.opacity = '0';
+      window.removeEventListener('wheel', onFirstInput);
+      window.removeEventListener('touchstart', onFirstInput);
+      window.removeEventListener('keydown', onFirstInput);
+    };
+    const onFirstInput = () => reveal();
+    window.addEventListener('wheel', onFirstInput, { passive: true });
+    window.addEventListener('touchstart', onFirstInput, { passive: true });
+    window.addEventListener('keydown', onFirstInput, { passive: true });
+    setTimeout(() => { if (!pageIsScrollable()) reveal(); }, 1200);
+  }
+})();
+</script>

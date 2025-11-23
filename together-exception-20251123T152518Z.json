@@ -1,0 +1,8 @@
+{
+  "error": "Error code: 400 - {\"message\": \"Invalid value for 'prompt' parameter. Positive prompt must be a string value between 2 and 3000 characters.\", \"type_\": \"invalid_request_error\"}",
+  "model": "ByteDance-Seed/Seedream-4.0",
+  "w": 1344,
+  "h": 1280,
+  "steps": 28,
+  "cfg": 7.5
+}

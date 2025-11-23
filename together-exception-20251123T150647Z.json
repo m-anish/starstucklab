@@ -1,0 +1,8 @@
+{
+  "error": "Error code: 400 - {\"message\": \"Invalid value for 'height' parameter. Image height must be an integer value between 128 and 2048, in multiples of 64.\", \"type_\": \"invalid_request_error\"}",
+  "model": "stabilityai/stable-diffusion-3-medium",
+  "w": 1344,
+  "h": 2368,
+  "steps": 28,
+  "cfg": 7.5
+}

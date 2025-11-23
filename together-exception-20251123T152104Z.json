@@ -1,0 +1,8 @@
+{
+  "error": "Error code: 400 - {\"message\": \"Invalid value for 'width' parameter. Image width must be an integer value between 128 and 2048, in multiples of '64'.\", \"type_\": \"invalid_request_error\"}",
+  "model": "stabilityai/stable-diffusion-3-medium",
+  "w": 672,
+  "h": 384,
+  "steps": 14,
+  "cfg": 5.5
+}

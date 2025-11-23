@@ -1,109 +1,46 @@
-# inside_workshop.md (FINAL, MATCHING HERO FORMAT)
+# **Inside Workshop**
 
-A warm, hand-painted digital illustration in a soft, Studio-Ghibli–inspired style.
-The scene shows a nighttime forest workshop interior under a quiet, star-filled sky visible through a central window.
-This image will be used as a major website artwork, so **precise composition rules must be followed**.
+A warm, hand-painted, Studio-Ghibli–inspired night-time workshop interior.
 
----
+## **Core Composition Rules (STRICT)**
 
-## COMPOSITION (STRICT RULES):
+* Aspect ratio: **16:10**
+* **Workbench, desk lamp, and four-pane window** must sit **exactly at the horizontal center**.
+* The composition must remain **strictly center-aligned** so a **9:16 center crop** preserves the workbench, lamp, and **entire window** with no clipping.
+* Show **some floor (~15–25%)** and **some ceiling (~12–18%)** to make it a full-room view. Some of the wood on the floor should be a little weathered. The stool base should be completely visible with 7-10% empty space in front of it.
+* The **workbench surface** sits roughly in the **central 40%** of the frame; lamp head at **48–52%** of image height.
+* The **window must be proportionally small enough** that even a **vertical 9:16 crop** keeps it fully visible.
+  * Bottom of window ≥ **12–15% above** the image bottom (to avoid mobile cropping).
+  * Top of window well below ceiling line.
+* **Leftmost and rightmost 20%**: non-essential details (shelves, pegboards, beams) only — keep center safe.
 
-* The **workbench, desk lamp, and the central window** must be placed **EXACTLY at the horizontal center** of the image.
-* Vertically, the **workbench surface** must sit in the **center 40%** of the image.
-  The lamp head should fall approximately at **48–52%** of the total image height.
-  Do **NOT** place the bench near the bottom edge.
-* The **central four-pane window** must also be centered precisely behind the workbench.
-  Its bottom frame must be at least **12–15% above** the bottom of the image.
-  There must be a clean margin so the window is never clipped on wide desktop screens.
-* Maintain a clean **safe zone**:
-  The **leftmost 20% and rightmost 20%** must contain only shelves, tools, beams, wood walls, and negative space — nothing crucial —
-  so a **9:16 center crop** preserves the entire workbench / lamp / window composition.
-* The entire design must remain **center-weighted** so the middle vertical slice is automatically a perfect mobile composition.
+## **Focal Elements**
 
----
+* Centered **wooden workbench** (warm brown #5b4736) with scattered small tools, jars, and a glowing **vintage desk lamp** emitting warm amber light (#f4ce84).
+* Soft greenish solder fumes rising from a small active solder joint.
+* A small stool aligned perfectly to the workbench.
 
-## WORKBENCH & LAMP (FOCAL ELEMENTS):
+## **Window & Exterior**
 
-* The workbench is made of warm brown timber **#5b4736**, centered exactly.
-* On the bench: scattered tools (precision screwdrivers, pliers, soldering iron, wire spools, jars, brushes), light clutter but readable.
-* A vintage adjustable desk lamp casts a warm amber glow **#f4ce84** over the workspace.
-* A faint trail of **greenish solder fumes** rises softly from a small soldering joint.
-* A small crooked workshop stool sits directly in front of the bench, aligned to center.
+* Perfectly centered **four-pane window**, compact in size for mobile safety.
+* Outside: deep blue-black forest night (#1c2b3e → #0b1b2c) with soft stars (#dbe0e8).
+* Include a **silhouette of a bear** among pine trees — no facial detail.
 
----
+## **Room Interior**
 
-## WINDOW & OUTSIDE VIEW:
+* Warm timber walls (#5b4736). With subtle pale olive green accents.
+* **Left shelves**: retro electronics, meters, wires, connectors.
+* **Right shelves**: jars, small 3D printer, tools.
+* **Pegboards** on both sides with hand tools, somewhat disorganised.
+* **Noticeboard** faded olive green with some notes pinned. Subtle.
+* **Floor**: rough wood with scattered scraps and cables, but visually subtle.
+* **Ceiling**: visible wooden beams or rafters, softly lit, maintaining atmospheric depth.
+* **Right side of the room**: A **Dobsonian telescope** sitting on the floor, pointing away. 
 
-* The window is a **four-pane wooden frame**, perfectly centered behind the bench.
-* Through it: a deep, blue-black forest night in tones **#1c2b3e → #0b1b2c**.
-* Include a subtle star field, painterly and soft.
-* A **faint silhouette of a bear** among pine trees must be visible, but **ONLY as a silhouette**, with no facial details.
-  The bear should stand in the lower-middle part of the window view, recognizable but understated.
+## **Lighting & Style**
 
----
-
-## SURROUNDINGS (INTERIOR):
-
-* Walls are wooden planks in warm brown **#5b4736**, matching the workshop theme.
-* **Left side shelves**: retro electronics, old computers, meters, boxes, cables.
-* **Right side shelves**: jars, containers, tools, and a small 3D printer.
-* **Pegboards** on both sides: neatly arranged pliers, screwdrivers, hammers, chisels, saws.
-* **Floor**: rough, warm timber with small scattered objects (cables, scrap wood, tools).
-* The side areas must remain visually interesting but non-essential, to maintain the safe crop zone.
-
----
-
-## SKY & NIGHT COLOR THROUGH WINDOW:
-
-* Deep night gradient **#1c2b3e → #0b1b2c**, consistent with the hero scene’s astronomy palette.
-* Soft, subtle grain **#dbe0e8** to imply a natural night atmosphere.
-* No constellations required, but stars should feel organic and varied.
-
----
-
-## ART STYLE:
-
-* Painterly, hand-drawn, soft, Ghibli-influenced strokes.
-* Warm, cozy, quiet, introspective atmosphere.
-* Slight texture, no hard edges.
-* Soft interior shadows, gentle rim-lighting from the lamp and faint window moonlight.
-
----
-
-## COLOR PALETTE:
-
-* Interior wood: **#5b4736**
-* Lamp glow: **#f4ce84**
-* Night sky: **#1c2b3e → #0b1b2c**
-* Fumes: soft greenish tint
-* Star highlights / haze: **#dbe0e8**
-* Optional subtle purples blending into shadows: **#7d5fff**
-
-Palette must remain consistent with the hero scene for brand continuity.
+* Warm key light from the lamp; soft cool fill from the window.
+* Painterly, hand-drawn, Ghibli-inspired strokes; textured shadows; no hard edges.
+* No text or readable labels anywhere.
 
 
----
-
-## LIGHTING:
-
-* Primary warm light source: **desk lamp** over the workbench.
-* Secondary cool fill from the **night sky** through the window (very soft).
-* Gentle falloff into corners of the room.
-* Warm-cool contrast is essential.
-
----
-
-## OUTPUT REQUIREMENTS:
-
-* **Master aspect ratio:** 21:10
-* **Recommended resolution:** 3840 × 1820 (or higher).
-* Must be safe for a **center-crop 9:16** portrait without losing the workbench, lamp, or window.
-* No text overlays, no UI elements, no logos.
-
----
-
-## TEXT ACCURACY REQUIREMENT:
-
-* No textual labels or readable brand names anywhere.
-* All jars, tools, machines must be texture-only or unreadable scribbles.
-* This scene contains **no signage**.

@@ -1,0 +1,19 @@
+{
+  "generated_at": 1763921989.7559886,
+  "scenes": {
+    "hero": {
+      "hero-master-16_10": "assets/hero/master/hero-master.png",
+      "hero-desktop-16_10": "assets/hero/hero-desktop-3840x2400.png",
+      "hero-desktop-16_9": "assets/hero/hero-desktop-3840x2160.png",
+      "hero-tablet-3_4": "assets/hero/hero-tablet-1200x1600.png",
+      "hero-mobile-9_16": "assets/hero/hero-mobile-1080x1920.png",
+      "hero-thumb": "assets/hero/hero-thumb-600x338.jpg"
+    },
+    "workshop": {
+      "workshop-master-16_10": "assets/hero/master/workshop-master.png",
+      "workshop-wide-21_10": "assets/hero/workshop-wide-2560x1219.png",
+      "workshop-mobile-9_16": "assets/hero/workshop-mobile-1080x1920.png",
+      "workshop-thumb": "assets/hero/workshop-thumb-600x338.jpg"
+    }
+  }
+}
