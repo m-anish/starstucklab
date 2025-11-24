@@ -88,12 +88,34 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
 .hero-layer { position: fixed; inset: 0; width:100%; height:100vh; display:block; object-fit: cover; object-position: 50% 65%; transform-origin: 50% 65%; will-change: transform, opacity; pointer-events: none; z-index: 20; }
 
 /* layering */
-.layer-forest { z-index:15; opacity:1; transform: scale(1) translateY(0); transition: transform 160ms linear, opacity 180ms linear; transform-origin: 50% 65%; }
+.layer-forest {
+  z-index:15;
+  opacity:1;
+  transform: scale(1) translateY(0);
+  transition: transform 160ms linear, opacity 180ms linear;
+  transform-origin: 50% 80%; /* was 50% 65% — moved anchor lower */
+  object-position: 50% 70%;   /* nudges the visible crop upward slightly */
+}
 .layer-interior { z-index:10; opacity:0; transition: opacity 220ms linear; transform-origin: 50% 65%; }
 
 /* overlay */
 .hero-overlay { position: fixed; top: 12vh; left: 0; right: 0; display:flex; flex-direction:column; align-items:center; text-align:center; z-index:30; pointer-events:none; color:var(--starry-white); padding:0 1rem; }
 .post-zoom { background:var(--page-bg); color:#ddd; padding:48px 24px; min-height:40vh; }
+
+/* Large center hero logo above text */
+#hzHeroLogo {
+  width: clamp(70px, 12vw, 140px);
+  height: auto;
+  margin-bottom: 22px;  /* spacing before the <h1> */
+  opacity: 0.96;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+}
+
+/* When zooming into interior, fade it out gently */
+#pageNav.nav-visible + #hzHeroLogo {
+  opacity: 0;
+}
 
 /* Top nav — hidden until inside workshop, then becomes sticky/compact */
 #pageNav {
@@ -159,6 +181,80 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   margin: 0 auto;
 }
 
+/* LOGO inside navbar */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: var(--starry-white);
+  text-decoration: none;
+}
+
+.nav-logo img {
+  height: 28px;        /* normal size */
+  width: auto;
+  object-fit: contain;
+  display: block;
+}
+
+/* compact sticky navbar makes logo slightly smaller */
+#pageNav.nav-sticky .nav-logo img {
+  height: 22px;        /* shrinks smoothly in sticky mode */
+}
+
+/* Responsive, fluid sizing using clamp() — replaces many breakpoints */
+:root {
+  /* optional design tokens you can tune */
+  --nav-font-min: 1.65rem;
+  --nav-font-max: 2.15rem;
+  --nav-logo-text-min: 1.65rem;
+  --nav-logo-text-max: 2.15rem;
+  --nav-padding-min: 8px;
+  --nav-padding-max: 14px;
+}
+
+/* fluid sizes for nav items and logo */
+.nav-logo-img {
+  height: clamp(32px, 4.8vw, 42px); /* small phones -> large desktops */
+  width: auto;
+  transition: height 180ms ease;
+}
+
+.nav-logo-text {
+  font-size: clamp(var(--nav-logo-text-min), 1.5vw, var(--nav-logo-text-max));
+  letter-spacing: 0.6px;
+  transition: font-size 180ms ease;
+}
+
+.nav-links a {
+  font-size: clamp(var(--nav-font-min), 1.6vw, var(--nav-font-max));
+  padding: 6px 2px;
+  transition: font-size 160ms ease, padding 160ms ease;
+}
+
+/* fluid container padding so nav doesn't feel cramped on xs screens */
+#pageNav .nav-inner {
+  padding: clamp(var(--nav-padding-min), 1.6vw, var(--nav-padding-max));
+}
+
+/* sticky / compact variations (still keep clamp for smoothness) */
+#pageNav.nav-sticky .nav-logo-img {
+  height: clamp(18px, 3.2vw, 26px);
+}
+#pageNav.nav-sticky .nav-logo-text {
+  font-size: clamp(0.88rem, 1.2vw, 0.95rem);
+}
+#pageNav.nav-sticky .nav-inner {
+  padding: clamp(6px, 1.2vw, 10px);
+}
+
+/* Very small tweak for very narrow screens — optional */
+@media (max-width: 360px) {
+  .nav-links { gap: 10px; }
+  .nav-links a { padding: 8px 4px; }
+}
+
 /* reduced motion safety */
 @media (prefers-reduced-motion: reduce) {
   .layer-interior, .layer-forest, #pageNav { transition: none !important; }
@@ -178,7 +274,10 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   <!-- Top navigation: appears when inside workshop and becomes sticky -->
   <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">STARSTUCK LAB</a>
+      <a href="/" class="nav-logo">
+        <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
+        <span>STARSTUCK LAB</span>
+      </a>
       <ul class="nav-links">
         <li><a href="#workbench">Workbench</a></li>
         <li><a href="#projects">Projects</a></li>
@@ -214,6 +313,12 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   </picture>
 
   <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
+    <img
+      id="hzHeroLogo"
+      src="/assets/icons/starstucklab_logo_black_white.svg"
+      alt="Starstuck Lab Logo"
+      loading="eager"
+    />
     <h1 style="margin:0;padding:0;font-family:'Playfair Display',serif;font-size:clamp(2rem,5.8vw,3.6rem);">
       "I assemble dreams, and they dissolve."
     </h1>
