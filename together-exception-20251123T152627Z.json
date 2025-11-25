@@ -1,8 +1,0 @@
-{
-  "error": "Error code: 400 - {\"message\": \"Unsupported use of 'steps' parameter. This parameter is not supported for the selected model.\", \"type_\": \"invalid_request_error\"}",
-  "model": "google/gemini-3-pro-image",
-  "w": 1344,
-  "h": 1280,
-  "steps": 28,
-  "cfg": 7.5
-}

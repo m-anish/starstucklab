@@ -1,0 +1,107 @@
+---
+/*
+  AboutPanel.astro
+  Reads /public/data/about.json (via Astro.fetchContent)
+  Renders latest variant emblem + title + lead + motto.
+  Adds class "in" to fade in (herozoom's script toggles it).
+*/
+
+//const about = await Astro.fetchContent('/data/about.json');
+import about from '../../public/data/about.json';
+const variants = Object.keys(about || {}).sort((a,b) => {
+  const an = Number(a); const bn = Number(b);
+  if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
+  return a.localeCompare(b);
+});
+const latest = variants.length ? variants[variants.length - 1] : 'default';
+const content = about[latest] || { title: '', lead: '', motto: '' };
+const emblemPath = `/data/about-emblem-${latest}.png`;
+
+const ariaLabel = 'About Starstuck Lab';
+---
+
+<style>
+:root{
+  --parchment-bg-1:#fbf7ef;
+  --parchment-bg-2:#f4efe3;
+  --parchment-edge: rgba(20,12,8,0.06);
+  --panel-width: clamp(300px, 62ch, 720px);
+}
+
+/* Debug / visibility helpers — add near top of your style block in aboutpanel.astro */
+/* Make the wrapper positioned so z-index takes effect, and place it above overlay but below nav */
+.about-panel-wrap {
+  position: relative;    /* <--- required for z-index to work */
+  z-index: 50;           /* sits above overlay(30) and below nav(60) */
+  pointer-events: auto;
+  margin: 1.75rem 0;
+}
+
+/* Also ensure the panel itself participates if needed */
+.about-panel {
+  position: relative;    /* helpful when you want to add z-index or transforms */
+  z-index: 51;
+}
+
+/* Temporary visual debug outline — remove after verifying */
+.about-panel-wrap.debug {
+  outline: 3px dashed lime;
+  background: rgba(255,255,255,0.02); /* subtle tint to prove it's on top */
+}
+
+/* wrapper sits in document flow (in-world) */
+.about-panel-wrap {
+  display:flex;
+  justify-content:center;
+  margin: 1.75rem 0;
+  pointer-events:auto;
+  z-index:30;
+}
+
+/* parchment panel */
+.about-panel {
+  width: var(--panel-width);
+  background: linear-gradient(180deg, var(--parchment-bg-1) 0%, var(--parchment-bg-2) 100%);
+  border-radius:14px;
+  padding:20px 22px;
+  box-shadow: 0 12px 36px rgba(6,6,6,0.12), inset 0 2px 8px rgba(255,255,255,0.55);
+  border: 1px solid var(--parchment-edge);
+  display:grid;
+  grid-template-columns: 84px 1fr;
+  gap:18px;
+  align-items:start;
+  transform: translateY(10px);
+  opacity: 0;
+  transition: opacity 520ms cubic-bezier(.2,.9,.3,1), transform 520ms cubic-bezier(.2,.9,.3,1);
+}
+
+/* visible state */
+.about-panel.in { opacity:1; transform: translateY(0); }
+
+/* emblem */
+.about-emblem {
+  width:84px; height:84px; object-fit:contain; justify-self:center; align-self:start; border-radius:8px;
+}
+
+/* content */
+.content { color:#1f1f1f; font-family:Inter,system-ui,'Segoe UI',Roboto,Arial; }
+.title { font-family:'Playfair Display',serif; font-size:clamp(1.05rem,2.6vw,1.4rem); margin:0 0 6px 0; color:#0f0f0f; line-height:1.05; }
+.lead { margin:0 0 10px 0; color:#262626; font-size:clamp(.95rem,1.9vw,1.02rem); opacity:0.95; }
+.motto { margin-top:8px; font-size:0.92rem; color:#3b3b3b; opacity:0.9; border-top:1px dashed rgba(0,0,0,0.04); padding-top:10px; }
+
+@media (max-width:680px) {
+  .about-panel { grid-template-columns:1fr; grid-row-gap:12px; padding:16px; }
+  .about-emblem { width:92px; height:92px; justify-self:center; }
+}
+</style>
+
+<section class="about-panel-wrap" aria-label={ariaLabel}>
+  <article id="aboutPanel" class="about-panel" data-variant={latest}>
+    <img class="about-emblem" src={emblemPath} alt={`Emblem variant ${latest}`} loading="lazy" decoding="async" onerror="this.onerror=null;this.style.opacity=0.65;" />
+    <div class="content">
+      <h2 class="title">{content.title}</h2>
+      <p class="lead">{content.lead}</p>
+      {content.motto ? <div class="motto">{content.motto}</div> : null}
+    </div>
+  </article>
+</section>

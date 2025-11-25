@@ -1,0 +1,29 @@
+[
+  {
+    "id": "about.title",
+    "page": "about",
+    "block": "title",
+    "prompt": "Write a short atmospheric title (4–7 words) for the small in-workshop About panel of Starstuck Lab. Tone: poetic, quiet, slightly weary. No punctuation beyond normal letters.",
+    "public_json_key": "title",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.35
+  },
+  {
+    "id": "about.lead",
+    "page": "about",
+    "block": "lead",
+    "prompt": "Write a single compact paragraph (40–70 words) describing Starstuck Lab as a quiet hillside workshop where ideas drift between solder smoke, old wood, soft starlight, and dry cosmic humor. Keep the tone gentle, introspective, and slightly melancholic. Do not break into multiple paragraphs. Do not write in the first person.",
+    "public_json_key": "lead",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.55
+  },
+  {
+    "id": "about.motto",
+    "page": "about",
+    "block": "motto",
+    "prompt": "Write a one-line motto (max 10 words) expressing quiet persistence and cosmic resignation. Tone: subtle, poetic, understated.",
+    "public_json_key": "motto",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.35
+  }
+]

@@ -3,8 +3,9 @@
 // GH-Pages-safe hero zoom with sticky nav after it appears
 // Build-time only: reads site/src/data/images.json
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import fs from 'fs';
+import path from 'path';
+import AboutPanel from '../components/aboutpanel.astro';
 
 // Read manifest relative to this file (site/src/data/images.json)
 const manifestPath = new URL('../data/images.json', import.meta.url);
@@ -333,6 +334,8 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   </div>
 
   <main class="post-zoom" id="postZoomContent" aria-live="polite">
+    <!-- INSERT ABOUT PANEL HERE so it's in document flow (it will fade-in via JS) -->
+    <AboutPanel />
     <section id="workbench">
       <h2>Inside the Workshop</h2>
       <p>Welcome — this is where your workbench / featured products / logs begin.</p>
@@ -359,6 +362,9 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   const overlayEl = document.getElementById('hzOverlay');
   const navEl = document.getElementById('pageNav');
 
+  // ABOUT PANEL element (added)
+  const aboutEl = document.getElementById('aboutPanel');
+
   if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
   const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
@@ -374,6 +380,9 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
   let navShownOnce = false;
   const NAV_SHOW_THRESHOLD = 0.5; // tune this: when interiorOpacity > 0.5 show nav
 
+  // NEW: threshold for showing the parchment panel during transition
+  const ABOUT_SHOW_THRESHOLD = 0.12; // low so the parchment appears early in the cross-fade
+
   function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
   function spacerHeight(){ return spacer.getBoundingClientRect().height; }
 
@@ -386,13 +395,16 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
     return Math.max(0, Math.min(1, p));
   }
 
-  function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
+  function easeInOutCubic(t: number) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
 
   function applyInitialFrame(){ 
     forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`; 
     forestImg.style.opacity = '1'; 
     interiorImg.style.opacity = '0'; 
     overlay.style.opacity = '1'; 
+    // ensure about panel starts hidden (if present)
+    if (aboutEl) aboutEl.classList.remove('in');
+
   }
 
   function update(){
@@ -418,6 +430,18 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
       forestImg.style.opacity = `${Math.round(1 - interiorOpacity)}`;
       interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
       overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
+    }
+
+    // ABOUT PANEL: show when interiorOpacity crosses ABOUT_SHOW_THRESHOLD
+    if (aboutEl) {
+      const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
+      if (shouldBeIn && !aboutEl.classList.contains('in')) {
+        console.log('[herozoom] ABOUT PANEL → ADD .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
+        aboutEl.classList.add('in');
+      } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
+        console.log('[herozoom] ABOUT PANEL → REMOVE .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
+        aboutEl.classList.remove('in');
+      }
     }
 
     // NAV: show when crossing threshold. Once shown, make it sticky (compact).
@@ -465,6 +489,8 @@ html,body { background: var(--page-bg); margin:0; height:100%; }
       overlay.style.opacity = '0';
       navEl.classList.add('nav-visible');
       navEl.classList.add('nav-sticky');
+      // make sure parchment is visible in fallback
+      if (aboutEl) aboutEl.classList.add('in');
       window.removeEventListener('wheel', onFirstInput);
       window.removeEventListener('touchstart', onFirstInput);
       window.removeEventListener('keydown', onFirstInput);

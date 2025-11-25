@@ -1,8 +1,0 @@
-{
-  "error": "Error code: 400 - {\"message\": \"Parameter 'steps' is not supported for the selected model configuration. Please remove this parameter from your request.\", \"type_\": \"invalid_request_error\"}",
-  "model": "ByteDance-Seed/Seedream-4.0",
-  "w": 1344,
-  "h": 1280,
-  "steps": 28,
-  "cfg": 7.5
-}

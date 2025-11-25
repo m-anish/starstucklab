@@ -1,8 +1,0 @@
-{
-  "error": "Together response did not contain base64 image.",
-  "model": "black-forest-labs/FLUX.1-dev",
-  "w": 672,
-  "h": 384,
-  "steps": 14,
-  "cfg": 5.5
-}
