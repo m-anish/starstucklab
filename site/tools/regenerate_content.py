@@ -27,21 +27,9 @@ import datetime
 from pathlib import Path
 from collections import defaultdict
 from dotenv import load_dotenv
-
-# ---- API SETUP ----
-try:
-    from openai import OpenAI
-except ImportError:
-    raise SystemExit("❌ Missing dependency: pip install openai python-dotenv")
+from openai import OpenAI
 
 load_dotenv()
-
-API_KEY = os.getenv("TOGETHER_API_KEY") or os.getenv("OPENAI_API_KEY")
-if not API_KEY:
-    raise SystemExit("❌ No API key found (TOGETHER_API_KEY or OPENAI_API_KEY).")
-
-BASE_URL = os.getenv("TOGETHER_BASE_URL")
-client = OpenAI(api_key=API_KEY, base_url=BASE_URL) if BASE_URL else OpenAI(api_key=API_KEY)
 
 # ---- PATHS ----
 ROOT = Path(__file__).resolve().parent.parent
@@ -49,6 +37,7 @@ DATA_SOURCE = ROOT / "src" / "data"
 
 persona_file = DATA_SOURCE / "persona_preamble.txt"
 about_prompts_file = DATA_SOURCE / "about.json"
+hero_prompts_file = DATA_SOURCE / "hero.json"
 
 DATA_DIR = ROOT / "public" / "data"
 MAX_VARIANTS = 20
@@ -60,12 +49,16 @@ if not persona_file.exists():
 if not about_prompts_file.exists():
     raise SystemExit(f"❌ Missing about.json prompts file: {about_prompts_file}")
 
+if not hero_prompts_file.exists():
+    raise SystemExit(f"❌ Missing hero.json prompts file: {hero_prompts_file}")
+
 # ---- LOAD DATA ----
 persona = persona_file.read_text(encoding="utf-8").strip()
 
 # Load per-page JSON file(s). For now: only About.
 page_files = {
-    "about": about_prompts_file
+    "about": about_prompts_file,
+    "hero": hero_prompts_file
 }
 
 prompts_by_page = {}
@@ -73,6 +66,7 @@ prompts_by_page = {}
 for page_name, file_path in page_files.items():
     try:
         prompts_by_page[page_name] = json.loads(file_path.read_text(encoding="utf-8"))
+        print(f"✅ Loaded {len(prompts_by_page[page_name])} prompts for page '{page_name}'")
     except Exception as e:
         raise SystemExit(f"❌ Failed to load {file_path}: {e}")
 
@@ -81,11 +75,45 @@ parser = argparse.ArgumentParser(description="Starstuck Lab Multi-Page Regenerat
 parser.add_argument("--page", type=str, default="all", help="Page to regenerate (about, …)")
 parser.add_argument("--num-variants", type=int, default=5)
 parser.add_argument("--model", type=str, default=None)
+parser.add_argument("--provider", choices=["openai", "together"], default=None,
+                    help="Choose which provider to use for generation.")
 args = parser.parse_args()
 
 TARGET_PAGE = args.page.lower()
 NUM_NEW = args.num_variants
 MODEL_OVERRIDE = args.model
+provider = args.provider
+
+if provider is None:
+    # Auto-detect if not provided
+    if os.getenv("TOGETHER_API_KEY"):
+        provider = "together"
+    elif os.getenv("OPENAI_API_KEY"):
+        provider = "openai"
+    else:
+        raise SystemExit("❌ No API key found (TOGETHER_API_KEY or OPENAI_API_KEY).")
+
+# Load provider-specific settings
+if provider == "together":
+    API_KEY = os.getenv("TOGETHER_API_KEY")
+    BASE_URL = os.getenv("TOGETHER_BASE_URL")  # required when using Together
+    if not API_KEY:
+        raise SystemExit("❌ TOGETHER_API_KEY is not set.")
+    if not BASE_URL:
+        raise SystemExit("❌ TOGETHER_BASE_URL is not set for provider=together.")
+    client = OpenAI(api_key=API_KEY, base_url=BASE_URL)
+    print("🔌 Using Together.ai endpoint")
+
+elif provider == "openai":
+    API_KEY = os.getenv("OPENAI_API_KEY")
+    if not API_KEY:
+        raise SystemExit("❌ OPENAI_API_KEY is not set.")
+    # OpenAI normally uses default base_url
+    client = OpenAI(api_key=API_KEY)
+    print("🔌 Using OpenAI endpoint")
+
+else:
+    raise SystemExit(f"❌ Unknown provider: {provider}")
 
 if TARGET_PAGE == "all":
     target_pages = list(prompts_by_page.keys())
@@ -136,7 +164,7 @@ for page in target_pages:
 
             print(f"   ➜ {pid} ({block}) ...")
 
-            model = MODEL_OVERRIDE or p.get("model", "gpt-5")
+            model = MODEL_OVERRIDE or p.get("model", "gpt-5.1")
             temperature = p.get("temperature", 0.7)
             seed = uuid.uuid4().hex[:8]
 

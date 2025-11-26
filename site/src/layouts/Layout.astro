@@ -4,6 +4,8 @@ import '../styles/global.css';
 const {
   title = 'Starstuck Lab',
   description = 'Where science met poetry and regretted nothing.',
+  showHeader = true,
+  showFooter = true,
 } = Astro.props;
 
 const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
@@ -13,29 +15,44 @@ const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+
     <title>{title}</title>
     <meta name="description" content={description} />
+
     <link rel="icon" type="image/svg+xml" href={`${base}assets/icons/starstucklab_logo_black_white.svg`} />
+    <slot name="head" />
   </head>
+
   <body>
-    <header>
-      <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab Logo" />
-      <nav>
-        <a href={`${base}`}>Home</a>
-        <a href={`${base}about`}>About</a>
-        <a href={`${base}projects`}>Projects</a>
-        <a href={`${base}order`}>Order</a>
-        <a href={`${base}contact`}>Contact</a>
-      </nav>
-    </header>
+    {showHeader && (
+      <header>
+        <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab Logo" />
+        <nav>
+          <a href={`${base}`}>Home</a>
+          <a href={`${base}about`}>About</a>
+          <a href={`${base}projects`}>Projects</a>
+          <a href={`${base}order`}>Order</a>
+          <a href={`${base}contact`}>Contact</a>
+        </nav>
+      </header>
+    )}
 
     <main>
       <slot />
     </main>
 
-    <footer>
-      <hr style="border: 0; border-top: 1px solid var(--accent-purple); width: 60%; margin: 2rem auto;" />
-      <p>© {new Date().getFullYear()} Starstuck Lab — Where the void blooms.</p>
-    </footer>
+    {showFooter && (
+      <footer>
+        <hr
+          style="
+            border: 0;
+            border-top: 1px solid var(--accent-purple);
+            width: 60%;
+            margin: 2rem auto;
+          "
+        />
+        <p>© {new Date().getFullYear()} Starstuck Lab — Where the void blooms.</p>
+      </footer>
+    )}
   </body>
 </html>

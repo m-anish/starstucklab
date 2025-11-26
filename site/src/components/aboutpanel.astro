@@ -11,6 +11,7 @@
 
 
 import aboutData from '../../public/data/about.json';
+import "../styles/components/aboutpanel.css"; //css for about panel
 
 const about: Record<string, { title: string; lead: string; motto?: string }> = aboutData as any;
 const variants = Object.keys(about || {}).sort((a, b) => {
@@ -49,118 +50,6 @@ const emblemPath = `/data/about-emblem-${chosen}.png`;
 const ariaLabel = 'About Starstuck Lab';
 ---
 
-<style>
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Merriweather:wght@300;400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap');
-
-:root{
-  --paper-cream: #fbf0db;
-  --paper-mid: #f0d9bd;
-  --paper-stain: rgba(90,50,20,0.08);
-  --panel-width: clamp(320px, 56ch, 900px);
-  --edge-radius: 18px;
-}
-
-/* wrapper */
-.about-panel-wrap{ position:relative; z-index:52; display:flex; justify-content:center; margin:2.25rem 0; }
-
-/* panel */
-.about-panel{
-  position:relative; z-index:53; width:var(--panel-width); border-radius:var(--edge-radius);
-  padding:36px 40px; opacity:0; transform:translateY(8px);
-  transition:opacity 420ms cubic-bezier(.2,.9,.3,1), transform 420ms cubic-bezier(.2,.9,.3,1);
-
-  display:block; /* single-column flow to allow wrapping */
-  background: linear-gradient(180deg, var(--paper-cream) 0%, var(--paper-mid) 100%);
-  border:1px solid rgba(60,40,22,0.08);
-  box-shadow: 0 48px 110px rgba(6,6,6,0.48), inset 0 2px 14px rgba(255,255,255,0.48);
-  overflow:visible;
-}
-
-/* "in" state */
-.about-panel.in{ opacity:1; transform:translateY(0); }
-
-/* grain overlay (subtle) */
-.grain-overlay{
-  position:absolute; inset:0; border-radius:var(--edge-radius); pointer-events:none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' width='1600' height='1600'><filter id='g'><feTurbulence baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23g)' fill='%23000' opacity='0.07'/></svg>");
-  mix-blend-mode:multiply; opacity:0.08; background-size:cover; background-repeat:no-repeat;
-}
-
-/* burnt vignette + inner singe */
-.about-panel::before{
-  content:''; position:absolute; inset:0; border-radius:var(--edge-radius); pointer-events:none;
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,220,140,0.06) 0%, transparent 22%),
-    radial-gradient(ellipse at 50% 92%, rgba(120,60,20,0.10) 0% 8%, rgba(120,60,20,0.20) 60%, transparent 90%);
-  mix-blend-mode:multiply; box-shadow: inset 0 0 48px rgba(0,0,0,0.22);
-}
-
-/* speckles */
-.about-panel::after{
-  content:''; position:absolute; inset:6% 4% 8% 4%; pointer-events:none; opacity:0.22;
-  background-image:
-    radial-gradient(circle at 8% 22%, var(--paper-stain) 0 2px, transparent 3px),
-    radial-gradient(circle at 72% 76%, rgba(90,50,20,0.04) 0 1.6px, transparent 2.5px);
-  filter: blur(0.45px) contrast(1.04);
-}
-
-/* EDGE BURN element */
-.edge-burn{ position:absolute; inset:8px; border-radius:calc(var(--edge-radius) - 4px); pointer-events:none;
-  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.02), inset 0 20px 44px rgba(120,60,20,0.10); }
-
-/* EMBLEM — floated element with shape-outside to wrap text */
-.float-emblem{
-  float:left;
-  width:120px;
-  height:120px;
-  margin:3px 11px 6px 4px; /* top, right, bottom, left */
-  shape-outside: inset(0 round 8px); /* rounded rect wrap shape */
-  -webkit-shape-outside: inset(0 round 8px);
-  clip-path: inset(0 round 8px); /* visual clipping */
-  border-radius:8px;
-  background: linear-gradient(180deg,#fbf4e7 0%, #efe3c9 100%);
-  box-shadow: 0 7px 18px rgba(0,0,0,0.26);
-  padding:6px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* inside the float: the actual image */
-.float-emblem img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:6px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.12);
-  display:block;
-}
-
-/* content typography */
-.content{ color:#151110; font-family: 'Merriweather', Georgia, serif; font-weight:300; font-variant-ligatures:none; font-feature-settings:'liga' 0, 'dlig' 0; }
-
-/* title */
-.title{ font-family: 'Playfair Display', serif; font-weight:700; font-size: clamp(1.4rem, 3.6vw, 2.0rem); margin:0 0 20px 0; color:#28160b; line-height:1.02; }
-
-/* LEAD now flows around the float */
-.lead{ margin:0 0 14px 0; color:#2b1f18; font-size: clamp(1.02rem, 1.95vw, 1.12rem); line-height:1.56; hyphens:auto; }
-
-/* motto */
-.motto{ margin-top:18px; font-size:1.50rem; color:#3d2f24; opacity:0.96; border-top:1px dashed rgba(0,0,0,0.04); padding-top:14px; font-family:'Cormorant Garamond', serif; font-style:oblique; font-weight: 300; }
-
-/* clear float on smaller screens by stacking */
-@media (max-width:820px){
-  .float-emblem{ float:none; margin:0 auto 6px auto; width:140px; height:140px; shape-outside:none; -webkit-shape-outside:none; clip-path:none; }
-  .lead{ margin-top:6px; }
-  .about-panel{ padding:14px; }
-  .title{ font-size: clamp(1.1rem, 8.8vw, 1.7rem); text-align:center; }
-}
-
-/* ensure the float doesn't push the panel height weirdly */
-.about-panel:after{ content:''; display:table; clear:both; }
-</style>
-
 <!-- Inline SVG grain filter (kept for compatibility) -->
 <svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
   <filter id="grainFilter">
@@ -175,9 +64,14 @@ const ariaLabel = 'About Starstuck Lab';
     <div class="grain-overlay" style="filter:url(#grainFilter)"></div>
     <div class="edge-burn" aria-hidden="true"></div>
 
-    <!-- floated emblem that text will wrap around -->
-    <div class="float-emblem" aria-hidden="true">
-      <img src={emblemPath} alt={`Emblem variant ${chosen}`} loading="lazy" decoding="async" onerror="this.onerror=null; this.style.opacity=0.65;" />
+    <div class="float-emblem" aria-hidden="true" data-prerender="true">
+      <!-- prefer eager load for the emblem so it is available for the initial cross-fade -->
+      <img src={emblemPath}
+           alt={`Emblem variant ${chosen}`}
+           loading="eager"
+           decoding="async"
+           fetchpriority="high"
+           onerror="this.onerror=null; this.style.opacity=0.65;" />
     </div>
 
     <div class="content">

@@ -1,11 +1,14 @@
 ---
 // site/src/pages/herozoom.astro
+// Wrapped in Layout (no header/footer) and cleaned to avoid double <main>.
 // GH-Pages-safe hero zoom with sticky nav after it appears
 // Build-time only: reads site/src/data/images.json
 
 import fs from 'fs';
 import path from 'path';
+import Layout from "../layouts/Layout.astro";
 import AboutPanel from '../components/aboutpanel.astro';
+import "../styles/components/herozoom.css"; // component CSS (kept external)
 
 // Read manifest relative to this file (site/src/data/images.json)
 const manifestPath = new URL('../data/images.json', import.meta.url);
@@ -69,8 +72,37 @@ function buildSceneSources(sceneKey: string) {
   return urls;
 }
 
+const HERO_DATA_PATH = new URL('../../public/data/hero.json', import.meta.url);
+let heroVariants = null;
+try {
+  heroVariants = JSON.parse(fs.readFileSync(HERO_DATA_PATH, 'utf8'));
+} catch (err) {
+  heroVariants = null;
+}
+
+// Page-level variant picker
+function pickVariantIndex(variants) {
+  if (!variants) return null;
+  const keys = Object.keys(variants).sort();
+  if (keys.length === 0) return null;
+
+  // Generate one random index per page load
+  const idx = Math.floor(Math.random() * keys.length);
+  return keys[idx];
+}
+
+const chosenHeroKey = pickVariantIndex(heroVariants);
+const chosenHero =
+  (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]) || null;
+
 const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
+
+// ---------- Preload important visuals (small, non-invasive) ----------
+// preload the best-guess desktop images so the browser warms cache early
+const preloadUrls = [hero.desktop_16_10, hero.generated_2k, workshop.desktop_16_10, workshop.generated_2k].filter(Boolean);
+
+{preloadUrls.map(u => `<link rel="preload" as="image" href="${u}">`)}
 
 const MEDIA = {
   ultra_wide: '(min-width:1400px)',
@@ -79,427 +111,512 @@ const MEDIA = {
   tablet: '(min-width:640px)'
 };
 ---
-<style>
-:root { --page-bg:#05060a; --starry-white:#f8f4e8; --nav-bg: rgba(6,10,12,0.6); --nav-compact-bg: rgba(6,10,12,0.85); }
-html,body { background: var(--page-bg); margin:0; height:100%; }
+<Layout showHeader={false} showFooter={false} title="Starstuck Lab">
+  <script>
+    // Prevent initial transition flicker: disable transitions until first frames done
+    (function () {
+      try {
+        document.documentElement.classList.add('no-transitions');
+        // Remove after two animation frames so layout has settled
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.remove('no-transitions');
+            // optional: notify other scripts if they want to know prerender finished
+            document.dispatchEvent(new Event('starstuck:prerender-ready'));
+          });
+        });
+      } catch (e) { /* ignore if any error */ }
+    })();
+  </script>
+  <div class="herozoom-root" id="herozoomRoot">
+    <div
+      class="herozoom-spacer"
+      id="herozoomSpacer"
+      style={`--stage-vh: 140`}
+      data-zoom-scale="1.9"
+      data-cross-start="0.45"
+      data-cross-end="1.0"
+    ></div>
 
-/* layout */
-.herozoom-root { position: relative; width:100%; }
-.herozoom-spacer { height: calc(var(--stage-vh) * 1vh); width:100%; }
-.hero-layer { position: fixed; inset: 0; width:100%; height:100vh; display:block; object-fit: cover; object-position: 50% 65%; transform-origin: 50% 65%; will-change: transform, opacity; pointer-events: none; z-index: 20; }
+    <!-- Top navigation: appears when inside workshop and becomes sticky -->
+    <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
+          <span>STARSTUCK LAB</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#workbench">Workbench</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#shop">Shop</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
 
-/* layering */
-.layer-forest {
-  z-index:15;
-  opacity:1;
-  transform: scale(1) translateY(0);
-  transition: transform 160ms linear, opacity 180ms linear;
-  transform-origin: 50% 80%; /* was 50% 65% — moved anchor lower */
-  object-position: 50% 70%;   /* nudges the visible crop upward slightly */
-}
-.layer-interior { z-index:10; opacity:0; transition: opacity 220ms linear; transform-origin: 50% 65%; }
+    <!-- Workshop (back layer) -->
+    <picture>
+      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
+      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
+      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
+      <img class="hero-layer layer-interior"
+           id="hzInterior"
+           src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+           alt="Workshop interior"
+           loading="eager" />
+    </picture>
 
-/* overlay */
-.hero-overlay { position: fixed; top: 12vh; left: 0; right: 0; display:flex; flex-direction:column; align-items:center; text-align:center; z-index:30; pointer-events:none; color:var(--starry-white); padding:0 1rem; }
-.post-zoom { background:var(--page-bg); color:#ddd; padding:48px 24px; min-height:40vh; }
+    <!-- Forest hero (front layer) -->
+    <picture>
+      {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
+      {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
+      {hero.desktop_16_9 ? <source media={MEDIA.laptop} srcset={hero.desktop_16_9} /> : null}
+      {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
+      <img class="hero-layer layer-forest"
+           id="hzForest"
+           src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
+           alt="Forest hero with cabin and STARSTUCKLAB sign"
+           loading="eager" />
+    </picture>
 
-/* Large center hero logo above text */
-#hzHeroLogo {
-  width: clamp(70px, 12vw, 140px);
-  height: auto;
-  margin-bottom: 22px;  /* spacing before the <h1> */
-  opacity: 0.96;
-  pointer-events: none;
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
-}
-
-/* When zooming into interior, fade it out gently */
-#pageNav.nav-visible + #hzHeroLogo {
-  opacity: 0;
-}
-
-/* Top nav — hidden until inside workshop, then becomes sticky/compact */
-#pageNav {
-  position: fixed;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-10px);
-  z-index: 60;
-  backdrop-filter: blur(6px);
-  border-radius: 12px;
-  transition:
-    opacity 260ms ease,
-    transform 260ms ease,
-    pointer-events 260ms ease,
-    padding 260ms ease,
-    background-color 260ms ease,
-    width 260ms ease;
-  opacity: 0;
-  pointer-events: none;
-  width: min(1100px, calc(100% - 40px));
-  box-shadow: 0 6px 18px rgba(0,0,0,0.45);
-  background: var(--nav-bg);
-}
-#pageNav .nav-inner {
-  display:flex; align-items:center; justify-content:space-between;
-  padding: 10px 16px; gap: 12px;
-  color: var(--starry-white);
-  font-family: Inter, system-ui;
-  font-size: 0.95rem;
-}
-#pageNav .nav-links { list-style:none; margin:0; padding:0; display:flex; gap:14px; }
-#pageNav .nav-links a { color: var(--starry-white); text-decoration:none; opacity:0.96; }
-#pageNav .nav-logo { font-weight:700; letter-spacing:0.6px; text-decoration:none; color:var(--starry-white); }
-
-/* override base state — MUST match ID selector specificity */
-#pageNav.nav-visible {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateX(-50%) translateY(0px);
-}
-
-#pageNav.nav-hidden {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) translateY(-10px);
-}
-
-/* sticky compact mode */
-#pageNav.nav-sticky {
-  top: 0;
-  left: 0;
-  right: 0;
-  transform: translateY(0);
-  width: 100%;
-  border-radius: 0;
-  padding: 6px 8px;
-  background: var(--nav-compact-bg);
-  box-shadow: 0 6px 28px rgba(0,0,0,0.55);
-}
-#pageNav.nav-sticky .nav-inner {
-  padding: 8px 20px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-/* LOGO inside navbar */
-.nav-logo {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  color: var(--starry-white);
-  text-decoration: none;
-}
-
-.nav-logo img {
-  height: 28px;        /* normal size */
-  width: auto;
-  object-fit: contain;
-  display: block;
-}
-
-/* compact sticky navbar makes logo slightly smaller */
-#pageNav.nav-sticky .nav-logo img {
-  height: 22px;        /* shrinks smoothly in sticky mode */
-}
-
-/* Responsive, fluid sizing using clamp() — replaces many breakpoints */
-:root {
-  /* optional design tokens you can tune */
-  --nav-font-min: 1.65rem;
-  --nav-font-max: 2.15rem;
-  --nav-logo-text-min: 1.65rem;
-  --nav-logo-text-max: 2.15rem;
-  --nav-padding-min: 8px;
-  --nav-padding-max: 14px;
-}
-
-/* fluid sizes for nav items and logo */
-.nav-logo-img {
-  height: clamp(32px, 4.8vw, 42px); /* small phones -> large desktops */
-  width: auto;
-  transition: height 180ms ease;
-}
-
-.nav-logo-text {
-  font-size: clamp(var(--nav-logo-text-min), 1.5vw, var(--nav-logo-text-max));
-  letter-spacing: 0.6px;
-  transition: font-size 180ms ease;
-}
-
-.nav-links a {
-  font-size: clamp(var(--nav-font-min), 1.6vw, var(--nav-font-max));
-  padding: 6px 2px;
-  transition: font-size 160ms ease, padding 160ms ease;
-}
-
-/* fluid container padding so nav doesn't feel cramped on xs screens */
-#pageNav .nav-inner {
-  padding: clamp(var(--nav-padding-min), 1.6vw, var(--nav-padding-max));
-}
-
-/* sticky / compact variations (still keep clamp for smoothness) */
-#pageNav.nav-sticky .nav-logo-img {
-  height: clamp(18px, 3.2vw, 26px);
-}
-#pageNav.nav-sticky .nav-logo-text {
-  font-size: clamp(0.88rem, 1.2vw, 0.95rem);
-}
-#pageNav.nav-sticky .nav-inner {
-  padding: clamp(6px, 1.2vw, 10px);
-}
-
-/* Very small tweak for very narrow screens — optional */
-@media (max-width: 360px) {
-  .nav-links { gap: 10px; }
-  .nav-links a { padding: 8px 4px; }
-}
-
-/* reduced motion safety */
-@media (prefers-reduced-motion: reduce) {
-  .layer-interior, .layer-forest, #pageNav { transition: none !important; }
-}
-</style>
-
-<div class="herozoom-root" id="herozoomRoot">
-  <div
-    class="herozoom-spacer"
-    id="herozoomSpacer"
-    style={`--stage-vh: 140`}
-    data-zoom-scale="1.9"
-    data-cross-start="0.45"
-    data-cross-end="1.0"
-  ></div>
-
-  <!-- Top navigation: appears when inside workshop and becomes sticky -->
-  <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
-    <div class="nav-inner">
-      <a href="/" class="nav-logo">
-        <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
-        <span>STARSTUCK LAB</span>
+    <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
+      <img
+        id="hzHeroLogo"
+        src="/assets/icons/starstucklab_logo_black_white.svg"
+        alt="Starstuck Lab Logo"
+        loading="eager"
+      />
+      <h1 class="hero-title">
+        {chosenHero?.title ?? "Fallback Title"}
+      </h1>
+      <p class="hero-lead">
+        {chosenHero?.subtitle ?? "Fallback Subtitle"}
+      </p>
+      <a href="#workbench" class="cta">
+        {chosenHero?.cta ?? "Enter the Workshop"}
       </a>
-      <ul class="nav-links">
-        <li><a href="#workbench">Workbench</a></li>
-        <li><a href="#projects">Projects</a></li>
-        <li><a href="#shop">Shop</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
     </div>
-  </nav>
 
-  <!-- Workshop (back layer) -->
-  <picture>
-    {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
-    {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
-    {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
-    <img class="hero-layer layer-interior"
-         id="hzInterior"
-         src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
-         alt="Workshop interior"
-         loading="eager" />
-  </picture>
-
-  <!-- Forest hero (front layer) -->
-  <picture>
-    {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
-    {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
-    {hero.desktop_16_9 ? <source media={MEDIA.laptop} srcset={hero.desktop_16_9} /> : null}
-    {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
-    <img class="hero-layer layer-forest"
-         id="hzForest"
-         src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
-         alt="Forest hero with cabin and STARSTUCKLAB sign"
-         loading="eager" />
-  </picture>
-
-  <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
-    <img
-      id="hzHeroLogo"
-      src="/assets/icons/starstucklab_logo_black_white.svg"
-      alt="Starstuck Lab Logo"
-      loading="eager"
-    />
-    <h1 style="margin:0;padding:0;font-family:'Playfair Display',serif;font-size:clamp(2rem,5.8vw,3.6rem);">
-      "I assemble dreams, and they dissolve."
-    </h1>
-    <p style="margin-top:10px;opacity:0.92;font-family:Inter,system-ui;font-size:clamp(.95rem,2.6vw,1.1rem);">
-      A hillside workshop where starlight meets solder.
-    </p>
-    <div style="margin-top:22px;">
-      <a href="#workbench" class="cta" style="background:rgba(78,197,122,0.06);border:1px solid rgba(78,197,122,0.18);padding:0.6rem 1rem;border-radius:28px;color:var(--starry-white);text-decoration:none;font-size:clamp(1rem,3.2vw,1.2rem);">
-        Enter the Workshop
-      </a>
+    <!-- NOTE: not <main> because Layout already provides <main> -->
+    <div class="post-zoom" id="postZoomContent" aria-live="polite">
+      <!-- INSERT ABOUT PANEL HERE so it's in document flow (it will fade-in via JS) -->
+      <AboutPanel />
+      <section id="workbench">
+        <h2>Inside the Workshop</h2>
+        <p>Welcome — this is where your workbench / featured products / logs begin.</p>
+      </section>
+      <section id="projects" style="height:800px;">
+        <h3>Projects</h3>
+        <p>Project tiles go here.</p>
+      </section>
+      <section id="shop" style="height:600px;">
+        <h3>Shop</h3>
+      </section>
+      <section id="contact" style="height:500px;">
+        <h3>Contact</h3>
+      </section>
+      <section style="height:1200px;"></section>
     </div>
   </div>
 
-  <main class="post-zoom" id="postZoomContent" aria-live="polite">
-    <!-- INSERT ABOUT PANEL HERE so it's in document flow (it will fade-in via JS) -->
-    <AboutPanel />
-    <section id="workbench">
-      <h2>Inside the Workshop</h2>
-      <p>Welcome — this is where your workbench / featured products / logs begin.</p>
-    </section>
-    <section id="projects" style="height:800px;">
-      <h3>Projects</h3>
-      <p>Project tiles go here.</p>
-    </section>
-    <section id="shop" style="height:600px;">
-      <h3>Shop</h3>
-    </section>
-    <section id="contact" style="height:500px;">
-      <h3>Contact</h3>
-    </section>
-    <section style="height:1200px;"></section>
-  </main>
-</div>
-
-<script>
-(() => {
-  const spacerEl = document.getElementById('herozoomSpacer');
-  const forestEl = document.getElementById('hzForest');
-  const interiorEl = document.getElementById('hzInterior');
-  const overlayEl = document.getElementById('hzOverlay');
-  const navEl = document.getElementById('pageNav');
-
-  // ABOUT PANEL element (added)
-  const aboutEl = document.getElementById('aboutPanel');
-
-  if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
-
-  const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
-  const ds = spacer.dataset;
-  const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
-  const CROSS_START = parseFloat(ds.crossStart ?? '0.45');
-  const CROSS_END = parseFloat(ds.crossEnd ?? '1.0');
-  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let ticking = false;
-  const BASE_SCALE = 1;
-
-  // once visible, keep sticky until we leave the workshop area (interiorOpacity falls below threshold)
-  let navShownOnce = false;
-  const NAV_SHOW_THRESHOLD = 0.5; // tune this: when interiorOpacity > 0.5 show nav
-
-  // NEW: threshold for showing the parchment panel during transition
-  const ABOUT_SHOW_THRESHOLD = 0.12; // low so the parchment appears early in the cross-fade
-
-  function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
-  function spacerHeight(){ return spacer.getBoundingClientRect().height; }
-
-  function computeProgress(){
-    const top = spacerTopAbsolute();
-    const duration = spacerHeight() - window.innerHeight;
-    if (window.scrollY <= top) return 0;
-    if (duration <= 0) return 1;
-    const p = (window.scrollY - top) / duration;
-    return Math.max(0, Math.min(1, p));
-  }
-
-  function easeInOutCubic(t: number) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
-
-  function applyInitialFrame(){ 
-    forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`; 
-    forestImg.style.opacity = '1'; 
-    interiorImg.style.opacity = '0'; 
-    overlay.style.opacity = '1'; 
-    // ensure about panel starts hidden (if present)
-    if (aboutEl) aboutEl.classList.remove('in');
-
-  }
-
-  function update(){
-    const p = computeProgress();
-    const eased = easeInOutCubic(p);
-    const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
-    const translateY = - Math.round(p * 40); // slightly stronger pan towards lower third
-
-    let interiorOpacity = 0;
-    if (p <= CROSS_START) interiorOpacity = 0;
-    else if (p >= CROSS_END) interiorOpacity = 1;
-    else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
-
-    const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
-
-    if (!prefersReduced) {
-      forestImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
-      forestImg.style.opacity = `${forestOpacity}`;
-      interiorImg.style.opacity = `${interiorOpacity}`;
-      overlay.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
-    } else {
-      forestImg.style.transform = `scale(${BASE_SCALE})`;
-      forestImg.style.opacity = `${Math.round(1 - interiorOpacity)}`;
-      interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
-      overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
-    }
-
-    // ABOUT PANEL: show when interiorOpacity crosses ABOUT_SHOW_THRESHOLD
-    if (aboutEl) {
-      const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
-      if (shouldBeIn && !aboutEl.classList.contains('in')) {
-        console.log('[herozoom] ABOUT PANEL → ADD .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
-        aboutEl.classList.add('in');
-      } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
-        console.log('[herozoom] ABOUT PANEL → REMOVE .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
-        aboutEl.classList.remove('in');
+  <!-- set --stage-vh for mobile 100vh quirks (runs once + on resize/orientation) -->
+  <script>
+    (function(){
+      function setVh(){
+        // store a *single unit* as CSS variable so our CSS can compute vh reliably
+        document.documentElement.style.setProperty('--stage-vh', (window.innerHeight / 100).toFixed(2));
       }
-    }
+      setVh();
+      window.addEventListener('resize', setVh);
+      window.addEventListener('orientationchange', setVh);
+    })();
+  </script>
 
-    // NAV: show when crossing threshold. Once shown, make it sticky (compact).
-    if (interiorOpacity > NAV_SHOW_THRESHOLD) {
-      navShownOnce = true;
-      // make visible
-      navEl.classList.add('nav-visible');
-      navEl.classList.remove('nav-hidden');
-      navEl.setAttribute('aria-hidden', 'false');
-      // compact/sticky style
-      navEl.classList.add('nav-sticky');
-    } else {
-      // if we haven't ever shown the nav, keep it hidden; if we had and interior is now below threshold, hide again.
-      navEl.classList.remove('nav-sticky');
-      if (navShownOnce && interiorOpacity > 0.15) {
-        // If we showed it but still somewhat inside, keep it visible (but not sticky)
-        navEl.classList.add('nav-visible');
-        navEl.classList.remove('nav-hidden');
-        navEl.setAttribute('aria-hidden', 'false');
-      } else {
-        navEl.classList.remove('nav-visible');
-        navEl.classList.add('nav-hidden');
-        navEl.setAttribute('aria-hidden', 'true');
-        if (interiorOpacity <= 0.05) navShownOnce = false; // reset when fully out
+  <!-- original hero zoom script (unchanged, uses same IDs) -->
+  <script>
+    (()=>{
+      const spacerEl = document.getElementById('herozoomSpacer');
+      const forestEl = document.getElementById('hzForest');
+      const interiorEl = document.getElementById('hzInterior');
+      const overlayEl = document.getElementById('hzOverlay');
+      const navEl = document.getElementById('pageNav');
+
+      // ABOUT PANEL element (added)
+      const aboutEl = document.getElementById('aboutPanel');
+
+      if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
+
+      const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
+      const ds = spacer.dataset;
+      const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
+      const CROSS_START = parseFloat(ds.crossStart ?? '0.45');
+      const CROSS_END = parseFloat(ds.crossEnd ?? '1.0');
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      let ticking = false;
+      const BASE_SCALE = 1;
+
+      // once visible, keep sticky until we leave the workshop area (interiorOpacity falls below threshold)
+      let navShownOnce = false;
+      const NAV_SHOW_THRESHOLD = 0.5; // tune this: when interiorOpacity > 0.5 show nav
+
+      // NEW: threshold for showing the parchment panel during transition
+      const ABOUT_SHOW_THRESHOLD = 0.12; // low so the parchment appears early in the cross-fade
+
+      function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
+      function spacerHeight(){ return spacer.getBoundingClientRect().height; }
+
+      function computeProgress(){
+        const top = spacerTopAbsolute();
+        const duration = spacerHeight() - window.innerHeight;
+        if (window.scrollY <= top) return 0;
+        if (duration <= 0) return 1;
+        const p = (window.scrollY - top) / duration;
+        return Math.max(0, Math.min(1, p));
       }
-    }
 
-    ticking = false;
-  }
+      function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
 
-  function requestTick(){ if (!ticking) { window.requestAnimationFrame(update); ticking = true; } }
-  function onScroll(){ requestTick(); }
+      function applyInitialFrame(){
+        forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`;
+        forestImg.style.opacity = '1';
+        interiorImg.style.opacity = '0';
+        overlay.style.opacity = '1';
+        // ensure about panel starts hidden (if present)
+        if (aboutEl) aboutEl.classList.remove('in');
 
-  requestAnimationFrame(()=>requestAnimationFrame(()=>{ applyInitialFrame(); update(); }));
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', () => { requestTick(); }, { passive: true });
+      }
 
-  // fallback for very-short pages
-  function pageIsScrollable(){ return document.documentElement.scrollHeight > window.innerHeight + 10; }
-  if (!pageIsScrollable()) {
-    const reveal = () => {
-      forestImg.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
-      forestImg.style.opacity = '0';
-      interiorImg.style.opacity = '1';
-      overlay.style.opacity = '0';
-      navEl.classList.add('nav-visible');
-      navEl.classList.add('nav-sticky');
-      // make sure parchment is visible in fallback
-      if (aboutEl) aboutEl.classList.add('in');
-      window.removeEventListener('wheel', onFirstInput);
-      window.removeEventListener('touchstart', onFirstInput);
-      window.removeEventListener('keydown', onFirstInput);
-    };
-    const onFirstInput = () => reveal();
-    window.addEventListener('wheel', onFirstInput, { passive: true });
-    window.addEventListener('touchstart', onFirstInput, { passive: true });
-    window.addEventListener('keydown', onFirstInput, { passive: true });
-    setTimeout(() => { if (!pageIsScrollable()) reveal(); }, 1200);
-  }
-})();
-</script>
+      function update(){
+        const p = computeProgress();
+        const eased = easeInOutCubic(p);
+        const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
+        const translateY = - Math.round(p * 40); // slightly stronger pan towards lower third
+
+        let interiorOpacity = 0;
+        if (p <= CROSS_START) interiorOpacity = 0;
+        else if (p >= CROSS_END) interiorOpacity = 1;
+        else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
+
+        const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
+
+        if (!prefersReduced) {
+          forestImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
+          forestImg.style.opacity = `${forestOpacity}`;
+          interiorImg.style.opacity = `${interiorOpacity}`;
+          overlay.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        } else {
+          forestImg.style.transform = `scale(${BASE_SCALE})`;
+          forestImg.style.opacity = `${Math.round(1 - interiorOpacity)}`;
+          interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
+          overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
+        }
+
+        // ABOUT PANEL: show when interiorOpacity crosses ABOUT_SHOW_THRESHOLD
+        if (aboutEl) {
+          const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
+          if (shouldBeIn && !aboutEl.classList.contains('in')) {
+            console.log('[herozoom] ABOUT PANEL → ADD .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
+            aboutEl.classList.add('in');
+          } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
+            console.log('[herozoom] ABOUT PANEL → REMOVE .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
+            aboutEl.classList.remove('in');
+          }
+        }
+
+        // NAV: show when crossing threshold. Once shown, make it sticky (compact).
+        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
+          navShownOnce = true;
+          // make visible
+          navEl.classList.add('nav-visible');
+          navEl.classList.remove('nav-hidden');
+          navEl.setAttribute('aria-hidden', 'false');
+          // compact/sticky style
+          navEl.classList.add('nav-sticky');
+        } else {
+          // if we haven't ever shown the nav, keep it hidden; if we had and interior is now below threshold, hide again.
+          navEl.classList.remove('nav-sticky');
+          if (navShownOnce && interiorOpacity > 0.15) {
+            // If we showed it but still somewhat inside, keep it visible (but not sticky)
+            navEl.classList.add('nav-visible');
+            navEl.classList.remove('nav-hidden');
+            navEl.setAttribute('aria-hidden', 'false');
+          } else {
+            navEl.classList.remove('nav-visible');
+            navEl.classList.add('nav-hidden');
+            navEl.setAttribute('aria-hidden', 'true');
+            if (interiorOpacity <= 0.05) navShownOnce = false; // reset when fully out
+          }
+        }
+
+        ticking = false;
+      }
+
+      function requestTick(){ if (!ticking) { window.requestAnimationFrame(update); ticking = true; } }
+      function onScroll(){ requestTick(); }
+
+      requestAnimationFrame(()=>requestAnimationFrame(()=>{ applyInitialFrame(); update(); }));
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => { requestTick(); }, { passive: true });
+
+      // Smooth-scroll CTA to 65% viewport height
+      document.addEventListener('DOMContentLoaded', () => {
+        const cta = document.querySelector('.cta');
+        const target = document.getElementById('workbench');
+        if (!cta || !target) return;
+
+        cta.addEventListener('click', (ev) => {
+          ev.preventDefault();
+
+          const VIEWPORT_FRACTION = 0.65;   // 👈 your chosen value
+          const rect = target.getBoundingClientRect();
+
+          const targetY =
+            window.scrollY +
+            rect.top -
+            Math.round(window.innerHeight * VIEWPORT_FRACTION);
+
+          // smooth scroll
+          window.scrollTo({
+            top: Math.max(0, targetY),
+            behavior: 'smooth',
+          });
+
+          // update hash without jumping
+          history.replaceState(null, '', '#workbench');
+        });
+      });
+
+      // fallback for very-short pages
+      function pageIsScrollable(){ return document.documentElement.scrollHeight > window.innerHeight + 10; }
+      if (!pageIsScrollable()) {
+        const reveal = () => {
+          forestImg.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
+          forestImg.style.opacity = '0';
+          interiorImg.style.opacity = '1';
+          overlay.style.opacity = '0';
+          navEl.classList.add('nav-visible');
+          navEl.classList.add('nav-sticky');
+          // make sure parchment is visible in fallback
+          if (aboutEl) aboutEl.classList.add('in');
+          window.removeEventListener('wheel', onFirstInput);
+          window.removeEventListener('touchstart', onFirstInput);
+          window.removeEventListener('keydown', onFirstInput);
+        };
+        const onFirstInput = () => reveal();
+        window.addEventListener('wheel', onFirstInput, { passive: true });
+        window.addEventListener('touchstart', onFirstInput, { passive: true });
+        window.addEventListener('keydown', onFirstInput, { passive: true });
+        setTimeout(() => { if (!pageIsScrollable()) reveal(); }, 1200);
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      // Find CTA anchor and target section
+      const cta = document.querySelector('.hero-overlay .cta') || document.querySelector('.cta');
+      const workbench = document.getElementById('workbench');
+      const spacer = document.getElementById('herozoomSpacer');
+      const forestImg = document.getElementById('hzForest');
+      const interiorImg = document.getElementById('hzInterior');
+      const overlay = document.getElementById('hzOverlay');
+      const navEl = document.getElementById('pageNav');
+      const aboutEl = document.getElementById('aboutPanel');
+
+      if (!cta || !workbench) return;
+
+      // Helper: set "revealed" visual state (matches the script's fallback reveal)
+      function revealInteriorVisuals() {
+        try {
+          if (forestImg) {
+            forestImg.style.transform = `scale(1.9)`; // follow same final scale from script
+            forestImg.style.opacity = '0';
+          }
+          if (interiorImg) interiorImg.style.opacity = '1';
+          if (overlay) overlay.style.opacity = '0';
+          if (navEl) {
+            navEl.classList.add('nav-visible', 'nav-sticky');
+            navEl.setAttribute('aria-hidden', 'false');
+          }
+          if (aboutEl) aboutEl.classList.add('in');
+        } catch (e) {
+          // swallow — visual nicety only
+          console.warn('[herozoom] revealInteriorVisuals failed', e);
+        }
+      }
+
+      // Smooth scroll and reveal handler
+      cta.addEventListener('click', function (ev) {
+        ev.preventDefault();
+
+        // If CSS accidentally disabled pointer events on CTA, ensure it's clickable next time
+        cta.style.pointerEvents = 'auto';
+
+        // Compute target y position for #workbench and scroll smoothly
+        const rect = workbench.getBoundingClientRect();
+        const targetY = window.scrollY + rect.top - 16; // slight offset so header/nav isn't overlapping
+
+        // If page is not scrollable or very short, first reveal visuals so user sees "inside"
+        const pageScrollable = document.documentElement.scrollHeight > window.innerHeight + 10;
+        if (!pageScrollable) {
+          revealInteriorVisuals();
+          // also update focus to workbench for keyboard users
+          workbench.setAttribute('tabindex', '-1');
+          workbench.focus({ preventScroll: true });
+          return;
+        }
+
+        // Smooth scroll and then make sure JS state reflects being inside the workshop
+        window.scrollTo({ top: Math.max(0, Math.floor(targetY)), behavior: 'smooth' });
+
+        // After a short delay, nudge visuals to the "inside" state.
+        // We keep this small and non-blocking so the smooth scroll continues uninterrupted.
+        window.setTimeout(() => {
+          // Keep in sync with herozoom script thresholds (approx after crossing)
+          revealInteriorVisuals();
+
+          // If the hero script uses navShownOnce / classes, ensure nav is set visible
+          if (navEl) {
+            navEl.classList.add('nav-visible');
+            navEl.classList.remove('nav-hidden');
+            navEl.setAttribute('aria-hidden', 'false');
+          }
+
+          // ensure about panel shows (if present)
+          if (aboutEl) aboutEl.classList.add('in');
+
+          // request a tick for the main hero script to recompute (if it's listening)
+          if (typeof window.requestAnimationFrame === 'function') {
+            window.requestAnimationFrame(() => {
+              window.dispatchEvent(new Event('resize')); // prompt recompute in main script
+            });
+          }
+        }, 350); // 350ms is a small delay — adjust if necessary
+      }, { passive: false });
+    })();
+  </script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const cta = document.querySelector('.cta');
+      const workbench = document.getElementById('workbench');
+      const postZoom = document.getElementById('postZoomContent');
+      const heroAnimatedEl = document.getElementById('hzForest') || document.getElementById('hzInterior') || document.getElementById('herozoomRoot');
+
+      if (!workbench || !postZoom) return;
+
+      // ====== Config ======
+      const VIEWPORT_FRACTION = 0.65; // CTA target: 65% of viewport
+      const REVEAL_DEBOUNCE_MS = 120; // wait for scroll to settle before reveal
+      const IO_ROOT_MARGIN = `-${Math.round(window.innerHeight * VIEWPORT_FRACTION)}px 0px 0px 0px`;
+      // rootMargin places the observed intersection point at the chosen viewport fraction
+
+      // ====== Utility: focus without scrolling ======
+      function focusWithoutScroll(el) {
+        if (!el) return;
+        el.setAttribute('tabindex', '-1');
+        const prevScroll = { x: window.scrollX, y: window.scrollY };
+        el.focus({ preventScroll: true });
+        // restore scroll in case browser moved it
+        window.scrollTo(prevScroll.x, prevScroll.y);
+      }
+
+      // ====== IntersectionObserver to reveal when #workbench crosses the desired fraction ======
+      let revealScheduled = false;
+      let revealTimer = null;
+
+      function doReveal() {
+        if (postZoom.classList.contains('in')) return;
+        postZoom.classList.add('in');
+        postZoom.setAttribute('aria-hidden', 'false');
+        // focus workbench for keyboard users without scrolling
+        focusWithoutScroll(workbench);
+        // small resize tick for other scripts to recompute layout
+        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
+      }
+
+      // Debounced reveal triggered by observer/scroll
+      function scheduleReveal() {
+        if (revealTimer) clearTimeout(revealTimer);
+        revealTimer = setTimeout(() => {
+          doReveal();
+          revealTimer = null;
+        }, REVEAL_DEBOUNCE_MS);
+      }
+
+      // Create observer: we use rootMargin to shift the intersection point to the VIEWPORT_FRACTION
+      const io = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          // When entry.isIntersecting === true, the element has reached the configured threshold position
+          if (entry.isIntersecting) {
+            scheduleReveal();
+          }
+        }
+      }, {
+        root: null,
+        rootMargin: IO_ROOT_MARGIN,
+        threshold: 0
+      });
+
+      // start observing
+      io.observe(workbench);
+
+      // Also listen for manual scroll end as a fallback (some browsers/devices)
+      let scrollEndTimer = null;
+      window.addEventListener('scroll', () => {
+        if (scrollEndTimer) clearTimeout(scrollEndTimer);
+        scrollEndTimer = setTimeout(() => {
+          // check if workbench is near the desired viewport fraction manually (safety)
+          const rect = workbench.getBoundingClientRect();
+          const targetViewportY = Math.round(window.innerHeight * VIEWPORT_FRACTION);
+          const delta = Math.abs(rect.top - targetViewportY);
+          // if within some pixels, reveal
+          if (delta < 60) scheduleReveal();
+        }, 80);
+      }, { passive: true });
+
+      // ====== CTA click handler: smooth scroll to the fraction, let the observer reveal ======
+      if (cta) {
+        // Ensure CTA's pointer events and z-index are enabled
+        cta.style.pointerEvents = 'auto';
+        cta.style.zIndex = cta.style.zIndex || 9999;
+
+        cta.addEventListener('click', (ev) => {
+          ev.preventDefault();
+
+          // compute target Y so workbench appears at VIEWPORT_FRACTION of viewport
+          const rect = workbench.getBoundingClientRect();
+          const targetY = Math.max(0, window.scrollY + rect.top - Math.round(window.innerHeight * VIEWPORT_FRACTION));
+
+          // perform smooth scroll
+          window.scrollTo({ top: targetY, behavior: 'smooth' });
+
+          // in case smooth scroll doesn't fire intersection reliably (older devices),
+          // schedule a fallback reveal after a safe delay
+          if (revealTimer) clearTimeout(revealTimer);
+          revealTimer = setTimeout(() => doReveal(), 900);
+
+          // keep hash in URL without jump
+          history.replaceState(null, '', '#workbench');
+        }, { passive: false });
+      }
+
+      // ====== If hero animation ends independently (e.g., programmatic open), reveal as well ======
+      if (heroAnimatedEl) {
+        const onEnd = () => {
+          // small delay to allow scroll/visual to settle
+          setTimeout(() => scheduleReveal(), 120);
+          heroAnimatedEl.removeEventListener('transitionend', onEnd);
+          heroAnimatedEl.removeEventListener('animationend', onEnd);
+        };
+        heroAnimatedEl.addEventListener('transitionend', onEnd);
+        heroAnimatedEl.addEventListener('animationend', onEnd);
+      }
+
+      // Clean-up on unload
+      window.addEventListener('beforeunload', () => {
+        io.disconnect();
+        if (revealTimer) clearTimeout(revealTimer);
+      });
+    });
+  </script>
+
+</Layout>

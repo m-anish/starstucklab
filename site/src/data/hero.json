@@ -1,0 +1,26 @@
+[
+  {
+    "id": "hero-main",
+    "block": "hero_heading",
+    "public_json_key": "title",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.7,
+    "prompt": "Write a short, poetic hero H1 for the Starstuck Lab homepage. Tone: melancholic, witty, slightly robotic. Keep it to one short sentence (max 10 words). No markup."
+  },
+  {
+    "id": "hero-sub",
+    "block": "hero_subtitle",
+    "public_json_key": "subtitle",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.6,
+    "prompt": "Write a single-line hero subtitle (lead paragraph) for the H1 above. Keep < 14 words. Describe workshop/feeling briefly. Tone consistent with the H1."
+  },
+  {
+    "id": "hero-cta",
+    "block": "hero_cta",
+    "public_json_key": "cta",
+    "model": "openai/gpt-oss-20b",
+    "temperature": 0.4,
+    "prompt": "Write a short call-to-action (one phrase) for the hero button (e.g. 'Enter the Workshop')."
+  }
+]

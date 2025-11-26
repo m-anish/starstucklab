@@ -1,27 +1,77 @@
 {
   "1": {
-    "title": "Dusty Lanterns in Starlit Wood",
-    "lead": "Perched on a wind-kissed slope, Starstuck Lab hums with the quiet clatter of old wood and soldered wires, its windows catching soft starlight that filters through a canopy of leaves. Ideas drift like smoke, curling around a weary, dry cosmic humor that whispers that even the universe pauses for a moment of tinkering, a quiet defiance against the silence.",
-    "motto": "Quiet persistence, starlight drifts, work endures."
+    "title": "Starstuck Lab and Other Small Experiments",
+    "lead": "Starstuck Lab sits on a quiet hillside, where solder smoke curls through lamplight and old wood remembers steadier hands. Circuits sprawl like unfinished constellations, sketched in graphite and hesitation. Here, ideas drift between resistor bins and soft starlight, half-joke, half-prayer, tested against the indifferent hum of the universe and kept anyway, like small, stubborn comets in a coffee-stained sky.",
+    "motto": "Building small, flickering answers in a universe that never asks."
   },
   "2": {
-    "title": "Quiet Sparks in a Woodshop",
-    "lead": "On a wind-kissed hillside, Starstuck Lab sits like a weathered lantern, its cedar walls breathing with the scent of old wood and soldered dreams. Ideas drift between gentle sparks, the quiet hum of circuitry, and the soft glow of starlight, while a dry cosmic joke lingers, reminding that even in silence, wonder still flickers.",
-    "motto": "Carving silence, one notch, the universe sighs."
+    "title": "Where Small Machines Practice Being Stars",
+    "lead": "Starstuck Lab sits on a quiet hillside, where half-finished circuits rest beside worn chisels and paper plans yellowing at the edges. Solder smoke rises like small, uncertain constellations, catching in beams of tired lamplight. Outside, the sky keeps expanding with indifferent grace, while inside, ideas flicker and fade, leaving behind patient tools and a faint, metallic hope.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
   },
   "3": {
-    "title": "Soldered Dreams in Quiet Wood",
-    "lead": "Perched on a quiet hillside, Starstuck Lab hums with the low hiss of solder smoke and the creak of old wood, while soft starlight filters through dusty windows, turning sketches into faint constellations. Ideas drift like moths between gears and paper, each whispering dry cosmic humor, as the workshop keeps turning, accepting that the universe will eventually silence its own pulse.",
-    "motto": "Each dawn, a soldered whisper toward the silent stars."
+    "title": "Where Small Experiments Outgrow Their Maker",
+    "lead": "Starstuck Lab is a small hillside workshop where half-finished circuits share the bench with worn chisels and curling sketches, and solder smoke climbs slowly into the rafters like tired constellations. Ideas arrive quietly, sifted through old wood and soft starlight, tested with dry, cosmic humor, then set aside on cluttered shelves while the universe continues, unimpressed, just beyond the dusty window.",
+    "motto": "Building small failures carefully, while the stars ignore the effort."
   },
   "4": {
-    "title": "Quiet Sparks in a Silent Workshop",
-    "lead": "On a quiet hillside, Starstuck Lab sits like a weathered chest of dreams, its wooden walls breathing with the scent of old timber and faint solder smoke. Ideas drift between the faint glow of soft starlight and the dry humor of a universe that hums in silence, each tinkering moment a fragile echo of longing, wondering if the night will ever answer.",
-    "motto": "Soldering silence, one spark at a time."
+    "title": "Starstuck Lab and Other Small Failures",
+    "lead": "Starstuck Lab is a quiet hillside workshop where half-finished machines rest among old wood, curling sketches, and the thin blue breath of solder smoke. Ideas wander between circuit boards and star maps, testing their weight against the dark. Under soft starlight and a dry sort of cosmic humor, small experiments persist, knowing the universe will not look up, and working anyway.",
+    "motto": "Building small, flickering answers in a universe that never asks."
   },
   "5": {
-    "title": "Dusty Dreams in a Quiet Workshop",
-    "lead": "Nestled on a wind-kissed hillside, Starstuck Lab hums with the quiet clatter of old wood and solder smoke, where ideas drift like forgotten constellations between the soft glow of starlight and a dry, cosmic chuckle that reminds the world that even the universe can be a weary, patient craftsman, echoing the lingering sighs of forgotten tools.",
-    "motto": "I keep crafting, as the cosmos sighs away."
+    "title": "Starstuck Lab and its unfinished constellations",
+    "lead": "Starstuck Lab sits on a quiet hillside, where solder smoke curls through lamplight and old wood remembers steadier plans. Circuits sprawl like half-finished constellations, sketched on paper that has learned to yellow patiently. Here, small machines try to make sense of distant stars, while a dry, cosmic joke hums beneath it all: nothing out there is waiting, yet the work continues.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "6": {
+    "title": "Where Small Experiments Outgrow Their Maker",
+    "lead": "Starstuck Lab sits on a quiet hillside where ideas move slowly through solder smoke and lamplight, brushing against old wood and curled paper plans. Circuits blink like tired constellations, half-believing in their own purpose. Here, soft starlight and dry cosmic humor share the same dust, and each small invention flickers up, then settles back down, as the universe politely looks away.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "7": {
+    "title": "A small workshop listening to stars",
+    "lead": "Starstuck Lab sits on a small hillside, where ideas wander between solder smoke and old wood, pausing in the soft drag of starlight. Circuits half-work, sketches curl, and tools rest mid-thought, all quietly aware that the universe is not watching. Here, small experiments glow for a while, then fade back into the grain of the bench and the dark.",
+    "motto": "Building small, stubborn miracles the universe will never notice."
+  },
+  "8": {
+    "title": "Starstuck Lab and Other Small Attempts",
+    "lead": "Starstuck Lab sits on a tired hillside, where old wood remembers storms and solder smoke curls like half-finished constellations. Circuits blink with patient uncertainty, sketches fade at the edges, and tools rest mid-thought. Under soft starlight and a thin layer of dust, small inventions argue quietly with infinity, then fall still, as the sky keeps widening without comment.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "9": {
+    "title": "Where Small Experiments Outgrow Their Maker",
+    "lead": "Starstuck Lab sits on a tired hillside, where old wood remembers storms and solder smoke curls like half-finished constellations. Circuits mutter under a low lamp, sharing the bench with curled sketches and patient dust. Outside, stars lean in without caring, and small, stubborn experiments keep glowing anyway, like folded notes left for a universe that never writes back.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "10": {
+    "title": "Starstuck Lab and Other Small Attempts",
+    "lead": "Starstuck Lab is a quiet hillside workshop where ideas move slowly through solder smoke and lamplight, brushing against old wood, yellowed schematics, and the faint patience of distant stars. Circuits half-work, sketches half-promise, and the tools wait without complaint, sharing a dry cosmic joke: everything here tries to matter, while the universe keeps drifting past, politely unimpressed.",
+    "motto": "Building small, patient failures beneath an indifferent, beautifully distant sky."
+  },
+  "11": {
+    "title": "Starstuck Lab and Other Small Failures",
+    "lead": "Starstuck Lab sits on a quiet hillside, where solder smoke curls through lamplight and old wood remembers steadier hands. Circuits sprawl like half-finished constellations across the bench, sketched in graphite and hesitation. Outside, stars keep their distance. Inside, small machines practice meaning in the dust, humming softly as if the universe might glance over, then doesn’t.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "12": {
+    "title": "Where small machines learn to sigh",
+    "lead": "Starstuck Lab sits on a quiet hillside, where solder smoke curls through lamplight and old wood listens without comment. Circuits sprawl like half-remembered constellations, sketched in pencil and hesitation. Here, small machines try to matter beneath a sky that does not care, while a dry, cosmic joke lingers in the dust between failure, revision, and the soft patience of starlight.",
+    "motto": "Building small, flickering answers in a universe that never asks."
+  },
+  "13": {
+    "title": "A small workshop orbiting unfinished ideas",
+    "lead": "Starstuck Lab sits on a quiet hillside, where half-finished circuits rest among worn chisels and paper plans curled like fallen leaves. Solder smoke climbs slowly into the rafters, mixing with the faint taste of old wood and midnight coffee. Outside, indifferent stars watch over small, stubborn experiments that blink, fail, and flicker again, as if the sky might someday notice.",
+    "motto": "Building small, flickering answers in a universe that never asks."
+  },
+  "14": {
+    "title": "Where Small Experiments Outgrow Their Maker",
+    "lead": "Starstuck Lab sits on a quiet hillside, where solder smoke curls through lamplight and old wood remembers steadier hands. Circuits sprawl like half-finished constellations across the bench, sketched in graphite, flux, and doubt. Here, ideas drift between humming components and distant stars, carried by a dry, cosmic humor that knows every small invention is just another whisper against an indifferent sky.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
+  },
+  "15": {
+    "title": "Starstuck Lab and Other Small Failures",
+    "lead": "Starstuck Lab sits on a quiet hillside where solder smoke curls through lamplight and old wood remembers every failed sketch. Circuits blink like tired constellations, half-believing in their own purpose. Here, ideas drift between resistor leads and starlight, carrying a dry cosmic joke: all this careful tinkering, set against a universe that barely notices the glow under one small roof.",
+    "motto": "Building small, patient failures beneath an indifferent, glittering sky."
   }
 }
