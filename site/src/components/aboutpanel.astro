@@ -1,107 +1,192 @@
 ---
-/*
-  AboutPanel.astro
-  Reads /public/data/about.json (via Astro.fetchContent)
-  Renders latest variant emblem + title + lead + motto.
-  Adds class "in" to fade in (herozoom's script toggles it).
-*/
+/**
+ * SPDX-License-Identifier: DWYWBDBM-1.0 
+ * Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0. 
+ * See the COPYING file or visit https://starstucklab.com/license for details.
+ * 
+ * AboutPanel.astro — Parched paper with emblem text-wrap.
+ * Preserves server-side logic (random variant selection + hyphen safety).
+ * Implements CSS `shape-outside` / float-based wrapping so the lead text flows around the emblem.
+ */
 
-//const about = await Astro.fetchContent('/data/about.json');
-import about from '../../public/data/about.json';
-const variants = Object.keys(about || {}).sort((a,b) => {
-  const an = Number(a); const bn = Number(b);
+
+import aboutData from '../../public/data/about.json';
+
+const about: Record<string, { title: string; lead: string; motto?: string }> = aboutData as any;
+const variants = Object.keys(about || {}).sort((a, b) => {
+  const an = Number(a);
+  const bn = Number(b);
   if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
   return a.localeCompare(b);
 });
-const latest = variants.length ? variants[variants.length - 1] : 'default';
-const content = about[latest] || { title: '', lead: '', motto: '' };
-const emblemPath = `/data/about-emblem-${latest}.png`;
 
+// pick a random variant at render time (stable per-request)
+const chosen = variants.length ? variants[Math.floor(Math.random() * variants.length)] : 'default';
+let content = about[chosen] || { title: '', lead: '', motto: '' };
+
+// sanitize lead/title/motto — replace hyphens inside words with non-breaking hyphen
+// also attempt to recover common mojibake sequences
+const hyphenSafe = (s = '') => {
+  return s
+    // Fix all common mojibake hyphens/dashes
+    .replace(/â€“|â€”|â€’|â€•/g, '-')  // U+2011 NB HYPHEN
+
+    // Fix curly quote mojibake
+    .replace(/â€˜|â€™/g, "'")
+    .replace(/â€œ|â€�/g, '"')
+
+    // Replace ONLY ASCII hyphens between letters with NB-hyphen
+    .replace(/(?<=\p{L})-(?=\p{L})/gu, '-');  // U+2011
+};
+
+content = {
+  title: hyphenSafe(content.title || ''),
+  lead: hyphenSafe(content.lead || ''),
+  motto: content.motto ? hyphenSafe(content.motto) : undefined
+};
+
+const emblemPath = `/data/about-emblem-${chosen}.png`;
 const ariaLabel = 'About Starstuck Lab';
 ---
 
 <style>
+/* Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Merriweather:wght@300;400;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap');
+
 :root{
-  --parchment-bg-1:#fbf7ef;
-  --parchment-bg-2:#f4efe3;
-  --parchment-edge: rgba(20,12,8,0.06);
-  --panel-width: clamp(300px, 62ch, 720px);
+  --paper-cream: #fbf0db;
+  --paper-mid: #f0d9bd;
+  --paper-stain: rgba(90,50,20,0.08);
+  --panel-width: clamp(320px, 56ch, 900px);
+  --edge-radius: 18px;
 }
 
-/* Debug / visibility helpers — add near top of your style block in aboutpanel.astro */
-/* Make the wrapper positioned so z-index takes effect, and place it above overlay but below nav */
-.about-panel-wrap {
-  position: relative;    /* <--- required for z-index to work */
-  z-index: 50;           /* sits above overlay(30) and below nav(60) */
-  pointer-events: auto;
-  margin: 1.75rem 0;
+/* wrapper */
+.about-panel-wrap{ position:relative; z-index:52; display:flex; justify-content:center; margin:2.25rem 0; }
+
+/* panel */
+.about-panel{
+  position:relative; z-index:53; width:var(--panel-width); border-radius:var(--edge-radius);
+  padding:36px 40px; opacity:0; transform:translateY(8px);
+  transition:opacity 420ms cubic-bezier(.2,.9,.3,1), transform 420ms cubic-bezier(.2,.9,.3,1);
+
+  display:block; /* single-column flow to allow wrapping */
+  background: linear-gradient(180deg, var(--paper-cream) 0%, var(--paper-mid) 100%);
+  border:1px solid rgba(60,40,22,0.08);
+  box-shadow: 0 48px 110px rgba(6,6,6,0.48), inset 0 2px 14px rgba(255,255,255,0.48);
+  overflow:visible;
 }
 
-/* Also ensure the panel itself participates if needed */
-.about-panel {
-  position: relative;    /* helpful when you want to add z-index or transforms */
-  z-index: 51;
+/* "in" state */
+.about-panel.in{ opacity:1; transform:translateY(0); }
+
+/* grain overlay (subtle) */
+.grain-overlay{
+  position:absolute; inset:0; border-radius:var(--edge-radius); pointer-events:none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' width='1600' height='1600'><filter id='g'><feTurbulence baseFrequency='0.7' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23g)' fill='%23000' opacity='0.07'/></svg>");
+  mix-blend-mode:multiply; opacity:0.08; background-size:cover; background-repeat:no-repeat;
 }
 
-/* Temporary visual debug outline — remove after verifying */
-.about-panel-wrap.debug {
-  outline: 3px dashed lime;
-  background: rgba(255,255,255,0.02); /* subtle tint to prove it's on top */
+/* burnt vignette + inner singe */
+.about-panel::before{
+  content:''; position:absolute; inset:0; border-radius:var(--edge-radius); pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 8%, rgba(255,220,140,0.06) 0%, transparent 22%),
+    radial-gradient(ellipse at 50% 92%, rgba(120,60,20,0.10) 0% 8%, rgba(120,60,20,0.20) 60%, transparent 90%);
+  mix-blend-mode:multiply; box-shadow: inset 0 0 48px rgba(0,0,0,0.22);
 }
 
-/* wrapper sits in document flow (in-world) */
-.about-panel-wrap {
+/* speckles */
+.about-panel::after{
+  content:''; position:absolute; inset:6% 4% 8% 4%; pointer-events:none; opacity:0.22;
+  background-image:
+    radial-gradient(circle at 8% 22%, var(--paper-stain) 0 2px, transparent 3px),
+    radial-gradient(circle at 72% 76%, rgba(90,50,20,0.04) 0 1.6px, transparent 2.5px);
+  filter: blur(0.45px) contrast(1.04);
+}
+
+/* EDGE BURN element */
+.edge-burn{ position:absolute; inset:8px; border-radius:calc(var(--edge-radius) - 4px); pointer-events:none;
+  box-shadow: inset 0 0 0 2px rgba(0,0,0,0.02), inset 0 20px 44px rgba(120,60,20,0.10); }
+
+/* EMBLEM — floated element with shape-outside to wrap text */
+.float-emblem{
+  float:left;
+  width:120px;
+  height:120px;
+  margin:3px 11px 6px 4px; /* top, right, bottom, left */
+  shape-outside: inset(0 round 8px); /* rounded rect wrap shape */
+  -webkit-shape-outside: inset(0 round 8px);
+  clip-path: inset(0 round 8px); /* visual clipping */
+  border-radius:8px;
+  background: linear-gradient(180deg,#fbf4e7 0%, #efe3c9 100%);
+  box-shadow: 0 7px 18px rgba(0,0,0,0.26);
+  padding:6px;
   display:flex;
+  align-items:center;
   justify-content:center;
-  margin: 1.75rem 0;
-  pointer-events:auto;
-  z-index:30;
 }
 
-/* parchment panel */
-.about-panel {
-  width: var(--panel-width);
-  background: linear-gradient(180deg, var(--parchment-bg-1) 0%, var(--parchment-bg-2) 100%);
-  border-radius:14px;
-  padding:20px 22px;
-  box-shadow: 0 12px 36px rgba(6,6,6,0.12), inset 0 2px 8px rgba(255,255,255,0.55);
-  border: 1px solid var(--parchment-edge);
-  display:grid;
-  grid-template-columns: 84px 1fr;
-  gap:18px;
-  align-items:start;
-  transform: translateY(10px);
-  opacity: 0;
-  transition: opacity 520ms cubic-bezier(.2,.9,.3,1), transform 520ms cubic-bezier(.2,.9,.3,1);
+/* inside the float: the actual image */
+.float-emblem img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:6px;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.12);
+  display:block;
 }
 
-/* visible state */
-.about-panel.in { opacity:1; transform: translateY(0); }
+/* content typography */
+.content{ color:#151110; font-family: 'Merriweather', Georgia, serif; font-weight:300; font-variant-ligatures:none; font-feature-settings:'liga' 0, 'dlig' 0; }
 
-/* emblem */
-.about-emblem {
-  width:84px; height:84px; object-fit:contain; justify-self:center; align-self:start; border-radius:8px;
+/* title */
+.title{ font-family: 'Playfair Display', serif; font-weight:700; font-size: clamp(1.4rem, 3.6vw, 2.0rem); margin:0 0 20px 0; color:#28160b; line-height:1.02; }
+
+/* LEAD now flows around the float */
+.lead{ margin:0 0 14px 0; color:#2b1f18; font-size: clamp(1.02rem, 1.95vw, 1.12rem); line-height:1.56; hyphens:auto; }
+
+/* motto */
+.motto{ margin-top:18px; font-size:1.50rem; color:#3d2f24; opacity:0.96; border-top:1px dashed rgba(0,0,0,0.04); padding-top:14px; font-family:'Cormorant Garamond', serif; font-style:oblique; font-weight: 300; }
+
+/* clear float on smaller screens by stacking */
+@media (max-width:820px){
+  .float-emblem{ float:none; margin:0 auto 6px auto; width:140px; height:140px; shape-outside:none; -webkit-shape-outside:none; clip-path:none; }
+  .lead{ margin-top:6px; }
+  .about-panel{ padding:14px; }
+  .title{ font-size: clamp(1.1rem, 8.8vw, 1.7rem); text-align:center; }
 }
 
-/* content */
-.content { color:#1f1f1f; font-family:Inter,system-ui,'Segoe UI',Roboto,Arial; }
-.title { font-family:'Playfair Display',serif; font-size:clamp(1.05rem,2.6vw,1.4rem); margin:0 0 6px 0; color:#0f0f0f; line-height:1.05; }
-.lead { margin:0 0 10px 0; color:#262626; font-size:clamp(.95rem,1.9vw,1.02rem); opacity:0.95; }
-.motto { margin-top:8px; font-size:0.92rem; color:#3b3b3b; opacity:0.9; border-top:1px dashed rgba(0,0,0,0.04); padding-top:10px; }
-
-@media (max-width:680px) {
-  .about-panel { grid-template-columns:1fr; grid-row-gap:12px; padding:16px; }
-  .about-emblem { width:92px; height:92px; justify-self:center; }
-}
+/* ensure the float doesn't push the panel height weirdly */
+.about-panel:after{ content:''; display:table; clear:both; }
 </style>
 
+<!-- Inline SVG grain filter (kept for compatibility) -->
+<svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
+  <filter id="grainFilter">
+    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch" result="noise"/>
+    <feColorMatrix type="saturate" values="0" result="mono"/>
+    <feBlend in="SourceGraphic" in2="mono" mode="overlay"/>
+  </filter>
+</svg>
+
 <section class="about-panel-wrap" aria-label={ariaLabel}>
-  <article id="aboutPanel" class="about-panel" data-variant={latest}>
-    <img class="about-emblem" src={emblemPath} alt={`Emblem variant ${latest}`} loading="lazy" decoding="async" onerror="this.onerror=null;this.style.opacity=0.65;" />
+  <article id="aboutPanel" class="about-panel" data-variant={chosen}>
+    <div class="grain-overlay" style="filter:url(#grainFilter)"></div>
+    <div class="edge-burn" aria-hidden="true"></div>
+
+    <!-- floated emblem that text will wrap around -->
+    <div class="float-emblem" aria-hidden="true">
+      <img src={emblemPath} alt={`Emblem variant ${chosen}`} loading="lazy" decoding="async" onerror="this.onerror=null; this.style.opacity=0.65;" />
+    </div>
+
     <div class="content">
       <h2 class="title">{content.title}</h2>
       <p class="lead">{content.lead}</p>
       {content.motto ? <div class="motto">{content.motto}</div> : null}
     </div>
+
+    <div class="crease" aria-hidden="true"></div>
+    <div class="shadow-curl" aria-hidden="true"></div>
   </article>
 </section>
