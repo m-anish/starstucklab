@@ -1,0 +1,446 @@
+---
+// site/src/pages/index.astro
+// Main landing page with hero zoom effect
+// Build-time only: reads site/src/data/images.json
+
+import fs from 'fs';
+import path from 'path';
+import Layout from "../layouts/Layout.astro";
+import AboutPanel from '../components/aboutpanel.astro';
+import "../styles/components/index.css";
+
+// Read manifest relative to this file (site/src/data/images.json)
+const manifestPath = new URL('../data/images.json', import.meta.url);
+let images: any;
+try {
+  images = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+} catch (err) {
+  throw new Error(`Failed to read manifest at ${manifestPath.pathname}: ${err}`);
+}
+
+const BASE_URL = String(import.meta.env.BASE_URL || '/') + 'assets/';
+const SCENES: Record<string, any> = images.scenes || {};
+
+/** Get filename from manifest by id/aspect/type heuristics */
+function findVariantFilename(sceneKey: string, opts: { id?: string; type?: string; aspect?: string } = {}): string | null {
+  const scene = SCENES[sceneKey];
+  if (!scene || !Array.isArray(scene.variants)) return null;
+  if (opts.id) {
+    const byId = scene.variants.find((v: any) => v.id === opts.id && v.filename);
+    if (byId) return byId.filename;
+  }
+  if (opts.aspect) {
+    const byAspect = scene.variants.find((v: any) => v.aspect === opts.aspect && v.filename);
+    if (byAspect) return byAspect.filename;
+  }
+  if (opts.type) {
+    const byType = scene.variants.find((v: any) => v.type === opts.type && v.filename);
+    if (byType) return byType.filename;
+  }
+  return null;
+}
+
+/** Build deterministic static URL for "prefixed-only" filenames */
+function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null): string | null {
+  if (!manifestFilename) return null;
+  return path.posix.join(BASE_URL, sceneKey, manifestFilename);
+}
+
+/** Build canonical source URLs for a scene (hero / workshop) */
+function buildSceneSources(sceneKey: string) {
+  const byAspect = (aspect: string) => findVariantFilename(sceneKey, { aspect });
+  const byId    = (id: string) => findVariantFilename(sceneKey, { id });
+  const byType  = (type: string) => findVariantFilename(sceneKey, { type });
+
+  const filenames: Record<string, string | null> = {
+    wide_21_10: byAspect('21:10') || byId(`${sceneKey}-wide-2560x1219`) || byId('wide-2560x1219'),
+    desktop_16_10: byAspect('16:10') || byId(`${sceneKey}-master`) || byId('master') || byId(`${sceneKey}-desktop-3840x2400`),
+    desktop_16_9: byAspect('16:9') || byId(`${sceneKey}-desktop-3840x2160`),
+    tablet_3_4: byAspect('3:4') || byId(`${sceneKey}-tablet-1200x1600`),
+    mobile_9_16: byAspect('9:16') || byId(`${sceneKey}-mobile-1080x1920`),
+    generated_2k: byType('generate') || byId(`${sceneKey}-generated-2048x1280`),
+    thumb: byType('resize') || byId(`${sceneKey}-thumb-600x338.jpg`)
+  };
+
+  const urls: Record<string, string | null> = {};
+  for (const [k, fname] of Object.entries(filenames)) {
+    urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
+  }
+  return urls;
+}
+
+const HERO_DATA_PATH = new URL('../../public/data/hero.json', import.meta.url);
+let heroVariants = null;
+try {
+  heroVariants = JSON.parse(fs.readFileSync(HERO_DATA_PATH, 'utf8'));
+} catch (err) {
+  heroVariants = null;
+}
+
+// Page-level variant picker
+function pickVariantIndex(variants: any) {
+  if (!variants) return null;
+  const keys = Object.keys(variants).sort();
+  if (keys.length === 0) return null;
+  const idx = Math.floor(Math.random() * keys.length);
+  return keys[idx];
+}
+
+const chosenHeroKey = pickVariantIndex(heroVariants);
+const chosenHero = (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]) || null;
+
+const hero = buildSceneSources('hero');
+const workshop = buildSceneSources('workshop');
+
+// Preload important visuals
+const preloadUrls = [hero.desktop_16_10, hero.generated_2k, workshop.desktop_16_10, workshop.generated_2k].filter(Boolean);
+
+const MEDIA = {
+  ultra_wide: '(min-width:1400px)',
+  desktop: '(min-width:1000px)',
+  laptop: '(min-width:820px)',
+  tablet: '(min-width:640px)'
+};
+---
+<Layout showHeader={false} showFooter={false} title="Starstuck Lab">
+  {preloadUrls.map(u => <link rel="preload" as="image" href={u} />)}
+
+  <script>
+    // Force scroll to top on page load/reload
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  </script>
+
+  <script>
+    // Prevent initial transition flicker
+    (function () {
+      try {
+        document.documentElement.classList.add('no-transitions');
+        requestAnimationFrame(function () {
+          requestAnimationFrame(function () {
+            document.documentElement.classList.remove('no-transitions');
+          });
+        });
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
+
+  <div class="herozoom-root" id="herozoomRoot">
+    <div
+      class="herozoom-spacer"
+      id="herozoomSpacer"
+      data-zoom-scale="1.9"
+      data-cross-start="0.40"
+      data-cross-end="0.85"
+    ></div>
+
+    <!-- Top navigation: appears when inside workshop -->
+    <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
+      <div class="nav-inner">
+        <a href="/" class="nav-logo">
+          <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
+          <span>STARSTUCK LAB</span>
+        </a>
+        <ul class="nav-links">
+          <li><a href="#workbench">Workbench</a></li>
+          <li><a href="#projects">Projects</a></li>
+          <li><a href="#shop">Shop</a></li>
+          <li><a href="#contact">Contact</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- Workshop (back layer) -->
+    <picture>
+      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
+      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
+      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
+      <img class="hero-layer layer-interior"
+           id="hzInterior"
+           src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+           alt="Workshop interior"
+           loading="eager" />
+    </picture>
+
+    <!-- Forest hero (front layer) -->
+    <picture>
+      {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
+      {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
+      {hero.desktop_16_9 ? <source media={MEDIA.laptop} srcset={hero.desktop_16_9} /> : null}
+      {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
+      <img class="hero-layer layer-forest"
+           id="hzForest"
+           src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
+           alt="Forest hero with cabin and STARSTUCKLAB sign"
+           loading="eager" />
+    </picture>
+
+    <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
+      <img
+        id="hzHeroLogo"
+        src="/assets/icons/starstucklab_logo_black_white.svg"
+        alt="Starstuck Lab Logo"
+        loading="eager"
+      />
+      <h1 class="hero-title">
+        {chosenHero?.title ?? "Starstuck Lab"}
+      </h1>
+      <p class="hero-lead">
+        {chosenHero?.subtitle ?? "Building small machines for an indifferent universe"}
+      </p>
+      <a href="#workbench" class="cta">
+        {chosenHero?.cta ?? "Enter the Workshop"}
+      </a>
+    </div>
+
+    <div class="post-zoom" id="postZoomContent" aria-live="polite">
+      <AboutPanel />
+      <section id="workbench">
+        <h2>Inside the Workshop</h2>
+        <p>Welcome — this is where your workbench / featured products / logs begin.</p>
+      </section>
+      <section id="projects" style="height:800px;">
+        <h3>Projects</h3>
+        <p>Project tiles go here.</p>
+      </section>
+      <section id="shop" style="height:600px;">
+        <h3>Shop</h3>
+      </section>
+      <section id="contact" style="height:500px;">
+        <h3>Contact</h3>
+      </section>
+      <section style="height:1200px;"></section>
+    </div>
+  </div>
+
+  <!-- Set --stage-vh for mobile 100vh quirks -->
+  <script>
+    (function(){
+      function setVh(){
+        document.documentElement.style.setProperty('--stage-vh', (window.innerHeight / 100).toFixed(2));
+      }
+      setVh();
+      window.addEventListener('resize', setVh);
+      window.addEventListener('orientationchange', setVh);
+    })();
+  </script>
+
+  <!-- UNIFIED HERO ZOOM SCRIPT -->
+  <script>
+    (function() {
+      const spacerEl = document.getElementById('herozoomSpacer');
+      const forestEl = document.getElementById('hzForest');
+      const interiorEl = document.getElementById('hzInterior');
+      const overlayEl = document.getElementById('hzOverlay');
+      const navEl = document.getElementById('pageNav');
+      const aboutEl = document.getElementById('aboutPanel');
+      const postZoomEl = document.getElementById('postZoomContent');
+
+      if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
+
+      const ds = spacerEl.dataset;
+      const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
+      const CROSS_START = parseFloat(ds.crossStart ?? '0.40');
+      const CROSS_END = parseFloat(ds.crossEnd ?? '0.85');
+      const NAV_SHOW_THRESHOLD = 0.75;
+      const ABOUT_SHOW_THRESHOLD = 0.85;
+      const POST_ZOOM_THRESHOLD = 0.90;
+
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isMobile = window.innerWidth <= 820;
+      const BASE_SCALE = 1;
+      let ticking = false;
+      
+      // Throttling for mobile performance
+      let lastScrollTime = 0;
+      const THROTTLE_MS = isMobile ? 16 : 0; // ~60fps on mobile, unlimited on desktop
+
+      // Cache DOM measurements (recalculate on resize only)
+      let cachedSpacerTop = 0;
+      let cachedSpacerHeight = 0;
+      let measurementsValid = false;
+
+      function updateMeasurements() {
+        const rect = spacerEl.getBoundingClientRect();
+        cachedSpacerTop = window.scrollY + rect.top;
+        cachedSpacerHeight = rect.height;
+        measurementsValid = true;
+      }
+
+      function spacerTopAbsolute() { 
+        if (!measurementsValid) updateMeasurements();
+        return cachedSpacerTop;
+      }
+      
+      function spacerHeight() { 
+        if (!measurementsValid) updateMeasurements();
+        return cachedSpacerHeight;
+      }
+
+      function computeProgress() {
+        const top = spacerTopAbsolute();
+        const duration = spacerHeight() - window.innerHeight;
+        if (window.scrollY <= top) return 0;
+        if (duration <= 0) return 1;
+        const p = (window.scrollY - top) / duration;
+        return Math.max(0, Math.min(1, p));
+      }
+
+      function easeInOutCubic(t: number) { 
+        return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; 
+      }
+
+      function applyInitialFrame() {
+        // Mobile: no transforms at all, just opacity
+        if (isMobile || prefersReduced) {
+          forestEl.style.transform = 'none';
+          interiorEl.style.transform = 'none';
+        } else {
+          forestEl.style.transform = `scale(${BASE_SCALE}) translateY(0px)`;
+        }
+        forestEl.style.opacity = '1';
+        interiorEl.style.opacity = '0';
+        overlayEl.style.opacity = '1';
+        if (aboutEl) aboutEl.classList.remove('in');
+        if (postZoomEl) {
+          postZoomEl.classList.remove('in');
+          postZoomEl.setAttribute('aria-hidden', 'true');
+        }
+      }
+
+      function update() {
+        const p = computeProgress();
+        
+        let interiorOpacity = 0;
+        if (p <= CROSS_START) interiorOpacity = 0;
+        else if (p >= CROSS_END) interiorOpacity = 1;
+        else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
+
+        const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
+
+        // Mobile: simple fade-only (no transforms)
+        // Desktop: full zoom/pan effect
+        if (isMobile || prefersReduced) {
+          // Simple opacity fade, no transforms
+          forestEl.style.opacity = `${forestOpacity}`;
+          interiorEl.style.opacity = `${interiorOpacity}`;
+          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        } else {
+          // Desktop: fancy zoom/pan
+          const eased = easeInOutCubic(p);
+          const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
+          const translateY = - Math.round(p * 40);
+          
+          forestEl.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
+          forestEl.style.opacity = `${forestOpacity}`;
+          interiorEl.style.opacity = `${interiorOpacity}`;
+          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        }
+
+        // Show nav
+        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
+          navEl.classList.add('nav-visible', 'nav-sticky');
+          navEl.classList.remove('nav-hidden');
+          navEl.setAttribute('aria-hidden', 'false');
+        } else {
+          navEl.classList.remove('nav-visible', 'nav-sticky');
+          navEl.classList.add('nav-hidden');
+          navEl.setAttribute('aria-hidden', 'true');
+        }
+
+        // Show about panel
+        if (aboutEl) {
+          const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
+          if (shouldBeIn && !aboutEl.classList.contains('in')) {
+            aboutEl.classList.add('in');
+          } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
+            aboutEl.classList.remove('in');
+          }
+        }
+
+        // Show post-zoom content
+        if (postZoomEl) {
+          const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
+          if (shouldBeIn && !postZoomEl.classList.contains('in')) {
+            postZoomEl.classList.add('in');
+            postZoomEl.setAttribute('aria-hidden', 'false');
+          } else if (!shouldBeIn && postZoomEl.classList.contains('in')) {
+            postZoomEl.classList.remove('in');
+            postZoomEl.setAttribute('aria-hidden', 'true');
+          }
+        }
+
+        ticking = false;
+      }
+
+      function requestTick() { 
+        if (!ticking) { 
+          window.requestAnimationFrame(update); 
+          ticking = true; 
+        } 
+      }
+
+      function onScroll() { requestTick(); }
+
+      requestAnimationFrame(() => requestAnimationFrame(() => { 
+        applyInitialFrame(); 
+        update(); 
+      }));
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', () => { 
+        measurementsValid = false; // Invalidate cache on resize
+        requestTick(); 
+      }, { passive: true });
+
+      // CTA smooth scroll handler - centers the parchment better
+      const cta = document.querySelector('.cta');
+      const aboutPanel = document.getElementById('aboutPanel');
+      if (cta && aboutPanel) {
+        cta.addEventListener('click', (ev) => {
+          ev.preventDefault();
+          const rect = aboutPanel.getBoundingClientRect();
+          // Scroll to center parchment at ~40% from top (more centered, less cramped)
+          const targetY = window.scrollY + rect.top - Math.round(window.innerHeight * 0.4);
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+          history.replaceState(null, '', '#workbench');
+        });
+      }
+
+      // Fallback for non-scrollable pages
+      function pageIsScrollable() { 
+        return document.documentElement.scrollHeight > window.innerHeight + 10; 
+      }
+      
+      if (!pageIsScrollable()) {
+        const reveal = () => {
+          forestEl.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
+          forestEl.style.opacity = '0';
+          interiorEl.style.opacity = '1';
+          overlayEl.style.opacity = '0';
+          navEl.classList.add('nav-visible', 'nav-sticky');
+          navEl.setAttribute('aria-hidden', 'false');
+          if (aboutEl) aboutEl.classList.add('in');
+          if (postZoomEl) {
+            postZoomEl.classList.add('in');
+            postZoomEl.setAttribute('aria-hidden', 'false');
+          }
+        };
+        
+        const onFirstInput = () => {
+          reveal();
+          window.removeEventListener('wheel', onFirstInput);
+          window.removeEventListener('touchstart', onFirstInput);
+          window.removeEventListener('keydown', onFirstInput);
+        };
+        
+        window.addEventListener('wheel', onFirstInput, { passive: true });
+        window.addEventListener('touchstart', onFirstInput, { passive: true });
+        window.addEventListener('keydown', onFirstInput, { passive: true });
+        setTimeout(() => { if (!pageIsScrollable()) reveal(); }, 1200);
+      }
+    })();
+  </script>
+</Layout>

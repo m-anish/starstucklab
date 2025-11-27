@@ -8,7 +8,7 @@
       "width": 3840,
       "height": 2400,
       "filename": "master.png",
-      "note": "Authoritative master resolution for interior."
+      "note": "Authoritative master resolution (kept as PNG for archival)."
     },
     {
       "id": "generated-2k",
@@ -20,16 +20,16 @@
       "guidance": 7.0,
       "filename": "generated-2048x1280.png"
     },
-     {
+    {
       "id": "wide-21_10",
       "type": "crop",
       "aspect": "21:10",
       "width": 2560,
       "height": 1219,
       "centered": true,
-      "filename": "wide-2560x1219.png"
+      "filename": "wide-2560x1219.webp",
+      "quality": 85
     },
-
     {
       "id": "desktop-16_9",
       "type": "crop",
@@ -37,7 +37,8 @@
       "width": 3840,
       "height": 2160,
       "centered": true,
-      "filename": "desktop-3840x2160.png"
+      "filename": "desktop-3840x2160.webp",
+      "quality": 85
     },
     {
       "id": "mobile-9_16",
@@ -46,7 +47,8 @@
       "width": 1080,
       "height": 1920,
       "centered": true,
-      "filename": "mobile-1080x1920.png"
+      "filename": "mobile-1080x1920.webp",
+      "quality": 85
     },
     {
       "id": "thumb",

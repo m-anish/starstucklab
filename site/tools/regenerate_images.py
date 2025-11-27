@@ -189,15 +189,38 @@ def prepare_scenes(config: dict, auto_sync=False, config_path: Path = None, writ
         write_config(config_path, cfg)
     return cfg, canonical_scene
 
-def _safe_save_image(img: Image.Image, out_path: Path, **save_kwargs):
+def _safe_save_image(img: Image.Image, out_path: Path, quality=None, **save_kwargs):
     """
-    Save image to out_path. Convert RGBA -> RGB automatically for JPEGs.
+    Save image to out_path with optimizations.
+    - Supports WebP, JPEG, PNG
+    - Converts RGBA -> RGB for JPEG/WebP
+    - Applies quality settings and optimization
     """
     ext = out_path.suffix.lower()
-    if ext in [".jpg", ".jpeg"] and img.mode == "RGBA":
-        img = img.convert("RGB")
+    
+    # Convert RGBA -> RGB for formats that don't support alpha
+    if ext in [".jpg", ".jpeg", ".webp"] and img.mode == "RGBA":
+        # Create white background
+        bg = Image.new("RGB", img.size, (255, 255, 255))
+        bg.paste(img, mask=img.split()[3] if img.mode == "RGBA" else None)
+        img = bg
+    
     ensure_dir(out_path.parent)
-    img.save(out_path, **save_kwargs)
+    
+    if ext == ".webp":
+        # WebP with quality and optimization
+        q = quality if quality is not None else 85
+        img.save(out_path, "WEBP", quality=q, method=6, **save_kwargs)
+    elif ext in [".jpg", ".jpeg"]:
+        # JPEG with quality and progressive encoding
+        q = quality if quality is not None else 85
+        img.save(out_path, "JPEG", quality=q, optimize=True, progressive=True, **save_kwargs)
+    elif ext == ".png":
+        # PNG with optimization
+        img.save(out_path, "PNG", optimize=True, **save_kwargs)
+    else:
+        # Fallback
+        img.save(out_path, **save_kwargs)
 
 def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
     """
@@ -303,18 +326,18 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
         h = int(v.get("height", src_img.height))
         centered = v.get("centered", True)
 
+        quality = v.get("quality")
         ensure_dir(out_path.parent)
         if vtype == "crop":
             print(f"  ⤷ crop [{w}x{h}] -> {out_path.name}")
             out_img = crop_center_to_aspect(src_img, w, h, centered=centered)
-            # Convert RGBA -> RGB automatically if saving JPEG
-            _safe_save_image(out_img, out_path)
+            _safe_save_image(out_img, out_path, quality=quality)
             produced[vid] = out_path
 
         elif vtype == "resize":
             print(f"  ⤷ resize contain [{w}x{h}] -> {out_path.name}")
             out_img = resize_to(src_img, w, h)
-            _safe_save_image(out_img, out_path)
+            _safe_save_image(out_img, out_path, quality=quality)
             produced[vid] = out_path
 
         else:

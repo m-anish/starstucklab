@@ -1,14 +1,13 @@
 ---
-// site/src/pages/herozoom.astro
-// Wrapped in Layout (no header/footer) and cleaned to avoid double <main>.
-// GH-Pages-safe hero zoom with sticky nav after it appears
+// site/src/pages/index.astro
+// Main landing page with hero fade effect (simplified)
 // Build-time only: reads site/src/data/images.json
 
 import fs from 'fs';
 import path from 'path';
 import Layout from "../layouts/Layout.astro";
 import AboutPanel from '../components/aboutpanel.astro';
-import "../styles/components/herozoom.css"; // component CSS (kept external)
+import "../styles/components/index.css";
 
 // Read manifest relative to this file (site/src/data/images.json)
 const manifestPath = new URL('../data/images.json', import.meta.url);
@@ -41,9 +40,7 @@ function findVariantFilename(sceneKey: string, opts: { id?: string; type?: strin
   return null;
 }
 
-/** Build deterministic static URL for "prefixed-only" filenames:
- *  /assets/<scene>/<manifestFilename>
- */
+/** Build deterministic static URL for "prefixed-only" filenames */
 function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null): string | null {
   if (!manifestFilename) return null;
   return path.posix.join(BASE_URL, sceneKey, manifestFilename);
@@ -81,28 +78,22 @@ try {
 }
 
 // Page-level variant picker
-function pickVariantIndex(variants) {
+function pickVariantIndex(variants: any) {
   if (!variants) return null;
   const keys = Object.keys(variants).sort();
   if (keys.length === 0) return null;
-
-  // Generate one random index per page load
   const idx = Math.floor(Math.random() * keys.length);
   return keys[idx];
 }
 
 const chosenHeroKey = pickVariantIndex(heroVariants);
-const chosenHero =
-  (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]) || null;
+const chosenHero = (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]) || null;
 
 const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
 
-// ---------- Preload important visuals (small, non-invasive) ----------
-// preload the best-guess desktop images so the browser warms cache early
-const preloadUrls = [hero.desktop_16_10, hero.generated_2k, workshop.desktop_16_10, workshop.generated_2k].filter(Boolean);
-
-{preloadUrls.map(u => `<link rel="preload" as="image" href="${u}">`)}
+// Only preload hero (above fold), workshop loads lazily
+const preloadUrls = [hero.desktop_16_10, hero.generated_2k].filter(Boolean);
 
 const MEDIA = {
   ultra_wide: '(min-width:1400px)',
@@ -112,33 +103,40 @@ const MEDIA = {
 };
 ---
 <Layout showHeader={false} showFooter={false} title="Starstuck Lab">
+  {preloadUrls.map(u => <link rel="preload" as="image" href={u} />)}
+
   <script>
-    // Prevent initial transition flicker: disable transitions until first frames done
+    // Force scroll to top on page load/reload
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+    window.scrollTo(0, 0);
+  </script>
+
+  <script>
+    // Prevent initial transition flicker
     (function () {
       try {
         document.documentElement.classList.add('no-transitions');
-        // Remove after two animation frames so layout has settled
         requestAnimationFrame(function () {
           requestAnimationFrame(function () {
             document.documentElement.classList.remove('no-transitions');
-            // optional: notify other scripts if they want to know prerender finished
-            document.dispatchEvent(new Event('starstuck:prerender-ready'));
           });
         });
-      } catch (e) { /* ignore if any error */ }
+      } catch (e) { /* ignore */ }
     })();
   </script>
+
   <div class="herozoom-root" id="herozoomRoot">
     <div
       class="herozoom-spacer"
       id="herozoomSpacer"
-      style={`--stage-vh: 140`}
-      data-zoom-scale="1.9"
-      data-cross-start="0.45"
-      data-cross-end="1.0"
+      data-fade-start="0.20"
+      data-fade-end="0.50"
+      data-content-start="0.60"
     ></div>
 
-    <!-- Top navigation: appears when inside workshop and becomes sticky -->
+    <!-- Top navigation: appears when inside workshop -->
     <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
       <div class="nav-inner">
         <a href="/" class="nav-logo">
@@ -154,19 +152,19 @@ const MEDIA = {
       </div>
     </nav>
 
-    <!-- Workshop (back layer) -->
+    <!-- Workshop (back layer) - lazy loaded -->
     <picture>
-      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
-      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
-      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
+      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} data-srcset={workshop.wide_21_10} /> : null}
+      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} data-srcset={workshop.desktop_16_10} /> : null}
+      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} data-srcset={workshop.tablet_3_4} /> : null}
       <img class="hero-layer layer-interior"
            id="hzInterior"
-           src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+           data-src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
            alt="Workshop interior"
-           loading="eager" />
+           loading="lazy" />
     </picture>
 
-    <!-- Forest hero (front layer) -->
+    <!-- Forest hero (front layer) - eager load -->
     <picture>
       {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
       {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
@@ -187,19 +185,17 @@ const MEDIA = {
         loading="eager"
       />
       <h1 class="hero-title">
-        {chosenHero?.title ?? "Fallback Title"}
+        {chosenHero?.title ?? "Starstuck Lab"}
       </h1>
       <p class="hero-lead">
-        {chosenHero?.subtitle ?? "Fallback Subtitle"}
+        {chosenHero?.subtitle ?? "Building small machines for an indifferent universe"}
       </p>
       <a href="#workbench" class="cta">
         {chosenHero?.cta ?? "Enter the Workshop"}
       </a>
     </div>
 
-    <!-- NOTE: not <main> because Layout already provides <main> -->
     <div class="post-zoom" id="postZoomContent" aria-live="polite">
-      <!-- INSERT ABOUT PANEL HERE so it's in document flow (it will fade-in via JS) -->
       <AboutPanel />
       <section id="workbench">
         <h2>Inside the Workshop</h2>
@@ -219,11 +215,10 @@ const MEDIA = {
     </div>
   </div>
 
-  <!-- set --stage-vh for mobile 100vh quirks (runs once + on resize/orientation) -->
+  <!-- Set --stage-vh for mobile 100vh quirks -->
   <script>
     (function(){
       function setVh(){
-        // store a *single unit* as CSS variable so our CSS can compute vh reliably
         document.documentElement.style.setProperty('--stage-vh', (window.innerHeight / 100).toFixed(2));
       }
       setVh();
@@ -232,40 +227,88 @@ const MEDIA = {
     })();
   </script>
 
-  <!-- original hero zoom script (unchanged, uses same IDs) -->
+  <!-- SIMPLIFIED HERO FADE SCRIPT WITH INTERSECTION OBSERVER -->
   <script>
-    (()=>{
+    (function() {
       const spacerEl = document.getElementById('herozoomSpacer');
       const forestEl = document.getElementById('hzForest');
       const interiorEl = document.getElementById('hzInterior');
       const overlayEl = document.getElementById('hzOverlay');
       const navEl = document.getElementById('pageNav');
-
-      // ABOUT PANEL element (added)
       const aboutEl = document.getElementById('aboutPanel');
+      const postZoomEl = document.getElementById('postZoomContent');
 
       if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
-      const spacer = spacerEl, forestImg = forestEl, interiorImg = interiorEl, overlay = overlayEl;
-      const ds = spacer.dataset;
-      const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
-      const CROSS_START = parseFloat(ds.crossStart ?? '0.45');
-      const CROSS_END = parseFloat(ds.crossEnd ?? '1.0');
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const ds = spacerEl.dataset;
+      const FADE_START = parseFloat(ds.fadeStart ?? '0.20');
+      const FADE_END = parseFloat(ds.fadeEnd ?? '0.50');
+      const CONTENT_START = parseFloat(ds.contentStart ?? '0.60');
+      const NAV_SHOW_THRESHOLD = FADE_END + 0.05; // Show nav right after fade completes
+      const ABOUT_SHOW_THRESHOLD = CONTENT_START; // Show parchment when content phase starts
+      const POST_ZOOM_THRESHOLD = CONTENT_START + 0.05;
+
       let ticking = false;
-      const BASE_SCALE = 1;
+      let cachedSpacerTop = 0;
+      let cachedSpacerHeight = 0;
+      let measurementsValid = false;
 
-      // once visible, keep sticky until we leave the workshop area (interiorOpacity falls below threshold)
-      let navShownOnce = false;
-      const NAV_SHOW_THRESHOLD = 0.5; // tune this: when interiorOpacity > 0.5 show nav
+      // Lazy load workshop image when it gets close to viewport
+      let workshopLoaded = false;
+      
+      function loadWorkshopImage() {
+        if (workshopLoaded) return;
+        
+        const sources = interiorEl.parentElement?.querySelectorAll('source[data-srcset]');
+        sources?.forEach(source => {
+          const srcset = source.getAttribute('data-srcset');
+          if (srcset) {
+            source.setAttribute('srcset', srcset);
+            source.removeAttribute('data-srcset');
+          }
+        });
+        
+        const dataSrc = interiorEl.getAttribute('data-src');
+        if (dataSrc) {
+          interiorEl.setAttribute('src', dataSrc);
+          interiorEl.removeAttribute('data-src');
+        }
+        
+        workshopLoaded = true;
+      }
 
-      // NEW: threshold for showing the parchment panel during transition
-      const ABOUT_SHOW_THRESHOLD = 0.12; // low so the parchment appears early in the cross-fade
+      // IntersectionObserver for lazy loading workshop
+      const workshopObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            loadWorkshopImage();
+            workshopObserver.disconnect();
+          }
+        });
+      }, {
+        rootMargin: '200px' // Start loading 200px before entering viewport
+      });
 
-      function spacerTopAbsolute(){ return window.scrollY + spacer.getBoundingClientRect().top; }
-      function spacerHeight(){ return spacer.getBoundingClientRect().height; }
+      workshopObserver.observe(spacerEl);
 
-      function computeProgress(){
+      function updateMeasurements() {
+        const rect = spacerEl.getBoundingClientRect();
+        cachedSpacerTop = window.scrollY + rect.top;
+        cachedSpacerHeight = rect.height;
+        measurementsValid = true;
+      }
+
+      function spacerTopAbsolute() { 
+        if (!measurementsValid) updateMeasurements();
+        return cachedSpacerTop;
+      }
+      
+      function spacerHeight() { 
+        if (!measurementsValid) updateMeasurements();
+        return cachedSpacerHeight;
+      }
+
+      function computeProgress() {
         const top = spacerTopAbsolute();
         const duration = spacerHeight() - window.innerHeight;
         if (window.scrollY <= top) return 0;
@@ -274,135 +317,141 @@ const MEDIA = {
         return Math.max(0, Math.min(1, p));
       }
 
-      function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; }
-
-      function applyInitialFrame(){
-        forestImg.style.transform = `scale(${BASE_SCALE}) translateY(0px)`;
-        forestImg.style.opacity = '1';
-        interiorImg.style.opacity = '0';
-        overlay.style.opacity = '1';
-        // ensure about panel starts hidden (if present)
+      function applyInitialFrame() {
+        // No transforms - just opacity on all devices
+        forestEl.style.transform = 'none';
+        interiorEl.style.transform = 'none';
+        forestEl.style.opacity = '1';
+        interiorEl.style.opacity = '0';
+        overlayEl.style.opacity = '1';
         if (aboutEl) aboutEl.classList.remove('in');
-
+        if (postZoomEl) {
+          postZoomEl.classList.remove('in');
+          postZoomEl.setAttribute('aria-hidden', 'true');
+        }
       }
 
-      function update(){
+      function update() {
         const p = computeProgress();
-        const eased = easeInOutCubic(p);
-        const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
-        const translateY = - Math.round(p * 40); // slightly stronger pan towards lower third
-
+        
+        // PHASE 1: Fade transition (FADE_START to FADE_END)
+        // Complete the crossfade FIRST before showing any content
         let interiorOpacity = 0;
-        if (p <= CROSS_START) interiorOpacity = 0;
-        else if (p >= CROSS_END) interiorOpacity = 1;
-        else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
+        if (p <= FADE_START) {
+          interiorOpacity = 0;
+        } else if (p >= FADE_END) {
+          interiorOpacity = 1;
+        } else {
+          // Linear fade between start and end
+          interiorOpacity = (p - FADE_START) / (FADE_END - FADE_START);
+        }
 
         const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
 
-        if (!prefersReduced) {
-          forestImg.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
-          forestImg.style.opacity = `${forestOpacity}`;
-          interiorImg.style.opacity = `${interiorOpacity}`;
-          overlay.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        // Apply fade - no transforms on any device
+        forestEl.style.opacity = `${forestOpacity}`;
+        interiorEl.style.opacity = `${interiorOpacity}`;
+        overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.5)}`; // Fade out overlay faster
+
+        // PHASE 2: Content reveal (after CONTENT_START)
+        // Only show nav/content AFTER fade is complete
+        
+        // Show nav (appears right after fade completes)
+        if (p > NAV_SHOW_THRESHOLD) {
+          navEl.classList.add('nav-visible', 'nav-sticky');
+          navEl.classList.remove('nav-hidden');
+          navEl.setAttribute('aria-hidden', 'false');
         } else {
-          forestImg.style.transform = `scale(${BASE_SCALE})`;
-          forestImg.style.opacity = `${Math.round(1 - interiorOpacity)}`;
-          interiorImg.style.opacity = `${Math.round(interiorOpacity)}`;
-          overlay.style.opacity = `${1 - Math.round(interiorOpacity)}`;
+          navEl.classList.remove('nav-visible', 'nav-sticky');
+          navEl.classList.add('nav-hidden');
+          navEl.setAttribute('aria-hidden', 'true');
         }
 
-        // ABOUT PANEL: show when interiorOpacity crosses ABOUT_SHOW_THRESHOLD
+        // Show about panel (parchment) - only after content phase starts
         if (aboutEl) {
-          const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
+          const shouldBeIn = p > ABOUT_SHOW_THRESHOLD;
           if (shouldBeIn && !aboutEl.classList.contains('in')) {
-            console.log('[herozoom] ABOUT PANEL → ADD .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
             aboutEl.classList.add('in');
           } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
-            console.log('[herozoom] ABOUT PANEL → REMOVE .in (interiorOpacity=', interiorOpacity.toFixed(3), ')');
             aboutEl.classList.remove('in');
           }
         }
 
-        // NAV: show when crossing threshold. Once shown, make it sticky (compact).
-        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
-          navShownOnce = true;
-          // make visible
-          navEl.classList.add('nav-visible');
-          navEl.classList.remove('nav-hidden');
-          navEl.setAttribute('aria-hidden', 'false');
-          // compact/sticky style
-          navEl.classList.add('nav-sticky');
-        } else {
-          // if we haven't ever shown the nav, keep it hidden; if we had and interior is now below threshold, hide again.
-          navEl.classList.remove('nav-sticky');
-          if (navShownOnce && interiorOpacity > 0.15) {
-            // If we showed it but still somewhat inside, keep it visible (but not sticky)
-            navEl.classList.add('nav-visible');
-            navEl.classList.remove('nav-hidden');
-            navEl.setAttribute('aria-hidden', 'false');
-          } else {
-            navEl.classList.remove('nav-visible');
-            navEl.classList.add('nav-hidden');
-            navEl.setAttribute('aria-hidden', 'true');
-            if (interiorOpacity <= 0.05) navShownOnce = false; // reset when fully out
+        // Show post-zoom content - slides in after parchment
+        if (postZoomEl) {
+          const shouldBeIn = p > POST_ZOOM_THRESHOLD;
+          if (shouldBeIn && !postZoomEl.classList.contains('in')) {
+            postZoomEl.classList.add('in');
+            postZoomEl.setAttribute('aria-hidden', 'false');
+          } else if (!shouldBeIn && postZoomEl.classList.contains('in')) {
+            postZoomEl.classList.remove('in');
+            postZoomEl.setAttribute('aria-hidden', 'true');
           }
         }
 
         ticking = false;
       }
 
-      function requestTick(){ if (!ticking) { window.requestAnimationFrame(update); ticking = true; } }
-      function onScroll(){ requestTick(); }
+      function requestTick() { 
+        if (!ticking) { 
+          window.requestAnimationFrame(update); 
+          ticking = true; 
+        } 
+      }
 
-      requestAnimationFrame(()=>requestAnimationFrame(()=>{ applyInitialFrame(); update(); }));
+      function onScroll() { requestTick(); }
+
+      requestAnimationFrame(() => requestAnimationFrame(() => { 
+        applyInitialFrame(); 
+        update(); 
+      }));
+
       window.addEventListener('scroll', onScroll, { passive: true });
-      window.addEventListener('resize', () => { requestTick(); }, { passive: true });
+      window.addEventListener('resize', () => { 
+        measurementsValid = false;
+        requestTick(); 
+      }, { passive: true });
 
-      // Smooth-scroll CTA to 65% viewport height
-      document.addEventListener('DOMContentLoaded', () => {
-        const cta = document.querySelector('.cta');
-        const target = document.getElementById('workbench');
-        if (!cta || !target) return;
-
+      // CTA smooth scroll handler
+      const cta = document.querySelector('.cta');
+      const aboutPanel = document.getElementById('aboutPanel');
+      if (cta && aboutPanel) {
         cta.addEventListener('click', (ev) => {
           ev.preventDefault();
-
-          const VIEWPORT_FRACTION = 0.65;   // 👈 your chosen value
-          const rect = target.getBoundingClientRect();
-
-          const targetY =
-            window.scrollY +
-            rect.top -
-            Math.round(window.innerHeight * VIEWPORT_FRACTION);
-
-          // smooth scroll
-          window.scrollTo({
-            top: Math.max(0, targetY),
-            behavior: 'smooth',
-          });
-
-          // update hash without jumping
+          const rect = aboutPanel.getBoundingClientRect();
+          const targetY = window.scrollY + rect.top - Math.round(window.innerHeight * 0.4);
+          window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
           history.replaceState(null, '', '#workbench');
         });
-      });
+      }
 
-      // fallback for very-short pages
-      function pageIsScrollable(){ return document.documentElement.scrollHeight > window.innerHeight + 10; }
+      // Fallback for non-scrollable pages
+      function pageIsScrollable() { 
+        return document.documentElement.scrollHeight > window.innerHeight + 10; 
+      }
+      
       if (!pageIsScrollable()) {
         const reveal = () => {
-          forestImg.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
-          forestImg.style.opacity = '0';
-          interiorImg.style.opacity = '1';
-          overlay.style.opacity = '0';
-          navEl.classList.add('nav-visible');
-          navEl.classList.add('nav-sticky');
-          // make sure parchment is visible in fallback
+          loadWorkshopImage(); // Force load if revealing without scroll
+          forestEl.style.opacity = '0';
+          interiorEl.style.opacity = '1';
+          overlayEl.style.opacity = '0';
+          navEl.classList.add('nav-visible', 'nav-sticky');
+          navEl.setAttribute('aria-hidden', 'false');
           if (aboutEl) aboutEl.classList.add('in');
+          if (postZoomEl) {
+            postZoomEl.classList.add('in');
+            postZoomEl.setAttribute('aria-hidden', 'false');
+          }
+        };
+        
+        const onFirstInput = () => {
+          reveal();
           window.removeEventListener('wheel', onFirstInput);
           window.removeEventListener('touchstart', onFirstInput);
           window.removeEventListener('keydown', onFirstInput);
         };
-        const onFirstInput = () => reveal();
+        
         window.addEventListener('wheel', onFirstInput, { passive: true });
         window.addEventListener('touchstart', onFirstInput, { passive: true });
         window.addEventListener('keydown', onFirstInput, { passive: true });
@@ -410,213 +459,4 @@ const MEDIA = {
       }
     })();
   </script>
-  <script>
-    (function () {
-      // Find CTA anchor and target section
-      const cta = document.querySelector('.hero-overlay .cta') || document.querySelector('.cta');
-      const workbench = document.getElementById('workbench');
-      const spacer = document.getElementById('herozoomSpacer');
-      const forestImg = document.getElementById('hzForest');
-      const interiorImg = document.getElementById('hzInterior');
-      const overlay = document.getElementById('hzOverlay');
-      const navEl = document.getElementById('pageNav');
-      const aboutEl = document.getElementById('aboutPanel');
-
-      if (!cta || !workbench) return;
-
-      // Helper: set "revealed" visual state (matches the script's fallback reveal)
-      function revealInteriorVisuals() {
-        try {
-          if (forestImg) {
-            forestImg.style.transform = `scale(1.9)`; // follow same final scale from script
-            forestImg.style.opacity = '0';
-          }
-          if (interiorImg) interiorImg.style.opacity = '1';
-          if (overlay) overlay.style.opacity = '0';
-          if (navEl) {
-            navEl.classList.add('nav-visible', 'nav-sticky');
-            navEl.setAttribute('aria-hidden', 'false');
-          }
-          if (aboutEl) aboutEl.classList.add('in');
-        } catch (e) {
-          // swallow — visual nicety only
-          console.warn('[herozoom] revealInteriorVisuals failed', e);
-        }
-      }
-
-      // Smooth scroll and reveal handler
-      cta.addEventListener('click', function (ev) {
-        ev.preventDefault();
-
-        // If CSS accidentally disabled pointer events on CTA, ensure it's clickable next time
-        cta.style.pointerEvents = 'auto';
-
-        // Compute target y position for #workbench and scroll smoothly
-        const rect = workbench.getBoundingClientRect();
-        const targetY = window.scrollY + rect.top - 16; // slight offset so header/nav isn't overlapping
-
-        // If page is not scrollable or very short, first reveal visuals so user sees "inside"
-        const pageScrollable = document.documentElement.scrollHeight > window.innerHeight + 10;
-        if (!pageScrollable) {
-          revealInteriorVisuals();
-          // also update focus to workbench for keyboard users
-          workbench.setAttribute('tabindex', '-1');
-          workbench.focus({ preventScroll: true });
-          return;
-        }
-
-        // Smooth scroll and then make sure JS state reflects being inside the workshop
-        window.scrollTo({ top: Math.max(0, Math.floor(targetY)), behavior: 'smooth' });
-
-        // After a short delay, nudge visuals to the "inside" state.
-        // We keep this small and non-blocking so the smooth scroll continues uninterrupted.
-        window.setTimeout(() => {
-          // Keep in sync with herozoom script thresholds (approx after crossing)
-          revealInteriorVisuals();
-
-          // If the hero script uses navShownOnce / classes, ensure nav is set visible
-          if (navEl) {
-            navEl.classList.add('nav-visible');
-            navEl.classList.remove('nav-hidden');
-            navEl.setAttribute('aria-hidden', 'false');
-          }
-
-          // ensure about panel shows (if present)
-          if (aboutEl) aboutEl.classList.add('in');
-
-          // request a tick for the main hero script to recompute (if it's listening)
-          if (typeof window.requestAnimationFrame === 'function') {
-            window.requestAnimationFrame(() => {
-              window.dispatchEvent(new Event('resize')); // prompt recompute in main script
-            });
-          }
-        }, 350); // 350ms is a small delay — adjust if necessary
-      }, { passive: false });
-    })();
-  </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const cta = document.querySelector('.cta');
-      const workbench = document.getElementById('workbench');
-      const postZoom = document.getElementById('postZoomContent');
-      const heroAnimatedEl = document.getElementById('hzForest') || document.getElementById('hzInterior') || document.getElementById('herozoomRoot');
-
-      if (!workbench || !postZoom) return;
-
-      // ====== Config ======
-      const VIEWPORT_FRACTION = 0.65; // CTA target: 65% of viewport
-      const REVEAL_DEBOUNCE_MS = 120; // wait for scroll to settle before reveal
-      const IO_ROOT_MARGIN = `-${Math.round(window.innerHeight * VIEWPORT_FRACTION)}px 0px 0px 0px`;
-      // rootMargin places the observed intersection point at the chosen viewport fraction
-
-      // ====== Utility: focus without scrolling ======
-      function focusWithoutScroll(el) {
-        if (!el) return;
-        el.setAttribute('tabindex', '-1');
-        const prevScroll = { x: window.scrollX, y: window.scrollY };
-        el.focus({ preventScroll: true });
-        // restore scroll in case browser moved it
-        window.scrollTo(prevScroll.x, prevScroll.y);
-      }
-
-      // ====== IntersectionObserver to reveal when #workbench crosses the desired fraction ======
-      let revealScheduled = false;
-      let revealTimer = null;
-
-      function doReveal() {
-        if (postZoom.classList.contains('in')) return;
-        postZoom.classList.add('in');
-        postZoom.setAttribute('aria-hidden', 'false');
-        // focus workbench for keyboard users without scrolling
-        focusWithoutScroll(workbench);
-        // small resize tick for other scripts to recompute layout
-        requestAnimationFrame(() => window.dispatchEvent(new Event('resize')));
-      }
-
-      // Debounced reveal triggered by observer/scroll
-      function scheduleReveal() {
-        if (revealTimer) clearTimeout(revealTimer);
-        revealTimer = setTimeout(() => {
-          doReveal();
-          revealTimer = null;
-        }, REVEAL_DEBOUNCE_MS);
-      }
-
-      // Create observer: we use rootMargin to shift the intersection point to the VIEWPORT_FRACTION
-      const io = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          // When entry.isIntersecting === true, the element has reached the configured threshold position
-          if (entry.isIntersecting) {
-            scheduleReveal();
-          }
-        }
-      }, {
-        root: null,
-        rootMargin: IO_ROOT_MARGIN,
-        threshold: 0
-      });
-
-      // start observing
-      io.observe(workbench);
-
-      // Also listen for manual scroll end as a fallback (some browsers/devices)
-      let scrollEndTimer = null;
-      window.addEventListener('scroll', () => {
-        if (scrollEndTimer) clearTimeout(scrollEndTimer);
-        scrollEndTimer = setTimeout(() => {
-          // check if workbench is near the desired viewport fraction manually (safety)
-          const rect = workbench.getBoundingClientRect();
-          const targetViewportY = Math.round(window.innerHeight * VIEWPORT_FRACTION);
-          const delta = Math.abs(rect.top - targetViewportY);
-          // if within some pixels, reveal
-          if (delta < 60) scheduleReveal();
-        }, 80);
-      }, { passive: true });
-
-      // ====== CTA click handler: smooth scroll to the fraction, let the observer reveal ======
-      if (cta) {
-        // Ensure CTA's pointer events and z-index are enabled
-        cta.style.pointerEvents = 'auto';
-        cta.style.zIndex = cta.style.zIndex || 9999;
-
-        cta.addEventListener('click', (ev) => {
-          ev.preventDefault();
-
-          // compute target Y so workbench appears at VIEWPORT_FRACTION of viewport
-          const rect = workbench.getBoundingClientRect();
-          const targetY = Math.max(0, window.scrollY + rect.top - Math.round(window.innerHeight * VIEWPORT_FRACTION));
-
-          // perform smooth scroll
-          window.scrollTo({ top: targetY, behavior: 'smooth' });
-
-          // in case smooth scroll doesn't fire intersection reliably (older devices),
-          // schedule a fallback reveal after a safe delay
-          if (revealTimer) clearTimeout(revealTimer);
-          revealTimer = setTimeout(() => doReveal(), 900);
-
-          // keep hash in URL without jump
-          history.replaceState(null, '', '#workbench');
-        }, { passive: false });
-      }
-
-      // ====== If hero animation ends independently (e.g., programmatic open), reveal as well ======
-      if (heroAnimatedEl) {
-        const onEnd = () => {
-          // small delay to allow scroll/visual to settle
-          setTimeout(() => scheduleReveal(), 120);
-          heroAnimatedEl.removeEventListener('transitionend', onEnd);
-          heroAnimatedEl.removeEventListener('animationend', onEnd);
-        };
-        heroAnimatedEl.addEventListener('transitionend', onEnd);
-        heroAnimatedEl.addEventListener('animationend', onEnd);
-      }
-
-      // Clean-up on unload
-      window.addEventListener('beforeunload', () => {
-        io.disconnect();
-        if (revealTimer) clearTimeout(revealTimer);
-      });
-    });
-  </script>
-
 </Layout>

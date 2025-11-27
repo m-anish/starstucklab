@@ -1,17 +1,11 @@
 ---
 /**
- * SPDX-License-Identifier: DWYWBDBM-1.0 
- * Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0. 
- * See the COPYING file or visit https://starstucklab.com/license for details.
- * 
- * AboutPanel.astro — Parched paper with emblem text-wrap.
- * Preserves server-side logic (random variant selection + hyphen safety).
- * Implements CSS `shape-outside` / float-based wrapping so the lead text flows around the emblem.
+ * AboutPanel.astro — Parchment panel with emblem and random variant text
+ * Mobile-optimized with stacked emblem on small screens, float-wrap on desktop
  */
 
-
 import aboutData from '../../public/data/about.json';
-import "../styles/components/aboutpanel.css"; //css for about panel
+import "../styles/components/aboutpanel.css";
 
 const about: Record<string, { title: string; lead: string; motto?: string }> = aboutData as any;
 const variants = Object.keys(about || {}).sort((a, b) => {
@@ -21,23 +15,20 @@ const variants = Object.keys(about || {}).sort((a, b) => {
   return a.localeCompare(b);
 });
 
-// pick a random variant at render time (stable per-request)
+// Pick random variant at render time
 const chosen = variants.length ? variants[Math.floor(Math.random() * variants.length)] : 'default';
 let content = about[chosen] || { title: '', lead: '', motto: '' };
 
-// sanitize lead/title/motto — replace hyphens inside words with non-breaking hyphen
-// also attempt to recover common mojibake sequences
+// Sanitize text - fix mojibake and use non-breaking hyphens
 const hyphenSafe = (s = '') => {
   return s
-    // Fix all common mojibake hyphens/dashes
-    .replace(/â€“|â€”|â€’|â€•/g, '-')  // U+2011 NB HYPHEN
-
+    // Fix mojibake hyphens/dashes
+    .replace(/â€"|â€"|â€'|â€•/g, '-')
     // Fix curly quote mojibake
     .replace(/â€˜|â€™/g, "'")
-    .replace(/â€œ|â€�/g, '"')
-
-    // Replace ONLY ASCII hyphens between letters with NB-hyphen
-    .replace(/(?<=\p{L})-(?=\p{L})/gu, '-');  // U+2011
+    .replace(/â€œ|â€/g, '"')
+    // Replace ASCII hyphens between letters with non-breaking hyphen (U+2011)
+    .replace(/(?<=\p{L})-(?=\p{L})/gu, '\u2011');
 };
 
 content = {
@@ -50,7 +41,7 @@ const emblemPath = `/data/about-emblem-${chosen}.png`;
 const ariaLabel = 'About Starstuck Lab';
 ---
 
-<!-- Inline SVG grain filter (kept for compatibility) -->
+<!-- Inline SVG grain filter -->
 <svg aria-hidden="true" style="position:absolute; width:0; height:0; overflow:hidden;">
   <filter id="grainFilter">
     <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="2" stitchTiles="stitch" result="noise"/>
@@ -64,14 +55,15 @@ const ariaLabel = 'About Starstuck Lab';
     <div class="grain-overlay" style="filter:url(#grainFilter)"></div>
     <div class="edge-burn" aria-hidden="true"></div>
 
-    <div class="float-emblem" aria-hidden="true" data-prerender="true">
-      <!-- prefer eager load for the emblem so it is available for the initial cross-fade -->
-      <img src={emblemPath}
-           alt={`Emblem variant ${chosen}`}
-           loading="eager"
-           decoding="async"
-           fetchpriority="high"
-           onerror="this.onerror=null; this.style.opacity=0.65;" />
+    <div class="float-emblem" aria-hidden="true">
+      <img 
+        src={emblemPath}
+        alt={`Emblem variant ${chosen}`}
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+        onerror="this.onerror=null; this.style.opacity=0.65;" 
+      />
     </div>
 
     <div class="content">
@@ -79,8 +71,5 @@ const ariaLabel = 'About Starstuck Lab';
       <p class="lead">{content.lead}</p>
       {content.motto ? <div class="motto">{content.motto}</div> : null}
     </div>
-
-    <div class="crease" aria-hidden="true"></div>
-    <div class="shadow-curl" aria-hidden="true"></div>
   </article>
 </section>
