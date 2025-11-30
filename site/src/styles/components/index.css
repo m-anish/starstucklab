@@ -122,7 +122,7 @@
   background: rgba(78,197,122,0.12);
 }
 
-/* Nav - mobile compact by default */
+/* Nav - mobile compact by default
 #pageNav {
   position: fixed;
   top: 12px;
@@ -205,14 +205,14 @@
 }
 
 /* Sticky nav state */
-#pageNav.nav-sticky {
+/* #pageNav.nav-sticky {
   top: 0;
   left: 0;
   right: 0;
   border-radius: 0;
   background: var(--nav-compact-bg);
   box-shadow: 0 4px 20px rgba(0,0,0,0.6);
-}
+} */
 
 /* Post-zoom content */
 .post-zoom {
@@ -241,9 +241,9 @@
 
 /* ===== VERY SMALL PHONES (<380px) ===== */
 @media (max-width: 380px) {
-  .nav-links {
-    display: none; /* hide links, keep logo */
-  }
+  /* .nav-links {
+    display: none; hide links, keep logo 
+  } */
   
   .hero-title {
     font-size: clamp(1.4rem, 8vw, 1.8rem);
@@ -281,10 +281,10 @@
     background: rgba(78,197,122,0.12);
   }
   
-  .nav-links a:hover {
+  /* .nav-links a:hover {
     background: rgba(255,255,255,0.08);
     opacity: 1;
-  }
+  } */
 }
 
 /* ===== DESKTOP (821px+) - ENHANCED PARALLAX ===== */
@@ -337,7 +337,7 @@
     padding: 0.7rem 1.8rem;
   }
   
-  #pageNav {
+  /* #pageNav {
     top: 16px;
     left: 50%;
     right: auto;
@@ -391,14 +391,14 @@
   
   #pageNav.nav-sticky .nav-logo img {
     height: 26px;
-  }
+  } */
 }
 
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
   .layer-interior,
   .layer-forest,
-  #pageNav,
+  /* #pageNav, */
   .cta,
   .post-zoom,
   .hero-overlay {
@@ -419,8 +419,8 @@
   outline-offset: 4px;
 }
 
-.nav-links a:focus {
+/* .nav-links a:focus {
   outline: 2px solid rgba(255,255,255,0.5);
   outline-offset: 2px;
   border-radius: 4px;
-}
+} */

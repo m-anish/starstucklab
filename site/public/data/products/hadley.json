@@ -1,0 +1,26 @@
+{
+  "id": "g-2025-11-28T13-58-14",
+  "date": "2025-11-28T13:58:14.906862",
+  "mood": 55,
+  "prompt_selection_reason": "default",
+  "prompt_id_used": "_default",
+  "model": "gpt-5.1",
+  "excerpt": "A compact Dobsonian made for small patios and large existential questions.",
+  "slug": "hadley",
+  "title": "Hadley 3D — Desktop Dobsonian (3D-printed)",
+  "price": "129.00",
+  "currency": "USD",
+  "status": "available",
+  "tags": [
+    "telescope",
+    "3d-printed"
+  ],
+  "specs": {
+    "aperture": "90 mm",
+    "focal_length": "500 mm",
+    "material": "PETG/PLA",
+    "weight": "1.8 kg"
+  },
+  "html": "<p>Hadley 3D — Desktop Dobsonian (3D-printed) is what happens when a telescope shrugs and decides to live on a desk instead of a mountaintop. Printed in layered plastic that still remembers the warmth of the nozzle, it cradles a small Newtonian mirror and points it, patiently, at whatever slice of sky the window will allow. The motions are simple, almost stubborn: up, down, left, right, like a wooden toy that learned orbital mechanics from a library book. It will not change the course of any galaxy, and the stars will not blink in appreciation, but it will quietly fold distant light into a circle of glass and offer it to whoever is still awake. A small machine, doing its best to make the universe feel closer, even as the universe keeps drifting away.</p>",
+  "raw": "Hadley 3D — Desktop Dobsonian (3D-printed) is what happens when a telescope shrugs and decides to live on a desk instead of a mountaintop. Printed in layered plastic that still remembers the warmth of the nozzle, it cradles a small Newtonian mirror and points it, patiently, at whatever slice of sky the window will allow. The motions are simple, almost stubborn: up, down, left, right, like a wooden toy that learned orbital mechanics from a library book. It will not change the course of any galaxy, and the stars will not blink in appreciation, but it will quietly fold distant light into a circle of glass and offer it to whoever is still awake. A small machine, doing its best to make the universe feel closer, even as the universe keeps drifting away."
+}

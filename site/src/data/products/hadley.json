@@ -1,0 +1,48 @@
+{
+  "slug": "hadley",
+  "title": "Hadley 3D — Desktop Dobsonian (3D-printed)",
+  "price": "129.00",
+  "currency": "USD",
+  "status": "available",
+  "tags": [
+    "telescope",
+    "3d-printed"
+  ],
+  "excerpt": "A compact Dobsonian made for small patios and large existential questions.",
+  "included": [
+    "3D-printed tube",
+    "rocker box",
+    "90mm achromatic lens",
+    "assembly guide (PDF)"
+  ],
+  "specs": {
+    "aperture": "90 mm",
+    "focal_length": "500 mm",
+    "material": "PETG/PLA",
+    "weight": "1.8 kg"
+  },
+  "mood_default": 55,
+  "enable_audit": true,
+  "generated": [
+    {
+      "id": "g-2025-11-28T13-58-14",
+      "date": "2025-11-28T13:58:14.906862",
+      "mood": 55,
+      "prompt_selection_reason": "default",
+      "prompt_id_used": "_default",
+      "model": "gpt-5.1",
+      "excerpt": "A compact Dobsonian made for small patios and large existential questions.",
+      "public_file": "/data/products/hadley.json"
+    },
+    {
+      "id": "g-2025-11-28T13-37-36",
+      "date": "2025-11-28T13:37:36.475266",
+      "mood": 55,
+      "prompt_selection_reason": "default",
+      "prompt_id_used": null,
+      "model": "mock",
+      "excerpt": "A compact Dobsonian made for small patios and large existential questions.",
+      "public_file": "/data/products/hadley.json"
+    }
+  ]
+}

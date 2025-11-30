@@ -6,7 +6,9 @@
 import fs from 'fs';
 import path from 'path';
 import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
 import AboutPanel from '../components/aboutpanel.astro';
+import "../styles/components/navbar.css";
 import "../styles/components/index.css";
 
 // Read manifest relative to this file (site/src/data/images.json)
@@ -48,18 +50,16 @@ function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null
 
 /** Build canonical source URLs for a scene (hero / workshop) */
 function buildSceneSources(sceneKey: string) {
-  const byAspect = (aspect: string) => findVariantFilename(sceneKey, { aspect });
-  const byId    = (id: string) => findVariantFilename(sceneKey, { id });
-  const byType  = (type: string) => findVariantFilename(sceneKey, { type });
+  const byId = (id: string) => findVariantFilename(sceneKey, { id });
 
   const filenames: Record<string, string | null> = {
-    wide_21_10: byAspect('21:10') || byId(`${sceneKey}-wide-2560x1219`) || byId('wide-2560x1219'),
-    desktop_16_10: byAspect('16:10') || byId(`${sceneKey}-master`) || byId('master') || byId(`${sceneKey}-desktop-3840x2400`),
-    desktop_16_9: byAspect('16:9') || byId(`${sceneKey}-desktop-3840x2160`),
-    tablet_3_4: byAspect('3:4') || byId(`${sceneKey}-tablet-1200x1600`),
-    mobile_9_16: byAspect('9:16') || byId(`${sceneKey}-mobile-1080x1920`),
-    generated_2k: byType('generate') || byId(`${sceneKey}-generated-2048x1280`),
-    thumb: byType('resize') || byId(`${sceneKey}-thumb-600x338.jpg`)
+    generated: byId('generated'),
+    master: byId('master'),
+    desktop: byId('desktop'),
+    laptop: byId('laptop'),
+    tablet: byId('tablet'),
+    mobile: byId('mobile'),
+    thumb: byId('thumb')
   };
 
   const urls: Record<string, string | null> = {};
@@ -93,7 +93,7 @@ const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
 
 // Preload important visuals
-const preloadUrls = [hero.desktop_16_10, hero.generated_2k, workshop.desktop_16_10, workshop.generated_2k].filter(Boolean);
+const preloadUrls = [hero.desktop, hero.generated, workshop.desktop, workshop.generated].filter(Boolean);
 
 const MEDIA = {
   ultra_wide: '(min-width:1400px)',
@@ -136,43 +136,30 @@ const MEDIA = {
       data-cross-end="0.85"
     ></div>
 
-    <!-- Top navigation: appears when inside workshop -->
-    <nav id="pageNav" class="nav-hidden" aria-hidden="true" role="navigation">
-      <div class="nav-inner">
-        <a href="/" class="nav-logo">
-          <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
-          <span>STARSTUCK LAB</span>
-        </a>
-        <ul class="nav-links">
-          <li><a href="#workbench">Workbench</a></li>
-          <li><a href="#projects">Projects</a></li>
-          <li><a href="#shop">Shop</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-      </div>
+    <!-- Top navigation: appears when inside workshop (uses Navbar component) -->
+    <nav id="pageNav" class="site-nav nav-hidden" aria-hidden="true" role="navigation">
+      <Navbar />
     </nav>
 
     <!-- Workshop (back layer) -->
     <picture>
-      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
-      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
-      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
+      {workshop.desktop ? <source media={MEDIA.desktop} srcset={workshop.desktop} /> : null}
+      {workshop.tablet ? <source media={MEDIA.tablet} srcset={workshop.tablet} /> : null}
       <img class="hero-layer layer-interior"
            id="hzInterior"
-           src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+           src={workshop.mobile ?? workshop.generated ?? workshop.thumb ?? workshop.desktop ?? `${BASE_URL}workshop/workshop-master.webp`}
            alt="Workshop interior"
            loading="eager" />
     </picture>
 
     <!-- Forest hero (front layer) -->
     <picture>
-      {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
-      {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
-      {hero.desktop_16_9 ? <source media={MEDIA.laptop} srcset={hero.desktop_16_9} /> : null}
-      {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
+      {hero.desktop ? <source media={MEDIA.desktop} srcset={hero.desktop} /> : null}
+      {hero.laptop ? <source media={MEDIA.laptop} srcset={hero.laptop} /> : null}
+      {hero.tablet ? <source media={MEDIA.tablet} srcset={hero.tablet} /> : null}
       <img class="hero-layer layer-forest"
            id="hzForest"
-           src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
+           src={hero.mobile ?? hero.generated ?? hero.thumb ?? hero.desktop ?? `${BASE_URL}hero/hero-master.webp`}
            alt="Forest hero with cabin and STARSTUCKLAB sign"
            loading="eager" />
     </picture>
@@ -253,11 +240,9 @@ const MEDIA = {
       const BASE_SCALE = 1;
       let ticking = false;
       
-      // Throttling for mobile performance
       let lastScrollTime = 0;
-      const THROTTLE_MS = isMobile ? 16 : 0; // ~60fps on mobile, unlimited on desktop
+      const THROTTLE_MS = isMobile ? 16 : 0;
 
-      // Cache DOM measurements (recalculate on resize only)
       let cachedSpacerTop = 0;
       let cachedSpacerHeight = 0;
       let measurementsValid = false;
@@ -288,12 +273,11 @@ const MEDIA = {
         return Math.max(0, Math.min(1, p));
       }
 
-      function easeInOutCubic(t: number) { 
+      function easeInOutCubic(t) { 
         return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; 
       }
 
       function applyInitialFrame() {
-        // Mobile: no transforms at all, just opacity
         if (isMobile || prefersReduced) {
           forestEl.style.transform = 'none';
           interiorEl.style.transform = 'none';
@@ -320,15 +304,11 @@ const MEDIA = {
 
         const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
 
-        // Mobile: simple fade-only (no transforms)
-        // Desktop: full zoom/pan effect
         if (isMobile || prefersReduced) {
-          // Simple opacity fade, no transforms
           forestEl.style.opacity = `${forestOpacity}`;
           interiorEl.style.opacity = `${interiorOpacity}`;
           overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
         } else {
-          // Desktop: fancy zoom/pan
           const eased = easeInOutCubic(p);
           const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
           const translateY = - Math.round(p * 40);
@@ -339,7 +319,6 @@ const MEDIA = {
           overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
         }
 
-        // Show nav
         if (interiorOpacity > NAV_SHOW_THRESHOLD) {
           navEl.classList.add('nav-visible', 'nav-sticky');
           navEl.classList.remove('nav-hidden');
@@ -350,7 +329,6 @@ const MEDIA = {
           navEl.setAttribute('aria-hidden', 'true');
         }
 
-        // Show about panel
         if (aboutEl) {
           const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
           if (shouldBeIn && !aboutEl.classList.contains('in')) {
@@ -360,7 +338,6 @@ const MEDIA = {
           }
         }
 
-        // Show post-zoom content
         if (postZoomEl) {
           const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
           if (shouldBeIn && !postZoomEl.classList.contains('in')) {
@@ -391,25 +368,22 @@ const MEDIA = {
 
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', () => { 
-        measurementsValid = false; // Invalidate cache on resize
+        measurementsValid = false;
         requestTick(); 
       }, { passive: true });
 
-      // CTA smooth scroll handler - centers the parchment better
       const cta = document.querySelector('.cta');
       const aboutPanel = document.getElementById('aboutPanel');
       if (cta && aboutPanel) {
         cta.addEventListener('click', (ev) => {
           ev.preventDefault();
           const rect = aboutPanel.getBoundingClientRect();
-          // Scroll to center parchment at ~40% from top (more centered, less cramped)
           const targetY = window.scrollY + rect.top - Math.round(window.innerHeight * 0.4);
           window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
           history.replaceState(null, '', '#workbench');
         });
       }
 
-      // Fallback for non-scrollable pages
       function pageIsScrollable() { 
         return document.documentElement.scrollHeight > window.innerHeight + 10; 
       }

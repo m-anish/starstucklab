@@ -1,0 +1,78 @@
+---
+// SPDX-License-Identifier: DWYWBDBM-1.0
+// site/src/pages/shop.astro
+import Layout from "../layouts/Layout.astro";
+import Navbar from "../components/Navbar.astro";
+import ProductCard from "../components/ProductCard.astro";
+import "../styles/tokens.css";
+import "../styles/components/parchment.css";
+import "../styles/components/navbar.css";
+import "../styles/components/shop.css";
+import fs from 'fs';
+import path from 'path';
+
+// Read from public/data/products (generated products)
+const PUBLIC_PRODUCTS_DIR = path.resolve('./public/data/products');
+
+let products = [];
+
+if (fs.existsSync(PUBLIC_PRODUCTS_DIR)) {
+  const files = fs.readdirSync(PUBLIC_PRODUCTS_DIR).filter(f => f.endsWith('.json'));
+  const publicProducts = files.map(f => {
+    try {
+      const raw = fs.readFileSync(path.join(PUBLIC_PRODUCTS_DIR, f), 'utf8');
+      return JSON.parse(raw);
+    } catch (e) {
+      console.warn('Skipping bad product JSON:', f, e);
+      return null;
+    }
+  }).filter(Boolean);
+  products.push(...publicProducts);
+}
+
+// Sort by date (newest first)
+products.sort((a,b) => (b.date || '').localeCompare(a.date || ''));
+
+// Read shop background manifest
+const manifestPath = new URL('../data/images.json', import.meta.url);
+let shopBg = '/assets/shop/shop-master.webp';
+try {
+  const images = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const shopScene = images.scenes?.shop;
+  if (shopScene?.variants) {
+    const desktop = shopScene.variants.find((v: any) => v.id === 'desktop' || v.aspect === '16:9');
+    if (desktop?.filename) {
+      shopBg = `/assets/shop/${desktop.filename}`;
+    }
+  }
+} catch (e) {
+  console.warn('Could not read shop background from manifest:', e);
+}
+---
+<Layout title="Shop — Starstuck Lab" showHeader={false} showFooter={true}>
+  <!-- Static navbar (always visible) -->
+  <nav class="site-nav nav-static">
+    <Navbar />
+  </nav>
+  
+  <div class="shop-stage">
+    <img src={shopBg} alt="Workshop background" class="shop-bg" loading="eager" />
+    
+    <main class="shop-content">
+      <header class="parchment parchment--large parchment--centered shop-hero">
+        <h1>Shop — Artifacts from the Bench</h1>
+        <p class="lead">Handmade, printed, lightly cursed. Pick something that will outlive your patience.</p>
+      </header>
+
+      {products.length === 0 ? (
+        <div class="parchment parchment--centered no-products">
+          <p>No products available yet. Check back soon!</p>
+        </div>
+      ) : (
+        <section class="product-grid" role="list">
+          {products.map(p => <ProductCard product={p} />)}
+        </section>
+      )}
+    </main>
+  </div>
+</Layout>

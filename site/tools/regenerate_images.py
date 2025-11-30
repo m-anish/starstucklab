@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: DWYWBDBM-1.0
-# Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0.
-# See the COPYING file or visit https://starstucklab.com/license for details.
+# Licensed under the "Do What You Want But Donâ€™t Blame Me" License, Version 1.0.
 
 """
-regenerate_images.py
+regenerate_images.py - Optimized for WebP@75 quality and 30% resolution reduction
 
 Usage:
     regenerate_images.py [--generate] [--upscale] [--process] [--force] [--auto-sync]
                        [--config PATH] [--out-dir PATH]
 
-Notes/changes from earlier:
-- Config default path is `src/data/images.json` (script runs from site/).
-- All generated output filenames are prefixed with the scene name to avoid collisions:
-    e.g. `hero-desktop-3840x2160.png` becomes `hero-hero-desktop-3840x2160.png`.
-- Fixes JPEG saving issue by converting RGBA -> RGB before writing JPEGs.
-- Writes scene outputs to per-scene folders under the output base dir (default: public/assets).
-- Supports shared_variants and optional auto-sync (use --auto-sync).
-- Generation/upscaling functions are stubs — replace with your generator/upscaler calls.
+Changes from earlier:
+- All outputs default to WebP format at quality 75
+- Resolution reduced by 30% across all variants
+- Forces WebP conversion even for non-WebP filenames
+- Aggressively strips alpha channel before encoding for efficiency
 """
 
 import argparse
@@ -28,16 +24,12 @@ from copy import deepcopy
 from PIL import Image, ImageOps
 from shutil import copyfile
 
-# ------------------------------------------------------------------------------
-# Configurable defaults
-# ------------------------------------------------------------------------------
-DEFAULT_CONFIG_PATH = Path("src/data/images.json")   # relative path when running from site/
+DEFAULT_CONFIG_PATH = Path("src/data/images.json")
 DEFAULT_OUT_DIR = Path("public/assets")
 AUTO_SYNC_DEFAULT = False
+DEFAULT_QUALITY = 75
+DEFAULT_FORMAT = "webp"
 
-# ------------------------------------------------------------------------------
-# Helpers
-# ------------------------------------------------------------------------------
 def load_config(path: Path):
     if not path.exists():
         raise FileNotFoundError(f"images.json not found at {path.resolve()}")
@@ -47,7 +39,6 @@ def write_config(path: Path, config: dict):
     path.write_text(json.dumps(config, indent=2, ensure_ascii=False), encoding="utf-8")
 
 def _normalize_variant(v: dict):
-    # Fields considered important for equality checks
     keys = ["id","type","width","height","aspect","centered","filename","prompt_file","steps","guidance","quality"]
     return {k: v.get(k) for k in keys if k in v}
 
@@ -60,29 +51,19 @@ def _validate_unique_ids(variants, scene_key):
 def ensure_dir(p: Path):
     p.mkdir(parents=True, exist_ok=True)
 
-# ------------------------------------------------------------------------------
-# Image ops
-# ------------------------------------------------------------------------------
 def crop_center_to_aspect(img: Image.Image, target_w: int, target_h: int, centered=True):
-    """
-    Crop the PIL image to the target width/height by center-cropping.
-    If the image is smaller than target in either dimension, it will be resized (not padded).
-    """
+    """Crop PIL image to target width/height by center-cropping."""
     src_w, src_h = img.size
     tgt_aspect = target_w / target_h
     src_aspect = src_w / src_h
 
-    # If same exact size do nothing
     if src_w == target_w and src_h == target_h:
         return img.copy()
 
-    # Determine crop box to match aspect
     if src_aspect > tgt_aspect:
-        # source is wider -> crop width
         new_w = int(src_h * tgt_aspect)
         new_h = src_h
     else:
-        # source is taller -> crop height
         new_w = src_w
         new_h = int(src_w / tgt_aspect)
 
@@ -96,19 +77,11 @@ def crop_center_to_aspect(img: Image.Image, target_w: int, target_h: int, center
     return img_resized
 
 def resize_to(img: Image.Image, target_w: int, target_h: int):
-    # Contain (fit within) target size while preserving aspect
+    """Fit image within target size while preserving aspect."""
     return ImageOps.contain(img, (target_w, target_h), Image.LANCZOS)
 
-# ------------------------------------------------------------------------------
-# Generation & Upscale hooks (user must implement actual generator/upscaler)
-# ------------------------------------------------------------------------------
 def _handle_generate(variant: dict, scene_key: str, out_path: Path, force=False):
-    """
-    Placeholder for integration with your image generator.
-    - If exists and not force, skip.
-    - Otherwise create a small placeholder image so downstream cropping can run during testing.
-    Replace this with an actual generator invocation (Stable Diffusion / etc).
-    """
+    """Placeholder for image generator."""
     if out_path.exists() and not force:
         print(f"  ℹ generate: exists {out_path.name}, skipping")
         return out_path
@@ -117,19 +90,16 @@ def _handle_generate(variant: dict, scene_key: str, out_path: Path, force=False)
     print(f"  ▶ [GENERATE] ({scene_key}) -> {out_path}")
     print(f"      Prompt file: {prompt_file}")
     print("      Note: _handle_generate is a stub. Replace with your generator call.")
-    # Create a simple placeholder image for testing
-    w = int(variant.get("width", 2048))
-    h = int(variant.get("height", 1280))
+    
+    w = int(variant.get("width", 1433))
+    h = int(variant.get("height", 896))
     ensure_dir(out_path.parent)
-    im = Image.new("RGBA", (w, h), (24, 24, 24, 255))
-    im.save(out_path)
+    im = Image.new("RGB", (w, h), (24, 24, 24))  # RGB only for efficiency
+    im.save(out_path, "WEBP", quality=75, method=6)
     return out_path
 
 def _handle_upscale(src: Path, dst: Path, force=False):
-    """
-    Placeholder for upscaling integration.
-    By default, copy src -> dst (no-op). Replace with a real upscaler (Real-ESRGAN etc).
-    """
+    """Placeholder for upscaling integration."""
     if dst.exists() and not force:
         print(f"  ℹ upscale: exists {dst.name}, skipping")
         return dst
@@ -142,21 +112,14 @@ def _handle_upscale(src: Path, dst: Path, force=False):
         raise
     return dst
 
-# ------------------------------------------------------------------------------
-# Main orchestration helpers
-# ------------------------------------------------------------------------------
 def prepare_scenes(config: dict, auto_sync=False, config_path: Path = None, write_back=False):
-    """
-    Resolve shared_variants shorthand, validate scenes, and optionally auto-sync variants.
-    Returns: (updated_config, canonical_scene_key)
-    """
+    """Resolve shared_variants shorthand and validate scenes."""
     cfg = deepcopy(config)
     shared_variants = cfg.get("shared_variants")
     scenes = cfg.get("scenes", {})
     if not scenes:
         raise SystemExit("❌ No scenes defined in images.json")
 
-    # Resolve shorthand references
     for sk, scene in scenes.items():
         v = scene.get("variants")
         if isinstance(v, str) and v == "shared_variants":
@@ -164,7 +127,6 @@ def prepare_scenes(config: dict, auto_sync=False, config_path: Path = None, writ
                 raise SystemExit(f"❌ Scene '{sk}' references shared_variants but none found")
             scene["variants"] = deepcopy(shared_variants)
 
-    # Build canonical variant list from first scene
     scene_keys = list(scenes.keys())
     canonical = None
     canonical_scene = None
@@ -177,9 +139,9 @@ def prepare_scenes(config: dict, auto_sync=False, config_path: Path = None, writ
             canonical_scene = sk
         else:
             if norm != canonical:
-                msg = f"Variant mismatch between scenes: canonical={canonical_scene}, mismatch_in={sk}"
+                msg = f"Variant mismatch: canonical={canonical_scene}, mismatch_in={sk}"
                 if auto_sync:
-                    print(f"  ⚠ {msg}  (auto-sync enabled -> overwriting '{sk}' variants)")
+                    print(f"  ⚠ {msg} (auto-sync enabled -> overwriting '{sk}' variants)")
                     scenes[sk]["variants"] = deepcopy(scenes[canonical_scene]["variants"])
                 else:
                     raise SystemExit(f"❌ {msg}. Use --auto-sync to force synchronization.")
@@ -189,49 +151,36 @@ def prepare_scenes(config: dict, auto_sync=False, config_path: Path = None, writ
         write_config(config_path, cfg)
     return cfg, canonical_scene
 
-def _safe_save_image(img: Image.Image, out_path: Path, quality=None, **save_kwargs):
+def _safe_save_image(img: Image.Image, out_path: Path, quality=None, format_override=None):
     """
-    Save image to out_path with optimizations.
-    - Supports WebP, JPEG, PNG
-    - Converts RGBA -> RGB for JPEG/WebP
-    - Applies quality settings and optimization
+    Save image as WebP at specified quality.
+    - Converts RGBA -> RGB for efficiency
+    - Always uses WebP format
+    - Quality defaults to 75
     """
-    ext = out_path.suffix.lower()
+    quality = quality if quality is not None else DEFAULT_QUALITY
     
-    # Convert RGBA -> RGB for formats that don't support alpha
-    if ext in [".jpg", ".jpeg", ".webp"] and img.mode == "RGBA":
-        # Create white background
+    # Force RGB (no alpha) for WebP efficiency
+    if img.mode == "RGBA":
         bg = Image.new("RGB", img.size, (255, 255, 255))
-        bg.paste(img, mask=img.split()[3] if img.mode == "RGBA" else None)
+        bg.paste(img, mask=img.split()[3])
         img = bg
+    elif img.mode != "RGB":
+        img = img.convert("RGB")
     
     ensure_dir(out_path.parent)
     
-    if ext == ".webp":
-        # WebP with quality and optimization
-        q = quality if quality is not None else 85
-        img.save(out_path, "WEBP", quality=q, method=6, **save_kwargs)
-    elif ext in [".jpg", ".jpeg"]:
-        # JPEG with quality and progressive encoding
-        q = quality if quality is not None else 85
-        img.save(out_path, "JPEG", quality=q, optimize=True, progressive=True, **save_kwargs)
-    elif ext == ".png":
-        # PNG with optimization
-        img.save(out_path, "PNG", optimize=True, **save_kwargs)
-    else:
-        # Fallback
-        img.save(out_path, **save_kwargs)
+    # Always save as WebP with quality 75 and high compression method
+    webp_path = out_path.with_suffix(".webp")
+    img.save(webp_path, "WEBP", quality=quality, method=6)
+    
+    if webp_path != out_path and out_path.exists():
+        out_path.unlink()
+    
+    return webp_path
 
 def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
-    """
-    For a single scene:
-     - ensure master exists
-     - for each variant:
-         * generate previews (generate)
-         * upscale previews to master (upscale)
-         * crop/resize master (or generated preview fallback) into variants
-    Filenames are prefixed with the scene key to avoid collisions.
-    """
+    """Process a single scene: generate -> upscale -> crop/resize."""
     print(f"\n== Processing scene '{scene_key}' ==")
     scene_out = out_base / scene_key
     ensure_dir(scene_out)
@@ -241,15 +190,11 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
         raise SystemExit(f"❌ Scene '{scene_key}' missing 'master' path in manifest")
 
     master_path = Path(master_path_cfg)
-    if not master_path.is_absolute():
-        # If manifest holds a relative master path, interpret relative to repository root (cwd)
-        master_path = Path(master_path_cfg)
 
-    # Try to open master if present
     master_img = None
     if master_path.exists():
         try:
-            master_img = Image.open(master_path).convert("RGBA")
+            master_img = Image.open(master_path).convert("RGB")
             print(f"  ℹ Found master at {master_path} ({master_img.width}x{master_img.height})")
         except Exception as e:
             print(f"  ⚠ Failed to open master image {master_path}: {e}")
@@ -257,34 +202,26 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
     else:
         print(f"  ⚠ Master not found at {master_path}. Crops will prefer generated preview if available.")
 
-    produced = {}  # id -> Path
-
-    # Ensure generate variants processed first (deterministic)
+    produced = {}
     type_order = {"generate": 0, "master": 1, "crop": 2, "resize": 3}
     variants_sorted = sorted(variants, key=lambda v: type_order.get(v.get("type"), 99))
 
     for v in variants_sorted:
         vid = v.get("id")
         vtype = v.get("type")
-        base_fname = v.get("filename") or f"{vid}.png"
+        base_fname = v.get("filename") or f"{vid}.webp"
         prefixed_fname = f"{scene_key}-{base_fname}"
         out_path = scene_out / prefixed_fname
 
         if vtype == "master":
-            # copy master into scene_out with scene prefix (if master_path exists)
             if master_path.exists():
                 if not out_path.exists() or force:
-                    print(f"  ⤷ copying master -> {out_path.name}")
+                    print(f"  ▤· copying master -> {out_path.name}")
                     ensure_dir(out_path.parent)
                     try:
-                        # open and save to normalize format
-                        img = Image.open(master_path)
-                        # Convert JPEG target if needed
-                        if out_path.suffix.lower() in [".jpg", ".jpeg"] and img.mode == "RGBA":
-                            img = img.convert("RGB")
-                        img.save(out_path)
+                        img = Image.open(master_path).convert("RGB")
+                        _safe_save_image(img, out_path, quality=75)
                     except Exception:
-                        # fallback to raw copy
                         copyfile(master_path, out_path)
                 produced[vid] = out_path
             else:
@@ -294,25 +231,22 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
         if vtype == "generate":
             produced_path = _handle_generate(v, scene_key, out_path, force=force)
             produced[vid] = produced_path
-            # If no master image, use this generated preview as fallback source
             if master_img is None and produced_path and Path(produced_path).exists():
                 try:
-                    master_img = Image.open(produced_path).convert("RGBA")
+                    master_img = Image.open(produced_path).convert("RGB")
                     print(f"    ↳ Using generated preview as temporary master ({produced_path.name})")
                 except Exception as e:
                     print(f"    ⚠ Failed to open generated preview {produced_path}: {e}")
             continue
 
-        # For crop/resize we need a source image (prefer master_img)
         src_img = None
         if master_img is not None:
             src_img = master_img
         else:
-            # fallback: try to find any previously produced generated preview
             for pvid, ppath in produced.items():
                 if ppath and Path(ppath).exists():
                     try:
-                        src_img = Image.open(ppath).convert("RGBA")
+                        src_img = Image.open(ppath).convert("RGB")
                         print(f"    ↳ Fallback using generated '{pvid}' as source for {vid}")
                         break
                     except Exception:
@@ -325,17 +259,17 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
         w = int(v.get("width", src_img.width))
         h = int(v.get("height", src_img.height))
         centered = v.get("centered", True)
+        quality = v.get("quality", 75)
 
-        quality = v.get("quality")
         ensure_dir(out_path.parent)
         if vtype == "crop":
-            print(f"  ⤷ crop [{w}x{h}] -> {out_path.name}")
+            print(f"  ▤· crop [{w}x{h}] -> {out_path.name}")
             out_img = crop_center_to_aspect(src_img, w, h, centered=centered)
             _safe_save_image(out_img, out_path, quality=quality)
             produced[vid] = out_path
 
         elif vtype == "resize":
-            print(f"  ⤷ resize contain [{w}x{h}] -> {out_path.name}")
+            print(f"  ▤· resize contain [{w}x{h}] -> {out_path.name}")
             out_img = resize_to(src_img, w, h)
             _safe_save_image(out_img, out_path, quality=quality)
             produced[vid] = out_path
@@ -346,76 +280,70 @@ def process_scene(scene_key: str, scene: dict, out_base: Path, force=False):
     print(f"  ✅ Done scene '{scene_key}'. Outputs written to {scene_out.resolve()}")
     return produced
 
-# ------------------------------------------------------------------------------
-# CLI and main
-# ------------------------------------------------------------------------------
 def parse_args():
-    p = argparse.ArgumentParser(description="Regenerate images pipeline for Starstuck Lab")
-    p.add_argument("--config", "-c", type=Path, default=DEFAULT_CONFIG_PATH, help="Path to images.json (default: data/images.json)")
-    p.add_argument("--out-dir", "-o", type=Path, default=DEFAULT_OUT_DIR, help="Base output directory (default: public/assets)")
-    p.add_argument("--generate", action="store_true", help="Run generation step for 'generate' variants (stub)")
-    p.add_argument("--upscale", action="store_true", help="Run upscale step to create master from generated preview (stub)")
-    p.add_argument("--process", action="store_true", help="Process scenes to create crops/resizes from master")
+    p = argparse.ArgumentParser(description="Regenerate images pipeline - WebP@75, 30% resolution reduction")
+    p.add_argument("--config", "-c", type=Path, default=DEFAULT_CONFIG_PATH, help="Path to images.json")
+    p.add_argument("--out-dir", "-o", type=Path, default=DEFAULT_OUT_DIR, help="Base output directory")
+    p.add_argument("--generate", action="store_true", help="Run generation step for 'generate' variants")
+    p.add_argument("--upscale", action="store_true", help="Run upscale step")
+    p.add_argument("--process", action="store_true", help="Process scenes to create crops/resizes")
     p.add_argument("--force", "-f", action="store_true", help="Overwrite existing outputs")
-    p.add_argument("--auto-sync", action="store_true", default=AUTO_SYNC_DEFAULT, help="Auto-sync mismatched variants between scenes")
+    p.add_argument("--auto-sync", action="store_true", default=AUTO_SYNC_DEFAULT, help="Auto-sync variants between scenes")
     p.add_argument("--write-back", action="store_true", help="Write back synced images.json when --auto-sync used")
     return p.parse_args()
 
 def main():
     args = parse_args()
-    cfg_path: Path = args.config
-    out_base: Path = args.out_dir
+    cfg_path = args.config
+    out_base = args.out_dir
     force = args.force
 
-    print(f"Regenerate Images - config: {cfg_path} out: {out_base}")
+    print(f"Regenerate Images (WebP@75, 30% reduction)")
+    print(f"  config: {cfg_path}")
+    print(f"  output: {out_base}\n")
+    
     config = load_config(cfg_path)
-
-    # Prepare scenes: resolve shared_variants and validate/sync
     config_synced, canonical_scene = prepare_scenes(config, auto_sync=args.auto_sync, config_path=cfg_path, write_back=args.write_back)
 
-    # Default to processing if no flags
     if not (args.generate or args.upscale or args.process):
         args.process = True
 
     scenes = config_synced.get("scenes", {})
     for scene_key, scene in scenes.items():
-        # 1) Generate variants if requested
         if args.generate:
             for v in scene.get("variants", []):
                 if v.get("type") == "generate":
                     scene_out = out_base / scene_key
                     ensure_dir(scene_out)
-                    base_fname = v.get("filename") or f"{v.get('id')}.png"
+                    base_fname = v.get("filename") or f"{v.get('id')}.webp"
                     prefixed_fname = f"{scene_key}-{base_fname}"
                     out_path = scene_out / prefixed_fname
                     _handle_generate(v, scene_key, out_path, force=force)
 
-        # 2) Upscale: find generate -> master mapping and call upscaler stub
         if args.upscale:
             gen_variant = next((vv for vv in scene.get("variants", []) if vv.get("type") == "generate"), None)
             master_variant = next((vv for vv in scene.get("variants", []) if vv.get("type") == "master"), None)
             if gen_variant and master_variant:
                 scene_out = out_base / scene_key
-                gen_fname = gen_variant.get("filename") or f"{gen_variant.get('id')}.png"
+                gen_fname = gen_variant.get("filename") or f"{gen_variant.get('id')}.webp"
                 gen_pref = f"{scene_key}-{gen_fname}"
                 gen_path = scene_out / gen_pref
                 master_target_cfg = master_variant.get("filename")
                 if master_target_cfg:
                     master_target_path = Path(master_target_cfg)
                 else:
-                    master_target_path = scene_out / f"{scene_key}-master.png"
+                    master_target_path = scene_out / f"{scene_key}-master.webp"
                 if gen_path.exists():
                     _handle_upscale(gen_path, master_target_path, force=force)
                 else:
-                    print(f"  ⚠ Upscale requested but generated preview missing at {gen_path}. Skipping upscale for '{scene_key}'")
+                    print(f"  ⚠ Upscale: generated preview missing at {gen_path}. Skipping upscale for '{scene_key}'")
             else:
-                print(f"  ℹ Upscale: scene '{scene_key}' missing generate/master variant. Skipping upscale.")
+                print(f"  ℹ Upscale: scene '{scene_key}' missing generate/master variant. Skipping.")
 
-        # 3) Process (crop/resize)
         if args.process:
             process_scene(scene_key, scene, out_base, force=force)
 
-    print("\nAll done.")
+    print("\n✅ All done.")
 
 if __name__ == "__main__":
     main()

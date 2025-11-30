@@ -1,0 +1,20 @@
+[
+{
+  "product-blurb": {
+    "prompt": "Write a short (40–80 words) product blurb for '{{title}}'. Tone: Starstuck Lab persona — dry, slightly nihilistic, witty. Include a single 'What's included' sentence. Output plain text only.",
+    "temperature": 0.7
+  },
+  "telescope-blurb": {
+    "prompt": "Describe '{{title}}' in 40–80 words as slightly mythic but technical; include a short 'What's included' clause.",
+    "temperature": 0.6
+  },
+  "weather-quick": {
+    "prompt": "Short (25–50 words) blurb for '{{title}}' with a skeptical, witty tone.",
+    "temperature": 0.6
+  },
+  "_default": {
+    "prompt": "Write a short product blurb for '{{title}}'.",
+    "temperature": 0.6
+  }
+}
+]

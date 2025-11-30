@@ -1,0 +1,157 @@
+---
+// SPDX-License-Identifier: DWYWBDBM-1.0
+// site/src/pages/shop/[slug].astro
+import Layout from "../../layouts/Layout.astro";
+import Navbar from "../../components/Navbar.astro";
+import "../../styles/tokens.css";
+import "../../styles/components/parchment.css";
+import "../../styles/components/navbar.css";
+import "../../styles/components/product-detail.css";
+import fs from 'fs';
+import path from 'path';
+
+// Build-time: tell Astro which slugs to pre-render
+export async function getStaticPaths() {
+  try {
+    const paths = [];
+    
+    const publicProductsDir = path.resolve('./public/data/products');
+    if (fs.existsSync(publicProductsDir)) {
+      const publicFiles = fs.readdirSync(publicProductsDir).filter(f => f.endsWith('.json'));
+      paths.push(...publicFiles.map(f => ({ params: { slug: f.replace(/\.json$/, '') } })));
+    }
+    
+    if (paths.length === 0) {
+      console.warn('getStaticPaths: no product json files found');
+    }
+    return paths;
+  } catch (err) {
+    console.error('getStaticPaths error:', err);
+    return [];
+  }
+}
+
+const slug = Astro.params.slug;
+
+// Try public/data/products FIRST (generated products have priority)
+let product = null;
+const publicJsonPath = path.resolve(`./public/data/products/${slug}.json`);
+
+if (fs.existsSync(publicJsonPath)) {
+  product = JSON.parse(fs.readFileSync(publicJsonPath, 'utf8'));
+} else {
+  throw new Error(`Product not found: ${slug}`);
+}
+
+// Image paths
+const heroImagePath = `/assets/product-${slug}/product-${slug}-hero.webp`;
+const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
+---
+<Layout title={product.title} showHeader={false} showFooter={true}>
+  <!-- Static navbar -->
+  <nav class="site-nav nav-static">
+    <Navbar />
+  </nav>
+  
+  <div class="product-page">
+    <article class="product-container">
+      <!-- Product image with vintage frame -->
+      <div class="product-media">
+        <img 
+          src={heroImagePath} 
+          alt={product.title} 
+          onerror={`this.onerror=null;this.src='${masterFallback}'`}
+        />
+      </div>
+
+      <!-- Main product info card -->
+      <div class="parchment product-info-card">
+        <h1>{product.title}</h1>
+        
+        <div class="product-meta-row">
+          {product.price && (
+            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
+          )}
+          {product.status && (
+            <span class="status">{product.status}</span>
+          )}
+        </div>
+
+        {product.tags && product.tags.length > 0 && (
+          <div class="tags-row">
+            {product.tags.map((tag: string) => <span class="tag">#{tag}</span>)}
+          </div>
+        )}
+
+        <div class="product-description" set:html={product.html}></div>
+
+        {product.specs && Object.keys(product.specs).length > 0 && (
+          <div class="parchment parchment--nested product-specs">
+            <h3>Specifications</h3>
+            <dl class="specs-list">
+              {Object.entries(product.specs).map(([key, value]) => (
+                <>
+                  <dt>{key}</dt>
+                  <dd>{value}</dd>
+                </>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        <form class="parchment parchment--nested order-form" 
+              action={`mailto:contact@starstucklab.com?subject=${encodeURIComponent('[Order] '+product.title)}`} 
+              method="get">
+          <fieldset>
+            <legend>Place an order</legend>
+
+            <label>
+              Your name
+              <input name="name" required placeholder="Ada Lovelace" />
+            </label>
+
+            <label>
+              Email
+              <input name="email" type="email" required placeholder="you@example.com" />
+            </label>
+
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="agree_personality" required />
+                <span>I accept that my product may develop consciousness.</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="agree_entropy" required />
+                <span>I agree to blame entropy if things go sideways.</span>
+              </label>
+            </div>
+
+            <label>
+              Notes / Options
+              <textarea name="notes" placeholder="Assembly preferences, shipping notes..."></textarea>
+            </label>
+
+            <div class="form-actions">
+              <button type="submit">Email order</button>
+              <a class="link-mailto" 
+                 href={`mailto:contact@starstucklab.com?subject=${encodeURIComponent('[Order] '+product.title)}`}>
+                Or email: contact@starstucklab.com
+              </a>
+            </div>
+          </fieldset>
+        </form>
+
+        {product.id && (
+          <div class="metadata">
+            <span class="sparkle">✦</span> Generated {new Date(product.date).toLocaleDateString()}
+            {product.mood && ` • mood ${product.mood}`}
+            {product.model && ` • ${product.model}`}
+            {product.prompt_selection_reason && product.prompt_selection_reason !== 'default' && 
+              ` • ${product.prompt_selection_reason}`
+            }
+          </div>
+        )}
+      </div>
+    </article>
+  </div>
+</Layout>

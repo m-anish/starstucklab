@@ -1,0 +1,25 @@
+{
+  "id": "g-2025-11-28T13-58-20",
+  "date": "2025-11-28T13:58:20.237828",
+  "mood": 40,
+  "prompt_selection_reason": "default",
+  "prompt_id_used": "_default",
+  "model": "gpt-5.1",
+  "excerpt": "A pocket weather station that is polite about humidity and extremely suspicious of umbrellas.",
+  "slug": "weather-station",
+  "title": "Handheld Weather Station — Gust & Gloom",
+  "price": "89.00",
+  "currency": "USD",
+  "status": "available",
+  "tags": [
+    "weather",
+    "sensor"
+  ],
+  "specs": {
+    "sensors": "temp, humidity, barometer, anemometer (optional)",
+    "connectivity": "BLE / USB",
+    "power": "LiPo battery"
+  },
+  "html": "<p>Handheld Weather Station — Gust &amp; Gloom measures the sky’s small moods while the larger universe ignores the forecast. A palm-sized slab of brushed metal and scuffed plastic, it tastes the air for temperature, humidity, pressure, and wind, then mutters the numbers onto a dim little screen that never pretends to be optimistic. A lanyard loop waits for a carabiner that might someday leave the drawer. The circuit inside is overqualified for watching clouds that will form and vanish whether anyone is counting. Still, it logs each gust and drop with patient, unromantic precision, a pocket witness to passing fronts and passing days, quietly recording how the weather changes and how little that changes anything at all.</p>",
+  "raw": "Handheld Weather Station — Gust & Gloom measures the sky’s small moods while the larger universe ignores the forecast. A palm-sized slab of brushed metal and scuffed plastic, it tastes the air for temperature, humidity, pressure, and wind, then mutters the numbers onto a dim little screen that never pretends to be optimistic. A lanyard loop waits for a carabiner that might someday leave the drawer. The circuit inside is overqualified for watching clouds that will form and vanish whether anyone is counting. Still, it logs each gust and drop with patient, unromantic precision, a pocket witness to passing fronts and passing days, quietly recording how the weather changes and how little that changes anything at all."
+}

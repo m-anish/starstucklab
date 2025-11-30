@@ -1,6 +1,6 @@
 ---
 // site/src/pages/index.astro
-// Main landing page with hero fade effect (simplified)
+// Main landing page with hero zoom effect
 // Build-time only: reads site/src/data/images.json
 
 import fs from 'fs';
@@ -53,13 +53,13 @@ function buildSceneSources(sceneKey: string) {
   const byType  = (type: string) => findVariantFilename(sceneKey, { type });
 
   const filenames: Record<string, string | null> = {
-    wide_21_10: byAspect('21:10') || byId(`${sceneKey}-wide-2560x1219`) || byId('wide-2560x1219'),
-    desktop_16_10: byAspect('16:10') || byId(`${sceneKey}-master`) || byId('master') || byId(`${sceneKey}-desktop-3840x2400`),
-    desktop_16_9: byAspect('16:9') || byId(`${sceneKey}-desktop-3840x2160`),
-    tablet_3_4: byAspect('3:4') || byId(`${sceneKey}-tablet-1200x1600`),
-    mobile_9_16: byAspect('9:16') || byId(`${sceneKey}-mobile-1080x1920`),
-    generated_2k: byType('generate') || byId(`${sceneKey}-generated-2048x1280`),
-    thumb: byType('resize') || byId(`${sceneKey}-thumb-600x338.jpg`)
+    wide_21_10: byAspect('21:10') || byId(`${sceneKey}-wide-21-10`),
+    desktop_16_10: byAspect('16:10') || byId(`${sceneKey}-desktop-16-10`),
+    desktop_16_9: byAspect('16:9') || byId(`${sceneKey}-desktop-16-9`),
+    tablet_3_4: byAspect('3:4') || byId(`${sceneKey}-tablet-3-4`),
+    mobile_9_16: byAspect('9:16') || byId(`${sceneKey}-mobile-9-16`),
+    generated: byType('generate') || byId(`${sceneKey}-generated`),
+    thumb: byType('resize') || byId(`${sceneKey}-thumb-420x236`)
   };
 
   const urls: Record<string, string | null> = {};
@@ -92,8 +92,8 @@ const chosenHero = (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]
 const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
 
-// Only preload hero (above fold), workshop loads lazily
-const preloadUrls = [hero.desktop_16_10, hero.generated_2k].filter(Boolean);
+// Preload important visuals
+const preloadUrls = [hero.desktop_16_10, hero.generated, workshop.desktop_16_10, workshop.generated].filter(Boolean);
 
 const MEDIA = {
   ultra_wide: '(min-width:1400px)',
@@ -131,9 +131,9 @@ const MEDIA = {
     <div
       class="herozoom-spacer"
       id="herozoomSpacer"
-      data-fade-start="0.20"
-      data-fade-end="0.50"
-      data-content-start="0.60"
+      data-zoom-scale="1.9"
+      data-cross-start="0.40"
+      data-cross-end="0.85"
     ></div>
 
     <!-- Top navigation: appears when inside workshop -->
@@ -152,19 +152,19 @@ const MEDIA = {
       </div>
     </nav>
 
-    <!-- Workshop (back layer) - lazy loaded -->
+    <!-- Workshop (back layer) -->
     <picture>
-      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} data-srcset={workshop.wide_21_10} /> : null}
-      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} data-srcset={workshop.desktop_16_10} /> : null}
-      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} data-srcset={workshop.tablet_3_4} /> : null}
+      {workshop.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={workshop.wide_21_10} /> : null}
+      {workshop.desktop_16_10 ? <source media={MEDIA.desktop} srcset={workshop.desktop_16_10} /> : null}
+      {workshop.tablet_3_4 ? <source media={MEDIA.tablet} srcset={workshop.tablet_3_4} /> : null}
       <img class="hero-layer layer-interior"
            id="hzInterior"
-           data-src={workshop.mobile_9_16 ?? workshop.generated_2k ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.png`}
+           src={workshop.mobile_9_16 ?? workshop.generated ?? workshop.thumb ?? workshop.desktop_16_10 ?? `${BASE_URL}workshop/workshop-master.webp`}
            alt="Workshop interior"
-           loading="lazy" />
+           loading="eager" />
     </picture>
 
-    <!-- Forest hero (front layer) - eager load -->
+    <!-- Forest hero (front layer) -->
     <picture>
       {hero.wide_21_10 ? <source media={MEDIA.ultra_wide} srcset={hero.wide_21_10} /> : null}
       {hero.desktop_16_10 ? <source media={MEDIA.desktop} srcset={hero.desktop_16_10} /> : null}
@@ -172,7 +172,7 @@ const MEDIA = {
       {hero.tablet_3_4 ? <source media={MEDIA.tablet} srcset={hero.tablet_3_4} /> : null}
       <img class="hero-layer layer-forest"
            id="hzForest"
-           src={hero.mobile_9_16 ?? hero.generated_2k ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.png`}
+           src={hero.mobile_9_16 ?? hero.generated ?? hero.thumb ?? hero.desktop_16_10 ?? `${BASE_URL}hero/hero-master.webp`}
            alt="Forest hero with cabin and STARSTUCKLAB sign"
            loading="eager" />
     </picture>
@@ -199,7 +199,7 @@ const MEDIA = {
       <AboutPanel />
       <section id="workbench">
         <h2>Inside the Workshop</h2>
-        <p>Welcome — this is where your workbench / featured products / logs begin.</p>
+        <p>Welcome – this is where your workbench / featured products / logs begin.</p>
       </section>
       <section id="projects" style="height:800px;">
         <h3>Projects</h3>
@@ -227,7 +227,7 @@ const MEDIA = {
     })();
   </script>
 
-  <!-- SIMPLIFIED HERO FADE SCRIPT WITH INTERSECTION OBSERVER -->
+  <!-- UNIFIED HERO ZOOM SCRIPT -->
   <script>
     (function() {
       const spacerEl = document.getElementById('herozoomSpacer');
@@ -241,55 +241,26 @@ const MEDIA = {
       if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
       const ds = spacerEl.dataset;
-      const FADE_START = parseFloat(ds.fadeStart ?? '0.20');
-      const FADE_END = parseFloat(ds.fadeEnd ?? '0.50');
-      const CONTENT_START = parseFloat(ds.contentStart ?? '0.60');
-      const NAV_SHOW_THRESHOLD = FADE_END + 0.05; // Show nav right after fade completes
-      const ABOUT_SHOW_THRESHOLD = CONTENT_START; // Show parchment when content phase starts
-      const POST_ZOOM_THRESHOLD = CONTENT_START + 0.05;
+      const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
+      const CROSS_START = parseFloat(ds.crossStart ?? '0.40');
+      const CROSS_END = parseFloat(ds.crossEnd ?? '0.85');
+      const NAV_SHOW_THRESHOLD = 0.75;
+      const ABOUT_SHOW_THRESHOLD = 0.85;
+      const POST_ZOOM_THRESHOLD = 0.90;
 
+      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const isMobile = window.innerWidth <= 820;
+      const BASE_SCALE = 1;
       let ticking = false;
+      
+      // Throttling for mobile performance
+      let lastScrollTime = 0;
+      const THROTTLE_MS = isMobile ? 16 : 0; // ~60fps on mobile, unlimited on desktop
+
+      // Cache DOM measurements (recalculate on resize only)
       let cachedSpacerTop = 0;
       let cachedSpacerHeight = 0;
       let measurementsValid = false;
-
-      // Lazy load workshop image when it gets close to viewport
-      let workshopLoaded = false;
-      
-      function loadWorkshopImage() {
-        if (workshopLoaded) return;
-        
-        const sources = interiorEl.parentElement?.querySelectorAll('source[data-srcset]');
-        sources?.forEach(source => {
-          const srcset = source.getAttribute('data-srcset');
-          if (srcset) {
-            source.setAttribute('srcset', srcset);
-            source.removeAttribute('data-srcset');
-          }
-        });
-        
-        const dataSrc = interiorEl.getAttribute('data-src');
-        if (dataSrc) {
-          interiorEl.setAttribute('src', dataSrc);
-          interiorEl.removeAttribute('data-src');
-        }
-        
-        workshopLoaded = true;
-      }
-
-      // IntersectionObserver for lazy loading workshop
-      const workshopObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-          if (entry.isIntersecting) {
-            loadWorkshopImage();
-            workshopObserver.disconnect();
-          }
-        });
-      }, {
-        rootMargin: '200px' // Start loading 200px before entering viewport
-      });
-
-      workshopObserver.observe(spacerEl);
 
       function updateMeasurements() {
         const rect = spacerEl.getBoundingClientRect();
@@ -317,10 +288,18 @@ const MEDIA = {
         return Math.max(0, Math.min(1, p));
       }
 
+      function easeInOutCubic(t: number) { 
+        return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; 
+      }
+
       function applyInitialFrame() {
-        // No transforms - just opacity on all devices
-        forestEl.style.transform = 'none';
-        interiorEl.style.transform = 'none';
+        // Mobile: no transforms at all, just opacity
+        if (isMobile || prefersReduced) {
+          forestEl.style.transform = 'none';
+          interiorEl.style.transform = 'none';
+        } else {
+          forestEl.style.transform = `scale(${BASE_SCALE}) translateY(0px)`;
+        }
         forestEl.style.opacity = '1';
         interiorEl.style.opacity = '0';
         overlayEl.style.opacity = '1';
@@ -334,30 +313,34 @@ const MEDIA = {
       function update() {
         const p = computeProgress();
         
-        // PHASE 1: Fade transition (FADE_START to FADE_END)
-        // Complete the crossfade FIRST before showing any content
         let interiorOpacity = 0;
-        if (p <= FADE_START) {
-          interiorOpacity = 0;
-        } else if (p >= FADE_END) {
-          interiorOpacity = 1;
-        } else {
-          // Linear fade between start and end
-          interiorOpacity = (p - FADE_START) / (FADE_END - FADE_START);
-        }
+        if (p <= CROSS_START) interiorOpacity = 0;
+        else if (p >= CROSS_END) interiorOpacity = 1;
+        else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
 
         const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
 
-        // Apply fade - no transforms on any device
-        forestEl.style.opacity = `${forestOpacity}`;
-        interiorEl.style.opacity = `${interiorOpacity}`;
-        overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.5)}`; // Fade out overlay faster
+        // Mobile: simple fade-only (no transforms)
+        // Desktop: full zoom/pan effect
+        if (isMobile || prefersReduced) {
+          // Simple opacity fade, no transforms
+          forestEl.style.opacity = `${forestOpacity}`;
+          interiorEl.style.opacity = `${interiorOpacity}`;
+          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        } else {
+          // Desktop: fancy zoom/pan
+          const eased = easeInOutCubic(p);
+          const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
+          const translateY = - Math.round(p * 40);
+          
+          forestEl.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
+          forestEl.style.opacity = `${forestOpacity}`;
+          interiorEl.style.opacity = `${interiorOpacity}`;
+          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        }
 
-        // PHASE 2: Content reveal (after CONTENT_START)
-        // Only show nav/content AFTER fade is complete
-        
-        // Show nav (appears right after fade completes)
-        if (p > NAV_SHOW_THRESHOLD) {
+        // Show nav
+        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
           navEl.classList.add('nav-visible', 'nav-sticky');
           navEl.classList.remove('nav-hidden');
           navEl.setAttribute('aria-hidden', 'false');
@@ -367,9 +350,9 @@ const MEDIA = {
           navEl.setAttribute('aria-hidden', 'true');
         }
 
-        // Show about panel (parchment) - only after content phase starts
+        // Show about panel
         if (aboutEl) {
-          const shouldBeIn = p > ABOUT_SHOW_THRESHOLD;
+          const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
           if (shouldBeIn && !aboutEl.classList.contains('in')) {
             aboutEl.classList.add('in');
           } else if (!shouldBeIn && aboutEl.classList.contains('in')) {
@@ -377,9 +360,9 @@ const MEDIA = {
           }
         }
 
-        // Show post-zoom content - slides in after parchment
+        // Show post-zoom content
         if (postZoomEl) {
-          const shouldBeIn = p > POST_ZOOM_THRESHOLD;
+          const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
           if (shouldBeIn && !postZoomEl.classList.contains('in')) {
             postZoomEl.classList.add('in');
             postZoomEl.setAttribute('aria-hidden', 'false');
@@ -408,17 +391,18 @@ const MEDIA = {
 
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', () => { 
-        measurementsValid = false;
+        measurementsValid = false; // Invalidate cache on resize
         requestTick(); 
       }, { passive: true });
 
-      // CTA smooth scroll handler
+      // CTA smooth scroll handler - centers the parchment better
       const cta = document.querySelector('.cta');
       const aboutPanel = document.getElementById('aboutPanel');
       if (cta && aboutPanel) {
         cta.addEventListener('click', (ev) => {
           ev.preventDefault();
           const rect = aboutPanel.getBoundingClientRect();
+          // Scroll to center parchment at ~40% from top (more centered, less cramped)
           const targetY = window.scrollY + rect.top - Math.round(window.innerHeight * 0.4);
           window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
           history.replaceState(null, '', '#workbench');
@@ -432,7 +416,7 @@ const MEDIA = {
       
       if (!pageIsScrollable()) {
         const reveal = () => {
-          loadWorkshopImage(); // Force load if revealing without scroll
+          forestEl.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
           forestEl.style.opacity = '0';
           interiorEl.style.opacity = '1';
           overlayEl.style.opacity = '0';

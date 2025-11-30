@@ -1,73 +1,86 @@
 {
-  "version": "1.1",
   "shared_variants": [
     {
-      "id": "master-16_10",
-      "type": "master",
-      "aspect": "16:10",
-      "width": 3840,
-      "height": 2400,
-      "filename": "master.png",
-      "note": "Authoritative master resolution (kept as PNG for archival)."
-    },
-    {
-      "id": "generated-2k",
+      "id": "generated",
       "type": "generate",
-      "prompt_file": "site/data/inside_workshop.md",
-      "width": 2048,
-      "height": 1280,
-      "steps": 28,
-      "guidance": 7.0,
-      "filename": "generated-2048x1280.png"
+      "width": 1433,
+      "height": 896,
+      "filename": "generated.webp",
+      "prompt_file": "prompt.txt",
+      "quality": 75
     },
     {
-      "id": "wide-21_10",
+      "id": "master",
+      "type": "master",
+      "width": 1433,
+      "height": 896,
+      "filename": "master.webp",
+      "quality": 75
+    },
+    {
+      "id": "desktop",
       "type": "crop",
-      "aspect": "21:10",
-      "width": 2560,
-      "height": 1219,
+      "width": 2688,
+      "height": 1680,
+      "aspect": "16:10",
       "centered": true,
-      "filename": "wide-2560x1219.webp",
-      "quality": 85
+      "filename": "desktop.webp",
+      "quality": 75
     },
     {
-      "id": "desktop-16_9",
+      "id": "laptop",
       "type": "crop",
+      "width": 1280,
+      "height": 720,
       "aspect": "16:9",
-      "width": 3840,
-      "height": 2160,
       "centered": true,
-      "filename": "desktop-3840x2160.webp",
-      "quality": 85
+      "filename": "laptop.webp",
+      "quality": 75
     },
     {
-      "id": "mobile-9_16",
+      "id": "tablet",
       "type": "crop",
-      "aspect": "9:16",
-      "width": 1080,
-      "height": 1920,
+      "width": 840,
+      "height": 1120,
+      "aspect": "3:4",
       "centered": true,
-      "filename": "mobile-1080x1920.webp",
-      "quality": 85
+      "filename": "tablet.webp",
+      "quality": 75
+    },
+    {
+      "id": "mobile",
+      "type": "crop",
+      "width": 756,
+      "height": 1344,
+      "aspect": "9:16",
+      "centered": true,
+      "filename": "mobile.webp",
+      "quality": 75
     },
     {
       "id": "thumb",
       "type": "resize",
-      "width": 600,
-      "height": 338,
-      "filename": "thumb-600x338.jpg",
-      "quality": 85
+      "width": 420,
+      "height": 236,
+      "filename": "thumb.webp",
+      "quality": 75
     }
   ],
   "scenes": {
     "hero": {
-      "description": "Forest hero ...",
-      "master": "assets/hero/master/hero-master.png",
+      "master": "public/assets/hero/hero-master.png",
       "variants": "shared_variants"
     },
     "workshop": {
-      "description": "Workshop interior ...",
-      "master": "assets/hero/master/workshop-master.png",
+      "master": "public/assets/workshop/workshop-master.png",
+      "variants": "shared_variants"
+    },
+    "shop": {
+      "master": "public/assets/shop/shop-master.png",
+      "variants": "shared_variants"
+    },
+    "product-hadley": {
+      "master": "public/assets/product-hadley/product-hadley-master.png",
       "variants": "shared_variants"
     }
   }

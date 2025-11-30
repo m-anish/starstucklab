@@ -1,0 +1,153 @@
+/* tokens.css - Design System Foundation
+   Place this in: site/src/styles/tokens.css
+   Import FIRST in all other CSS files
+*/
+
+:root {
+  /* ===== COLOR PALETTE ===== */
+  /* Parchment System (Primary) */
+  --paper-cream: #fbf0db;
+  --paper-mid: #f0d9bd;
+  --paper-dark: #e8d4ab;
+  --paper-stain: rgba(90, 50, 20, 0.08);
+  
+  /* Ink Colors */
+  --ink-black: #1a1412;
+  --ink-dark: #28160b;
+  --ink-mid: #2b1f18;
+  --ink-brown: #5a3214;
+  --ink-muted: #3d2f24;
+  
+  /* Accent Colors */
+  --accent-green: #2a7a4f;
+  --accent-green-light: rgba(42, 122, 79, 0.15);
+  --accent-green-border: rgba(42, 122, 79, 0.2);
+  
+  /* Workshop/Night Sky */
+  --sky-dark: #05060a;
+  --sky-deep: #0b0c10;
+  --starry-white: #f8f4e8;
+  
+  /* Navigation */
+  --nav-bg: rgba(6, 10, 12, 0.85);
+  --nav-border: rgba(255, 255, 255, 0.1);
+  
+  /* Semantic Colors */
+  --surface-light: rgba(255, 255, 255, 0.5);
+  --surface-lighter: rgba(255, 255, 255, 0.8);
+  --border-subtle: rgba(60, 40, 22, 0.08);
+  --border-medium: rgba(60, 40, 22, 0.12);
+  --shadow-ambient: rgba(6, 6, 6, 0.38);
+  
+  /* ===== TYPOGRAPHY ===== */
+  /* Font Families */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Merriweather', Georgia, serif;
+  --font-ui: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  
+  /* Font Sizes (Fluid Scale) */
+  --text-xs: clamp(0.75rem, 0.7rem + 0.2vw, 0.85rem);
+  --text-sm: clamp(0.85rem, 0.8rem + 0.2vw, 0.95rem);
+  --text-base: clamp(0.95rem, 0.9rem + 0.25vw, 1.05rem);
+  --text-lg: clamp(1.05rem, 1rem + 0.3vw, 1.2rem);
+  --text-xl: clamp(1.2rem, 1.1rem + 0.5vw, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
+  --text-3xl: clamp(1.8rem, 1.5rem + 1.5vw, 2.6rem);
+  --text-4xl: clamp(2.2rem, 1.8rem + 2vw, 3.2rem);
+  
+  /* Line Heights */
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.7;
+  
+  /* Font Weights */
+  --weight-light: 300;
+  --weight-normal: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  
+  /* ===== SPACING SCALE ===== */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+  --space-20: 5rem;     /* 80px */
+  --space-24: 6rem;     /* 96px */
+  
+  /* ===== SIZING ===== */
+  --content-narrow: 640px;
+  --content-medium: 900px;
+  --content-wide: 1200px;
+  --content-max: 1400px;
+  
+  /* ===== RADIUS ===== */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+  
+  /* ===== SHADOWS ===== */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 12px 36px rgba(0, 0, 0, 0.25);
+  --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow-2xl: 0 28px 72px rgba(6, 6, 6, 0.42);
+  
+  /* Parchment Shadows */
+  --shadow-parchment: 0 24px 64px var(--shadow-ambient),
+                      inset 0 2px 10px rgba(255, 255, 255, 0.45);
+  --shadow-inset-burn: inset 0 0 0 1px rgba(0, 0, 0, 0.02),
+                       inset 0 16px 32px rgba(120, 60, 20, 0.08);
+  
+  /* ===== Z-INDEX SCALE ===== */
+  --z-base: 1;
+  --z-elevated: 10;
+  --z-header: 50;
+  --z-overlay: 100;
+  --z-modal: 500;
+  --z-toast: 1000;
+  
+  /* ===== TRANSITIONS ===== */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 400ms cubic-bezier(0.2, 0.9, 0.3, 1);
+  --transition-smooth: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ===== BREAKPOINTS (for reference) ===== */
+  /* Use in media queries:
+     --bp-xs: 400px
+     --bp-sm: 640px
+     --bp-md: 820px
+     --bp-lg: 1024px
+     --bp-xl: 1400px
+  */
+}
+
+/* ===== DARK MODE OVERRIDES ===== */
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Parchment stays warm and light even in dark mode */
+    /* Workshop/night scenes use their own dark backgrounds */
+  }
+}
+
+/* ===== REDUCED MOTION ===== */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 100ms;
+    --transition-smooth: 100ms;
+  }
+}
