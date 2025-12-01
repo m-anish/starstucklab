@@ -29,7 +29,7 @@
 
 /* Ensure parchment card inside is visible */
 .about-panel-wrap .parchment {
-  max-width: 450px;
+  max-width: 500px;
   width: 100%;
   padding: 2rem 1.5rem;
 }
@@ -38,19 +38,20 @@
 /* Mobile: stacked above text */
 .about-panel-wrap .float-emblem {
   float: none;
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   margin: 0 auto 1.5rem auto;
   display: flex;
   justify-content: center;
   align-items: center;
   background: linear-gradient(135deg, #f0e8db 0%, #e4d9cc 100%);
   border-radius: 12px;
-  border: 2px solid rgba(80, 50, 25, 0.3);
+  border: 4px solid rgba(80, 50, 25, 0.3);
   padding: 6px;
   box-shadow: 
     0 3px 12px rgba(0, 0, 0, 0.25),
     inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  opacity: 0.8;
 }
 
 .about-panel-wrap .float-emblem img {
@@ -62,50 +63,53 @@
 }
 
 /* ===== CONTENT LAYOUT ===== */
-.about-panel-wrap .content {
+/* Above parchment pseudo-elements */
+/* .about-panel-wrap .content {
   position: relative;
-  z-index: 4; /* Above parchment pseudo-elements */
-}
+  z-index: 4; 
+} */
 
-.about-panel-wrap .title {
+/* .about-panel-wrap .title {
   margin-bottom: 0.75rem;
   text-align: center;
-}
+} */
 
-.about-panel-wrap .lead {
+/* .about-panel-wrap .lead {
   text-align: center;
-}
+} */
 
 .about-panel-wrap .motto {
   margin-top: 1.25rem;
   padding-top: 1.25rem;
   border-top: 1px solid rgba(0, 0, 0, 0.1);
   font-style: italic;
+  font-weight: 500;
   text-align: center;
 }
 
 /* ===== RESPONSIVE ===== */
 
 /* Tablets: enable float wrapping */
-@media (min-width: 641px) {
+ @media (min-width: 641px) {
   .about-panel-wrap {
     margin: 2.5rem auto;
   }
   
   .about-panel-wrap .float-emblem {
     float: left;
-    margin: 0 2rem 1.5rem 1rem;
-    shape-outside: circle(50%);
+    margin: 0 1rem 1.5rem 0;
+    /* shape-outside: circle(50%); */
+    shape-outside: square(50%);
   }
   
   .about-panel-wrap .float-emblem img {
-    width: 140px;
-    height: 140px;
+    width: 170px;
+    height: 170px;
   }
   
   .about-panel-wrap .title {
     text-align: left;
-    font-size: clamp(1.6rem, 3.5vw, 1.85rem);
+    /* font-size: clamp(1.6rem, 3.5vw, 1.85rem); */
   }
   
   .about-panel-wrap .lead {
@@ -115,10 +119,10 @@
   .about-panel-wrap .motto {
     text-align: left;
   }
-}
+} 
 
 /* Small phones */
-@media (max-width: 640px) {
+/* @media (max-width: 640px) {
   .about-panel-wrap {
     padding: 0 0.5rem;
   }
@@ -127,7 +131,7 @@
     width: 120px;
     height: 120px;
   }
-}
+} */
 
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {

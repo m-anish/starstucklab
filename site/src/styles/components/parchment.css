@@ -6,7 +6,7 @@
 @import '../tokens.css';
 
 :root {
-  --parchment-text: #3b2a1b;      /* main body text */
+  --parchment-text: #2b160e;      /* main body text (darkened for better contrast) */
   --parchment-heading: #2a1d12;   /* headings */
   --parchment-italic: #4a3420;    /* mottos, soft notes */
   --parchment-price: #1d5a3d;
@@ -17,13 +17,14 @@
   position: relative;
   /* Warmer, more aged parchment tone */
   background: linear-gradient(135deg, 
-    #e8c5a0 0%, 
-    #ddb890 25%, 
-    #d4a574 50%, 
-    #dcb388 75%, 
-    #e0b98c 100%);
+  #f5d7be 0%,    /* brighter #e8c5a0 */
+  #ebcba8 25%,   /* brighter #ddb890 */
+  #e4bb96 50%,   /* brighter #d4a574 */
+  #ebcdaa 75%,   /* brighter #dcb388 */
+  #eed0a7 100%   /* brighter #e0b98c */
+  );
   border: none;
-  padding: var(--space-8);
+  padding: calc(var(--space-8) + 32px) calc(var(--space-8) + 10px);
   
   /* Typography defaults */
   font-family: var(--font-body);
@@ -84,6 +85,12 @@
   opacity: 0.65;
 }
 
+.parchment,
+.parchment::before {
+  filter: brightness(1.10);
+}
+
+
 .about-panel-wrap .parchment::before {
   /* Override with stain + grain */
   background-image: 
@@ -106,6 +113,7 @@
   opacity: 0.65;
 }
 
+/* ===== 1) Reduce edge darkness ~20% & 2) Lighten center ===== */
 /* Enhanced aged/burnt edge effect optimized for 9:16 portrait */
 .parchment::after {
   content: '';
@@ -115,119 +123,119 @@
   
   /* Multiple radial gradients for realistic aging - adjusted for portrait aspect */
   background: 
-    /* Center glow/highlight - taller ellipse for portrait */
+    /* Center glow/highlight - taller ellipse for portrait (brighter center) */
     radial-gradient(
       ellipse 55% 70% at 48% 45%,
-      rgba(255, 250, 240, 0.35) 0%,
-      rgba(255, 250, 240, 0.15) 30%,
-      transparent 55%
+      rgba(255, 250, 240, 0.45) 0%,
+      rgba(255, 250, 240, 0.20) 28%,
+      transparent 52%
     ),
     
-    /* Main vignette - portrait optimized */
+    /* Main vignette - portrait optimized (opacities reduced ~20%) */
     radial-gradient(
       ellipse 60% 85% at center,
       transparent 0%,
       transparent 20%,
-      rgba(100, 60, 30, 0.12) 45%,
-      rgba(80, 45, 20, 0.28) 65%,
-      rgba(60, 35, 15, 0.48) 82%,
-      rgba(40, 25, 10, 0.72) 100%
+      rgba(100, 60, 30, 0.096) 65%,
+      rgba(80, 45, 20, 0.224) 80%,
+      rgba(60, 35, 15, 0.384) 93%,
+      rgba(40, 25, 10, 0.576) 100%
     ),
     
-    /* Top edge darkening - spans width */
+    /* Top edge darkening - spans width (softened) */
     radial-gradient(
       ellipse 80% 15% at 50% 0%,
-      rgba(45, 28, 12, 0.5) 0%,
-      rgba(55, 35, 18, 0.35) 40%,
-      transparent 80%
+      rgba(45, 28, 12, 0.40) 0%,
+      rgba(55, 35, 18, 0.28) 20%,
+      transparent 70%
     ),
     
-    /* Bottom edge darkening - spans width */
+    /* Bottom edge darkening - spans width (softened) */
     radial-gradient(
       ellipse 80% 15% at 50% 100%,
-      rgba(45, 28, 12, 0.55) 0%,
-      rgba(55, 35, 18, 0.4) 40%,
-      transparent 80%
+      rgba(45, 28, 12, 0.44) 0%,
+      rgba(55, 35, 18, 0.32) 20%,
+      transparent 70%
     ),
     
-    /* Left edge burn - vertical span */
+    /* Left edge burn - vertical span (softened) */
     radial-gradient(
       ellipse 12% 70% at 0% 50%,
-      rgba(50, 30, 15, 0.45) 0%,
-      rgba(60, 35, 20, 0.3) 35%,
-      transparent 70%
-    ),
-    
-    /* Right edge burn - vertical span */
-    radial-gradient(
-      ellipse 12% 70% at 100% 50%,
-      rgba(50, 30, 15, 0.45) 0%,
-      rgba(60, 35, 20, 0.3) 35%,
-      transparent 70%
-    ),
-    
-    /* Top-left burnt corner */
-    radial-gradient(
-      circle at 8% 5%,
-      rgba(40, 25, 12, 0.55) 0%,
-      rgba(55, 32, 18, 0.38) 12%,
-      rgba(65, 40, 22, 0.22) 25%,
-      transparent 40%
-    ),
-    
-    /* Top-right burnt corner */
-    radial-gradient(
-      circle at 92% 5%,
-      rgba(40, 25, 12, 0.5) 0%,
-      rgba(55, 32, 18, 0.35) 12%,
-      rgba(65, 40, 22, 0.2) 25%,
-      transparent 40%
-    ),
-    
-    /* Mid-left aged spot */
-    radial-gradient(
-      ellipse 15% 25% at 5% 35%,
-      rgba(70, 45, 25, 0.25) 0%,
-      rgba(80, 50, 28, 0.15) 30%,
+      rgba(50, 30, 15, 0.36) 0%,
+      rgba(60, 35, 20, 0.24) 15%,
       transparent 60%
     ),
     
-    /* Mid-right water stain */
+    /* Right edge burn - vertical span (softened) */
+    radial-gradient(
+      ellipse 12% 70% at 100% 50%,
+      rgba(50, 30, 15, 0.36) 0%,
+      rgba(60, 35, 20, 0.24) 15%,
+      transparent 60%
+    ),
+    
+    /* Top-left burnt corner (reduced alpha) */
+    radial-gradient(
+      circle at 8% 5%,
+      rgba(40, 25, 12, 0.44) 0%,
+      rgba(55, 32, 18, 0.30) 12%,
+      rgba(65, 40, 22, 0.18) 25%,
+      transparent 60%
+    ),
+    
+    /* Top-right burnt corner (reduced alpha) */
+    radial-gradient(
+      circle at 92% 5%,
+      rgba(40, 25, 12, 0.40) 0%,
+      rgba(55, 32, 18, 0.28) 12%,
+      rgba(65, 40, 22, 0.16) 25%,
+      transparent 60%
+    ),
+    
+    /* Mid-left aged spot (reduced alpha) */
+    radial-gradient(
+      ellipse 15% 25% at 5% 35%,
+      rgba(70, 45, 25, 0.20) 0%,
+      rgba(80, 50, 28, 0.12) 30%,
+      transparent 70%
+    ),
+    
+    /* Mid-right water stain (reduced alpha) */
     radial-gradient(
       ellipse 18% 22% at 90% 55%,
-      rgba(75, 48, 26, 0.28) 0%,
-      rgba(85, 55, 30, 0.16) 35%,
-      transparent 65%
+      rgba(75, 48, 26, 0.224) 0%,
+      rgba(85, 55, 30, 0.128) 35%,
+      transparent 75%
     ),
     
-    /* Bottom-left burnt corner */
+    /* Bottom-left burnt corner (softened) */
     radial-gradient(
       circle at 8% 95%,
-      rgba(40, 25, 12, 0.6) 0%,
-      rgba(55, 32, 18, 0.42) 12%,
-      rgba(65, 40, 22, 0.25) 25%,
-      transparent 40%
+      rgba(40, 25, 12, 0.48) 0%,
+      rgba(55, 32, 18, 0.336) 12%,
+      rgba(65, 40, 22, 0.20) 25%,
+      transparent 60%
     ),
     
-    /* Bottom-right burnt corner - most prominent */
+    /* Bottom-right burnt corner - most prominent but softened */
     radial-gradient(
       circle at 92% 95%,
-      rgba(38, 23, 10, 0.65) 0%,
-      rgba(52, 30, 16, 0.48) 12%,
-      rgba(62, 38, 20, 0.28) 25%,
-      transparent 42%
+      rgba(38, 23, 10, 0.52) 0%,
+      rgba(52, 30, 16, 0.384) 12%,
+      rgba(62, 38, 20, 0.224) 25%,
+      transparent 62%
     ),
     
-    /* Additional aging spots along edges */
+    /* Additional aging spots along edges (softened) */
     radial-gradient(
       ellipse 10% 8% at 25% 2%,
       rgba(60, 38, 20, 0.3) 0%,
-      transparent 70%
+      transparent 80%
     ),
     radial-gradient(
       ellipse 10% 8% at 75% 98%,
       rgba(60, 38, 20, 0.35) 0%,
-      transparent 70%
+      transparent 80%
     );
   
   mix-blend-mode: multiply;
@@ -354,6 +362,7 @@
   color: var(--parchment-text);
   line-height: 1.7;
   font-weight: 400;
+  text-shadow: 0 1px 0 rgba(255,255,250,0.03); /* tiny highlight to separate from grain */
 }
 
 .parchment .lead {
@@ -384,7 +393,7 @@
 .parchment .product-title {
   font-weight: 700;
   color: var(--parchment-heading);
-  font-size: var(--text-lg);
+  font-size: var(--text-lg) !important;
   margin-bottom: var(--space-2);
 }
 
@@ -606,4 +615,11 @@
     width: 70px;
     height: 70px;
   }
+}
+
+body .about-panel-wrap .parchment {
+  padding-top: var(--space-8);
+  padding-bottom: var(--space-8);
+  padding-left: var(--space-8);
+  padding-right: var(--space-8);
 }
