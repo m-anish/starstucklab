@@ -1,20 +1,27 @@
-/* parchment.css - Artistic Aged Parchment Card System (Improved Readability)
+/* parchment.css - Artistic Aged Parchment Card System (Enhanced Aging)
    Place this in: site/src/styles/components/parchment.css
    Import tokens.css FIRST, then this
 */
 
 @import '../tokens.css';
 
+:root {
+  --parchment-text: #3b2a1b;      /* main body text */
+  --parchment-heading: #2a1d12;   /* headings */
+  --parchment-italic: #4a3420;    /* mottos, soft notes */
+  --parchment-price: #1d5a3d;
+}
+
 /* ===== BASE PARCHMENT CARD ===== */
 .parchment {
   position: relative;
-  /* Brightened background for better readability */
+  /* Warmer, more aged parchment tone */
   background: linear-gradient(135deg, 
-    #f0e4c8 0%, 
-    #f3e8d0 25%, 
-    #f5ebd8 50%, 
-    #f4e9d4 75%, 
-    #f5ebd8 100%);
+    #e8c5a0 0%, 
+    #ddb890 25%, 
+    #d4a574 50%, 
+    #dcb388 75%, 
+    #e0b98c 100%);
   border: none;
   padding: var(--space-8);
   
@@ -51,11 +58,11 @@
   );
   
   box-shadow: 
-    0 12px 48px rgba(0, 0, 0, 0.5),
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    0 0 0 1px rgba(0, 0, 0, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 0 60px rgba(255, 245, 220, 0.3);
+    0 16px 56px rgba(0, 0, 0, 0.6),
+    0 6px 20px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.3),
+    inset 0 0 80px rgba(255, 245, 220, 0.2);
 }
 
 /* Subtle paper texture overlay */
@@ -64,55 +71,212 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
+  /* Only paper grain - no coffee stains by default */
   background-image: 
-    /* Single coffee stain - top right corner */
-    url('/assets/textures/coffee-stain.png'),
-    /* Paper grain */
-    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' /><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/></svg>");
+    url('/assets/textures/paper-grain.png');
+    /* url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' /><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/></svg>"); */
   
-  /* Stain keeps natural size, positioned top right */
+  background-size: 400px 400px;
+  background-position: center;
+  background-repeat: repeat;
+  
+  mix-blend-mode: multiply;
+  opacity: 0.65;
+}
+
+.about-panel-wrap .parchment::before {
+  /* Override with stain + grain */
+  background-image: 
+    /* Coffee stain - bottom right */
+    url('/assets/textures/coffee-stain.png'),
+    url('/assets/textures/paper-grain.png');
+    /* Paper grain */
+    /* url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' /><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/></svg>"); */
+  
   background-size: 
-    220px auto,      /* coffee stain - adjust size as needed */
-    400px 400px;     /* grain texture */
+    220px auto,      /* coffee stain */
+    400px 400px;     /* grain */
   
   background-position: 
-    100% 100%,         /* stain position - adjust to taste */
+    88% 88%,         /* stain - bottom right */
     center;          /* grain */
   
   background-repeat: no-repeat, repeat;
-  
   mix-blend-mode: multiply;
-  opacity: 0.5; /* Adjust between 0.3-0.7 for intensity */
-  z-index: 1;
+  opacity: 0.65;
 }
 
-/* Enhanced burn/aging effect - subtler for better readability */
+/* Enhanced aged/burnt edge effect optimized for 9:16 portrait */
 .parchment::after {
   content: '';
   position: absolute;
   inset: 0;
   pointer-events: none;
-  /* More visible edge darkening */
-  background: radial-gradient(
-    ellipse at center,
-    transparent 0%,
-    transparent 35%,
-    rgba(80, 50, 20, 0.12) 60%,
-    rgba(60, 35, 15, 0.25) 80%,
-    rgba(40, 25, 10, 0.4) 100%
-  );
+  
+  /* Multiple radial gradients for realistic aging - adjusted for portrait aspect */
+  background: 
+    /* Center glow/highlight - taller ellipse for portrait */
+    radial-gradient(
+      ellipse 55% 70% at 48% 45%,
+      rgba(255, 250, 240, 0.35) 0%,
+      rgba(255, 250, 240, 0.15) 30%,
+      transparent 55%
+    ),
+    
+    /* Main vignette - portrait optimized */
+    radial-gradient(
+      ellipse 60% 85% at center,
+      transparent 0%,
+      transparent 20%,
+      rgba(100, 60, 30, 0.12) 45%,
+      rgba(80, 45, 20, 0.28) 65%,
+      rgba(60, 35, 15, 0.48) 82%,
+      rgba(40, 25, 10, 0.72) 100%
+    ),
+    
+    /* Top edge darkening - spans width */
+    radial-gradient(
+      ellipse 80% 15% at 50% 0%,
+      rgba(45, 28, 12, 0.5) 0%,
+      rgba(55, 35, 18, 0.35) 40%,
+      transparent 80%
+    ),
+    
+    /* Bottom edge darkening - spans width */
+    radial-gradient(
+      ellipse 80% 15% at 50% 100%,
+      rgba(45, 28, 12, 0.55) 0%,
+      rgba(55, 35, 18, 0.4) 40%,
+      transparent 80%
+    ),
+    
+    /* Left edge burn - vertical span */
+    radial-gradient(
+      ellipse 12% 70% at 0% 50%,
+      rgba(50, 30, 15, 0.45) 0%,
+      rgba(60, 35, 20, 0.3) 35%,
+      transparent 70%
+    ),
+    
+    /* Right edge burn - vertical span */
+    radial-gradient(
+      ellipse 12% 70% at 100% 50%,
+      rgba(50, 30, 15, 0.45) 0%,
+      rgba(60, 35, 20, 0.3) 35%,
+      transparent 70%
+    ),
+    
+    /* Top-left burnt corner */
+    radial-gradient(
+      circle at 8% 5%,
+      rgba(40, 25, 12, 0.55) 0%,
+      rgba(55, 32, 18, 0.38) 12%,
+      rgba(65, 40, 22, 0.22) 25%,
+      transparent 40%
+    ),
+    
+    /* Top-right burnt corner */
+    radial-gradient(
+      circle at 92% 5%,
+      rgba(40, 25, 12, 0.5) 0%,
+      rgba(55, 32, 18, 0.35) 12%,
+      rgba(65, 40, 22, 0.2) 25%,
+      transparent 40%
+    ),
+    
+    /* Mid-left aged spot */
+    radial-gradient(
+      ellipse 15% 25% at 5% 35%,
+      rgba(70, 45, 25, 0.25) 0%,
+      rgba(80, 50, 28, 0.15) 30%,
+      transparent 60%
+    ),
+    
+    /* Mid-right water stain */
+    radial-gradient(
+      ellipse 18% 22% at 90% 55%,
+      rgba(75, 48, 26, 0.28) 0%,
+      rgba(85, 55, 30, 0.16) 35%,
+      transparent 65%
+    ),
+    
+    /* Bottom-left burnt corner */
+    radial-gradient(
+      circle at 8% 95%,
+      rgba(40, 25, 12, 0.6) 0%,
+      rgba(55, 32, 18, 0.42) 12%,
+      rgba(65, 40, 22, 0.25) 25%,
+      transparent 40%
+    ),
+    
+    /* Bottom-right burnt corner - most prominent */
+    radial-gradient(
+      circle at 92% 95%,
+      rgba(38, 23, 10, 0.65) 0%,
+      rgba(52, 30, 16, 0.48) 12%,
+      rgba(62, 38, 20, 0.28) 25%,
+      transparent 42%
+    ),
+    
+    /* Additional aging spots along edges */
+    radial-gradient(
+      ellipse 10% 8% at 25% 2%,
+      rgba(60, 38, 20, 0.3) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 10% 8% at 75% 98%,
+      rgba(60, 38, 20, 0.35) 0%,
+      transparent 70%
+    );
+  
   mix-blend-mode: multiply;
   z-index: 2;
 }
 
-/* Decorative dashed border */
+/* Decorative hand-drawn style border - optimized for portrait 9:16 */
 .parchment-border {
   position: absolute;
-  inset: 24px;
-  border: 2px dashed rgba(80, 50, 25, 0.25);
-  border-radius: 8px;
+  inset: 20px;
   pointer-events: none;
   z-index: 3;
+  
+  /* Hand-drawn border effect using multiple box-shadows */
+  border-radius: 3px;
+  box-shadow: 
+    /* Main border lines */
+    inset 0 0 0 2px rgba(80, 50, 25, 0.35),
+    inset 0 0 0 3px rgba(255, 250, 240, 0.3),
+    inset 0 0 0 4px rgba(80, 50, 25, 0.25);
+}
+
+/* Add decorative corner flourishes using pseudo-elements */
+.parchment-border::before,
+.parchment-border::after {
+  content: '';
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  border: 2px solid rgba(80, 50, 25, 0.4);
+  pointer-events: none;
+}
+
+.parchment-border::before {
+  top: -2px;
+  left: -2px;
+  border-right: none;
+  border-bottom: none;
+  border-radius: 8px 0 0 0;
+  border-top-left-radius: 12px;
+}
+
+.parchment-border::after {
+  bottom: -2px;
+  right: -2px;
+  border-left: none;
+  border-top: none;
+  border-radius: 0 0 8px 0;
+  border-bottom-right-radius: 12px;
 }
 
 /* Content needs z-index above pseudo-elements */
@@ -151,7 +315,7 @@
 .parchment h3,
 .parchment h4 {
   font-family: 'Crimson Pro', 'Crimson Text', Georgia, serif;
-  color: #1a0f03;
+  color: var(--parchment-heading);
   font-weight: 700;
   line-height: 1.2;
   letter-spacing: 0.01em;
@@ -187,7 +351,7 @@
   margin-bottom: var(--space-4);
   font-size: var(--text-base);
   font-family: 'Crimson Pro', Georgia, serif;
-  color: #2a1f10;
+  color: var(--parchment-text);
   line-height: 1.7;
   font-weight: 400;
 }
@@ -196,7 +360,7 @@
   font-size: var(--text-lg);
   line-height: 1.6;
   margin-bottom: var(--space-5);
-  color: #1a0f03;
+  color: var(--parchment-italic);
   font-weight: 500;
 }
 
@@ -205,7 +369,7 @@
 /* Price text - enhanced visibility */
 .parchment .price,
 .price {
-  color: #1d5a3d;
+  color: var(--parchment-price) ;
   font-weight: 700;
   font-size: var(--text-lg);
   letter-spacing: 0.5px;
@@ -219,7 +383,7 @@
 /* Product title */
 .parchment .product-title {
   font-weight: 700;
-  color: #1a0f03;
+  color: var(--parchment-heading);
   font-size: var(--text-lg);
   margin-bottom: var(--space-2);
 }
@@ -227,7 +391,7 @@
 /* Product description */
 .parchment .product-description {
   font-weight: 400;
-  color: #2a1f10;
+  color: var(--parchment-text);
   line-height: 1.6;
   font-size: var(--text-base);
 }
@@ -279,7 +443,7 @@
   font-family: 'Crimson Pro', Georgia, serif;
   font-size: var(--text-sm);
   background: rgba(255, 250, 240, 0.8);
-  color: #2a1f10;
+  color: var(--parchment-text);
   transition: border-color var(--transition-base),
               box-shadow var(--transition-base);
   font-weight: 400;
@@ -297,7 +461,7 @@
   display: block;
   margin-bottom: var(--space-4);
   font-weight: 600;
-  color: #2a1f10;
+  color: var(--leading-normal);
   font-size: var(--text-sm);
   font-family: 'Crimson Pro', Georgia, serif;
 }
@@ -315,7 +479,7 @@
   font-family: 'Crimson Pro', Georgia, serif;
   font-weight: 700;
   padding: 0 var(--space-3);
-  color: #1a0f03;
+  color: var(--parchment-text);
   font-size: var(--text-lg);
 }
 
