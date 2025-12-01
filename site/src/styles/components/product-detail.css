@@ -112,7 +112,7 @@
 /* ===== SPECS SECTION ===== */
 
 .product-specs {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .specs-list {
@@ -144,53 +144,126 @@
 /* ===== ORDER FORM ===== */
 
 .order-form {
-  margin-bottom: 24px;
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(80, 50, 25, 0.15);
 }
 
-.order-form fieldset {
-  border: none;
-  padding: 0;
-}
-
-.order-form legend {
-  font-size: var(--text-lg);
+.form-heading {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: var(--text-xl);
   font-weight: 700;
-  margin-bottom: var(--space-4);
   color: var(--parchment-heading);
+  margin-bottom: var(--space-5);
 }
 
-/* Input and textarea styles inherit from parchment.css */
+/* Override parchment.css form styles for better integration */
+.order-form label {
+  display: block;
+  margin-bottom: var(--space-5);
+  font-weight: 600;
+  color: var(--parchment-heading);
+  font-size: var(--text-sm);
+  font-family: 'Crimson Pro', Georgia, serif;
+}
 
+.order-form input,
+.order-form textarea {
+  width: 100%;
+  padding: 10px 14px;
+  margin-top: 6px;
+  box-sizing: border-box;
+  /* Lighter border - more refined */
+  border: 1px solid rgba(80, 50, 25, 0.25);
+  border-radius: 6px;
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: var(--text-sm);
+  /* Blend with parchment background */
+  background: rgba(255, 250, 245, 0.6);
+  color: var(--parchment-text);
+  transition: border-color 0.2s ease, 
+              box-shadow 0.2s ease,
+              background 0.2s ease;
+  font-weight: 400;
+}
+
+.order-form input:focus,
+.order-form textarea:focus {
+  outline: none;
+  border-color: #8b6235;
+  background: rgba(255, 250, 245, 0.9);
+  box-shadow: 0 0 0 3px rgba(139, 98, 53, 0.12);
+}
+
+.order-form textarea {
+  min-height: 90px;
+  resize: vertical;
+  font-family: 'Crimson Pro', Georgia, serif;
+}
+
+/* Checkbox group */
 .checkbox-group {
-  margin: 16px 0;
+  margin: var(--space-5) 0;
 }
 
 .checkbox-label {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  align-items: flex-start;
+  gap: 12px;
   font-size: var(--text-sm);
-  margin: 12px 0;
+  margin-bottom: var(--space-4);
   cursor: pointer;
   font-style: italic;
   font-weight: 400;
+  color: var(--parchment-text);
+  line-height: 1.5;
 }
 
 .checkbox-label input[type="checkbox"] {
   width: auto;
   margin: 0;
+  margin-top: 3px; /* Align with first line of text */
+  flex-shrink: 0;
   cursor: pointer;
 }
 
+.checkbox-label span {
+  flex: 1;
+}
+
+/* Form actions */
 .form-actions {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-top: 20px;
+  margin-top: var(--space-6);
   flex-wrap: wrap;
 }
 
-/* Button styling inherits from parchment.css */
+/* Button inherits from parchment.css but with slight refinements */
+.order-form button {
+  background: linear-gradient(135deg, #ce9a62 0%, #a0744a 100%);
+  color: #fff;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: var(--text-base);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.order-form button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+}
+
+.order-form button:active {
+  transform: translateY(0);
+}
 
 .link-mailto {
   font-size: var(--text-sm);
@@ -257,6 +330,11 @@
   .product-description {
     font-size: 0.98rem;
   }
+  
+  .order-form {
+    margin-top: 24px;
+    padding-top: 20px;
+  }
 }
 
 @media (max-width: 400px) {
@@ -266,5 +344,10 @@
   
   .product-description {
     font-size: 0.92rem;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

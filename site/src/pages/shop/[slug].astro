@@ -172,46 +172,45 @@ const SHOP_FALLBACK = `/assets/shop/shop-master.webp`;
           </div>
         )}
 
-        <form class="parchment parchment--nested order-form" 
+        <!-- Order form - no nested parchment, styled directly -->
+        <form class="order-form" 
               action={`mailto:contact@starstucklab.com?subject=${encodeURIComponent('[Order] '+product.title)}`} 
               method="get">
-          <fieldset>
-            <legend>Place an order</legend>
+          <h3 class="form-heading">Place an order</h3>
 
-            <label>
-              Your name
-              <input name="name" required placeholder="Ada Lovelace" />
+          <label>
+            Your name
+            <input name="name" required placeholder="Ada Lovelace" />
+          </label>
+
+          <label>
+            Email
+            <input name="email" type="email" required placeholder="you@example.com" />
+          </label>
+
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" name="agree_personality" required />
+              <span>I accept that my product may develop consciousness.</span>
             </label>
-
-            <label>
-              Email
-              <input name="email" type="email" required placeholder="you@example.com" />
+            <label class="checkbox-label">
+              <input type="checkbox" name="agree_entropy" required />
+              <span>I agree to blame entropy if things go sideways.</span>
             </label>
+          </div>
 
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" name="agree_personality" required />
-                <span>I accept that my product may develop consciousness.</span>
-              </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="agree_entropy" required />
-                <span>I agree to blame entropy if things go sideways.</span>
-              </label>
-            </div>
+          <label>
+            Notes / Options
+            <textarea name="notes" placeholder="Assembly preferences, shipping notes..."></textarea>
+          </label>
 
-            <label>
-              Notes / Options
-              <textarea name="notes" placeholder="Assembly preferences, shipping notes..."></textarea>
-            </label>
-
-            <div class="form-actions">
-              <button type="submit">Email order</button>
-              <a class="link-mailto" 
-                 href={`mailto:contact@starstucklab.com?subject=${encodeURIComponent('[Order] '+product.title)}`}>
-                Or email: contact@starstucklab.com
-              </a>
-            </div>
-          </fieldset>
+          <div class="form-actions">
+            <button type="submit">Email order</button>
+            <a class="link-mailto" 
+               href={`mailto:contact@starstucklab.com?subject=${encodeURIComponent('[Order] '+product.title)}`}>
+              Or email: contact@starstucklab.com
+            </a>
+          </div>
         </form>
 
         {product.id && (
