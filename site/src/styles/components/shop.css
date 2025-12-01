@@ -1,4 +1,4 @@
-/* shop.css – Shop page layout (uses design tokens)
+/* shop.css — Shop page layout (uses design tokens)
    site/src/styles/components/shop.css
 */
 
@@ -32,20 +32,28 @@
 
 /* ===== SHOP HERO (floating text over background - COMPACT) ===== */
 
+/* Increase specificity to override .parchment styles */
+.shop-stage .shop-hero.parchment,
+.shop-stage .parchment.shop-hero,
 .shop-hero {
   margin-bottom: var(--space-12);
   padding: var(--space-8) var(--space-6);
   text-align: center;
   /* Fully transparent - no background at all */
-  background: none;
-  border: none;
-  box-shadow: none;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  /* Remove parchment effects */
+  clip-path: none !important;
+  border-radius: 0 !important;
 }
 
-/* Remove any parchment pseudo-elements if they exist */
+/* Remove all parchment pseudo-elements from hero */
 .shop-hero::before,
-.shop-hero::after {
-  display: none;
+.shop-hero::after,
+.shop-hero.parchment::before,
+.shop-hero.parchment::after {
+  display: none !important;
 }
 
 /* Hero title - compact but still dramatic */
