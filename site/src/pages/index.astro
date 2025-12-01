@@ -190,6 +190,7 @@ const MEDIA = {
 
   <!-- UNIFIED HERO ZOOM SCRIPT -->
   <script>
+    // SIMPLIFIED HERO FADE SCRIPT - opacity only, no zoom/parallax
     (function() {
       const spacerEl = document.getElementById('herozoomSpacer');
       const forestEl = document.getElementById('hzForest');
@@ -202,21 +203,13 @@ const MEDIA = {
       if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
       const ds = spacerEl.dataset;
-      const ZOOM_SCALE = parseFloat(ds.zoomScale ?? '1.9');
       const CROSS_START = parseFloat(ds.crossStart ?? '0.40');
       const CROSS_END = parseFloat(ds.crossEnd ?? '0.85');
       const NAV_SHOW_THRESHOLD = 0.75;
       const ABOUT_SHOW_THRESHOLD = 0.85;
       const POST_ZOOM_THRESHOLD = 0.90;
 
-      const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      const isMobile = window.innerWidth <= 820;
-      const BASE_SCALE = 1;
       let ticking = false;
-      
-      let lastScrollTime = 0;
-      const THROTTLE_MS = isMobile ? 16 : 0;
-
       let cachedSpacerTop = 0;
       let cachedSpacerHeight = 0;
       let measurementsValid = false;
@@ -247,20 +240,11 @@ const MEDIA = {
         return Math.max(0, Math.min(1, p));
       }
 
-      function easeInOutCubic(t) { 
-        return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3)/2; 
-      }
-
       function applyInitialFrame() {
-        if (isMobile || prefersReduced) {
-          forestEl.style.transform = 'none';
-          interiorEl.style.transform = 'none';
-        } else {
-          forestEl.style.transform = `scale(${BASE_SCALE}) translateY(0px)`;
-        }
         forestEl.style.opacity = '1';
         interiorEl.style.opacity = '0';
         overlayEl.style.opacity = '1';
+        
         if (aboutEl) aboutEl.classList.remove('in');
         if (postZoomEl) {
           postZoomEl.classList.remove('in');
@@ -271,28 +255,25 @@ const MEDIA = {
       function update() {
         const p = computeProgress();
         
+        // Calculate crossfade opacity
         let interiorOpacity = 0;
-        if (p <= CROSS_START) interiorOpacity = 0;
-        else if (p >= CROSS_END) interiorOpacity = 1;
-        else interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
-
-        const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
-
-        if (isMobile || prefersReduced) {
-          forestEl.style.opacity = `${forestOpacity}`;
-          interiorEl.style.opacity = `${interiorOpacity}`;
-          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+        if (p <= CROSS_START) {
+          interiorOpacity = 0;
+        } else if (p >= CROSS_END) {
+          interiorOpacity = 1;
         } else {
-          const eased = easeInOutCubic(p);
-          const currentScale = BASE_SCALE * (1 + (ZOOM_SCALE - 1) * eased);
-          const translateY = - Math.round(p * 40);
-          
-          forestEl.style.transform = `scale(${currentScale}) translateY(${translateY}px)`;
-          forestEl.style.opacity = `${forestOpacity}`;
-          interiorEl.style.opacity = `${interiorOpacity}`;
-          overlayEl.style.opacity = `${Math.max(0, 1 - p * 1.2)}`;
+          interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
         }
 
+        const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
+        const overlayOpacity = Math.max(0, 1 - p * 1.2);
+
+        // Apply simple opacity changes - no transforms
+        forestEl.style.opacity = `${forestOpacity}`;
+        interiorEl.style.opacity = `${interiorOpacity}`;
+        overlayEl.style.opacity = `${overlayOpacity}`;
+
+        // Show/hide navigation
         if (interiorOpacity > NAV_SHOW_THRESHOLD) {
           navEl.classList.add('nav-visible', 'nav-sticky');
           navEl.classList.remove('nav-hidden');
@@ -303,6 +284,7 @@ const MEDIA = {
           navEl.setAttribute('aria-hidden', 'true');
         }
 
+        // Show/hide about panel
         if (aboutEl) {
           const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
           if (shouldBeIn && !aboutEl.classList.contains('in')) {
@@ -312,6 +294,7 @@ const MEDIA = {
           }
         }
 
+        // Show/hide post-zoom content
         if (postZoomEl) {
           const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
           if (shouldBeIn && !postZoomEl.classList.contains('in')) {
@@ -333,19 +316,24 @@ const MEDIA = {
         } 
       }
 
-      function onScroll() { requestTick(); }
+      function onScroll() { 
+        requestTick(); 
+      }
 
+      // Initialize
       requestAnimationFrame(() => requestAnimationFrame(() => { 
         applyInitialFrame(); 
         update(); 
       }));
 
+      // Event listeners
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', () => { 
         measurementsValid = false;
         requestTick(); 
       }, { passive: true });
 
+      // CTA smooth scroll
       const cta = document.querySelector('.cta');
       const aboutPanel = document.getElementById('aboutPanel');
       if (cta && aboutPanel) {
@@ -358,13 +346,13 @@ const MEDIA = {
         });
       }
 
+      // Fallback for non-scrollable pages
       function pageIsScrollable() { 
         return document.documentElement.scrollHeight > window.innerHeight + 10; 
       }
       
       if (!pageIsScrollable()) {
         const reveal = () => {
-          forestEl.style.transform = `scale(${BASE_SCALE * ZOOM_SCALE})`;
           forestEl.style.opacity = '0';
           interiorEl.style.opacity = '1';
           overlayEl.style.opacity = '0';
