@@ -46,6 +46,67 @@ if (fs.existsSync(publicJsonPath)) {
 // Image paths
 const heroImagePath = `/assets/product-${slug}/product-${slug}-hero.webp`;
 const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
+
+// Background image loading logic (same as shop.astro)
+const manifestPath = new URL('../../data/images.json', import.meta.url);
+
+let images = {};
+try {
+  images = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+} catch (err) {
+  console.warn(`Could not read images manifest at ${manifestPath.pathname}:`, err);
+}
+
+const BASE_URL = String(import.meta.env.BASE_URL || '/') + 'assets/';
+const SCENES = images.scenes || {};
+
+function findVariantFilename(sceneKey, opts = {}) {
+  const scene = SCENES[sceneKey];
+  if (!scene || !Array.isArray(scene.variants)) return null;
+
+  if (opts.id) {
+    const byId = scene.variants.find(v => v.id === opts.id && v.filename);
+    if (byId) return byId.filename;
+  }
+  if (opts.aspect) {
+    const byAspect = scene.variants.find(v => v.aspect === opts.aspect && v.filename);
+    if (byAspect) return byAspect.filename;
+  }
+  if (opts.type) {
+    const byType = scene.variants.find(v => v.type === opts.type && v.filename);
+    if (byType) return byType.filename;
+  }
+  return null;
+}
+
+function staticUrlFromManifest(sceneKey, manifestFilename) {
+  if (!manifestFilename) return null;
+  return path.posix.join(BASE_URL, sceneKey, manifestFilename);
+}
+
+function buildSceneSources(sceneKey) {
+  const byId = id => findVariantFilename(sceneKey, { id });
+
+  const filenames = {
+    generated: byId('generated'),
+    master: byId('master'),
+    desktop: byId('desktop'),
+    laptop: byId('laptop'),
+    tablet: byId('tablet'),
+    mobile: byId('mobile'),
+    thumb: byId('thumb'),
+  };
+
+  const urls = {};
+  for (const k in filenames) {
+    const fname = filenames[k];
+    urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
+  }
+  return urls;
+}
+
+const shopSources = buildSceneSources('shop');
+const SHOP_FALLBACK = `/assets/shop/shop-master.webp`;
 ---
 <Layout title={product.title} showHeader={false} showFooter={true}>
   <!-- Static navbar -->
@@ -54,6 +115,18 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   </nav>
   
   <div class="product-page">
+    <!-- Background image (same as shop page) -->
+    <picture>
+      {shopSources.desktop ? <source media="(min-width:1000px)" srcset={shopSources.desktop} /> : null}
+      {shopSources.tablet ? <source media="(min-width:640px)" srcset={shopSources.tablet} /> : null}
+      <img
+        src={shopSources.mobile ?? shopSources.generated ?? shopSources.thumb ?? shopSources.desktop ?? SHOP_FALLBACK}
+        alt="Workshop background"
+        class="product-bg"
+        loading="eager"
+      />
+    </picture>
+
     <article class="product-container">
       <!-- Product image with vintage frame -->
       <div class="product-media">
@@ -64,7 +137,7 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
         />
       </div>
 
-      <!-- Main product info card -->
+      <!-- Main product info card - uses base parchment -->
       <div class="parchment product-info-card">
         <h1>{product.title}</h1>
         

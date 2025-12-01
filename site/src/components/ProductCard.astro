@@ -41,7 +41,7 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   text-decoration: none;
   color: inherit;
   width: 100%;
-  max-width: 4200px;
+  max-width: 420px;
   transition: transform var(--transition-base, 0.25s ease);
 }
 
@@ -64,12 +64,28 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   margin-bottom: var(--space-3, 12px);
 }
 
+.product-thumb {
+  width: 100%;
+  /* put the frame on the wrapper to avoid anti-alias/fringe around the image */
+  box-sizing: border-box;
+  border-radius: 16px;               /* outer radius */
+  padding: 0x;                      /* space for the 4px frame */
+  overflow: hidden;                  /* clip the inner image cleanly */
+  background: rgba(248, 244, 232, 0.95); /* parchment-like inner panel (matches card) */
+  border: 4px solid rgba(120, 85, 40, 0.35); /* warm 4px frame */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .product-thumb img {
   width: 100%;
-  height: 180px;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
-  transition: transform var(--transition-base, 0.25s ease);
+  border: none;               /* no border on the image itself */
+  border-radius: 12px;        /* slightly smaller so the frame is visible */
+  background: transparent;
+  outline: none;
 }
 
 .product-card:hover .product-thumb img {
