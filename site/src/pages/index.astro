@@ -69,26 +69,6 @@ function buildSceneSources(sceneKey: string) {
   return urls;
 }
 
-const HERO_DATA_PATH = new URL('../../public/data/hero.json', import.meta.url);
-let heroVariants = null;
-try {
-  heroVariants = JSON.parse(fs.readFileSync(HERO_DATA_PATH, 'utf8'));
-} catch (err) {
-  heroVariants = null;
-}
-
-// Page-level variant picker
-function pickVariantIndex(variants: any) {
-  if (!variants) return null;
-  const keys = Object.keys(variants).sort();
-  if (keys.length === 0) return null;
-  const idx = Math.floor(Math.random() * keys.length);
-  return keys[idx];
-}
-
-const chosenHeroKey = pickVariantIndex(heroVariants);
-const chosenHero = (chosenHeroKey && heroVariants && heroVariants[chosenHeroKey]) || null;
-
 const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
 
@@ -171,15 +151,9 @@ const MEDIA = {
         alt="Starstuck Lab Logo"
         loading="eager"
       />
-      <h1 class="hero-title">
-        {chosenHero?.title ?? "Starstuck Lab"}
-      </h1>
-      <p class="hero-lead">
-        {chosenHero?.subtitle ?? "Building small machines for an indifferent universe"}
-      </p>
-      <a href="#workbench" class="cta">
-        {chosenHero?.cta ?? "Enter the Workshop"}
-      </a>
+      <h1 class="hero-title">Starstuck Lab</h1>
+      <p class="hero-lead">Building small machines for an indifferent universe</p>
+      <a href="#workbench" class="cta">Enter the Workshop</a>
     </div>
 
     <div class="post-zoom" id="postZoomContent" aria-live="polite">
@@ -417,4 +391,31 @@ const MEDIA = {
       }
     })();
   </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        const res = await fetch("/data/hero.json");
+        const variants = await res.json();  // your uploaded file (:contentReference[oaicite:1]{index=1})
+
+        const keys = Object.keys(variants);
+        if (!keys.length) return;
+
+        // Pick random variant
+        const randomKey = keys[Math.floor(Math.random() * keys.length)];
+        const hero = variants[randomKey];
+
+        // Replace text
+        const titleEl = document.querySelector(".hero-title");
+        const leadEl = document.querySelector(".hero-lead");
+        const ctaEl = document.querySelector(".cta");
+
+        if (titleEl) titleEl.textContent = hero.title;
+        if (leadEl) leadEl.textContent = hero.subtitle;
+        if (ctaEl) ctaEl.textContent = hero.cta;
+
+      } catch (err) {
+        console.error("Hero variant loading failed:", err);
+      }
+    });
+   </script>
 </Layout>
