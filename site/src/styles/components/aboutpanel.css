@@ -1,289 +1,142 @@
-/* aboutpanel.css — Mobile-first parchment panel */
+/* aboutpanel.css – Animation and layout coordination with parchment.css
+   Place this in: site/src/styles/components/aboutpanel.css
+*/
 
-/* Component-scoped tokens */
+/* ===== WRAPPER WITH ANIMATION ===== */
 .about-panel-wrap {
-  --paper-cream: #fbf0db;
-  --paper-mid: #f0d9bd;
-  --paper-stain: rgba(90,50,20,0.08);
-  --panel-width: clamp(300px, 92%, 900px);
-  --edge-radius: 16px;
   position: relative;
   z-index: 52;
   display: flex;
   justify-content: center;
-  margin: 1.5rem auto;
-  padding: 0 12px;
-}
-
-/* ===== MOBILE-FIRST PANEL BASE ===== */
-.about-panel {
-  position: relative;
-  z-index: 53;
-  width: 100%;
-  max-width: var(--panel-width);
-  border-radius: var(--edge-radius);
-  padding: 22px 18px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  
+  /* Animation states - applied to wrapper */
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 400ms cubic-bezier(.2,.9,.3,1),
-              transform 400ms cubic-bezier(.2,.9,.3,1);
-  display: block;
-  background: linear-gradient(180deg, var(--paper-cream) 0%, var(--paper-mid) 100%);
-  border: 1px solid rgba(60,40,22,0.10);
-  box-shadow: 0 28px 72px rgba(6,6,6,0.42), inset 0 2px 10px rgba(255,255,255,0.45);
-  overflow: visible;
-  visibility: hidden;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
   pointer-events: none;
+  visibility: hidden;
 }
 
-/* Visible state (controlled by JS) */
-.about-panel.in {
+/* Visible state (controlled by JS adding .in to #aboutPanel) */
+.about-panel-wrap.in {
   opacity: 1;
   transform: translateY(0);
-  visibility: visible;
   pointer-events: auto;
+  visibility: visible;
 }
 
-/* Grain overlay */
-.grain-overlay {
-  position: absolute;
-  inset: 0;
-  border-radius: var(--edge-radius);
-  pointer-events: none;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' preserveAspectRatio='none' width='800' height='800'><filter id='g'><feTurbulence baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23g)' fill='%23000' opacity='0.06'/></svg>");
-  mix-blend-mode: multiply;
-  opacity: 0.08;
-  background-size: cover;
-  background-repeat: no-repeat;
+/* Ensure parchment card inside is visible */
+.about-panel-wrap .parchment {
+  max-width: 450px;
+  width: 100%;
+  padding: 2rem 1.5rem;
 }
 
-/* Visual accents */
-.about-panel::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: var(--edge-radius);
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse at 50% 8%, rgba(255,220,140,0.06) 0%, transparent 22%),
-    radial-gradient(ellipse at 50% 92%, rgba(120,60,20,0.10) 0% 8%, rgba(120,60,20,0.20) 60%, transparent 90%);
-  mix-blend-mode: multiply;
-  box-shadow: inset 0 0 32px rgba(0,0,0,0.18);
-}
-
-.about-panel::after {
-  content: '';
-  position: absolute;
-  inset: 6% 4% 8% 4%;
-  pointer-events: none;
-  opacity: 0.18;
-  background-image:
-    radial-gradient(circle at 8% 22%, var(--paper-stain) 0 2px, transparent 3px),
-    radial-gradient(circle at 72% 76%, rgba(90,50,20,0.04) 0 1.6px, transparent 2.5px);
-  filter: blur(0.4px) contrast(1.04);
-}
-
-/* Edge burn */
-.edge-burn {
-  position: absolute;
-  inset: 8px;
-  border-radius: calc(var(--edge-radius) - 4px);
-  pointer-events: none;
-  box-shadow: inset 0 0 0 1px rgba(0,0,0,0.02), inset 0 16px 32px rgba(120,60,20,0.08);
-}
-
-/* ===== EMBLEM - MOBILE: STACKED ===== */
-.float-emblem {
-  /* No float on mobile - stack above text */
+/* ===== EMBLEM LAYOUT ===== */
+/* Mobile: stacked above text */
+.about-panel-wrap .float-emblem {
   float: none;
-  width: 96px;
-  height: 96px;
-  margin: 0 auto 14px auto;
-  border-radius: 10px;
-  background: linear-gradient(180deg, #fbf4e7 0%, #efe3c9 100%);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.24);
-  padding: 5px;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 1.5rem auto;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #f0e8db 0%, #e4d9cc 100%);
+  border-radius: 12px;
+  border: 2px solid rgba(80, 50, 25, 0.3);
+  padding: 6px;
+  box-shadow: 
+    0 3px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
-.float-emblem img {
+.about-panel-wrap .float-emblem img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  border-radius: 7px;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.12);
+  object-fit: contain;
   display: block;
+  border-radius: 8px;
 }
 
-/* ===== TYPOGRAPHY - MOBILE ===== */
-.content {
-  color: #1a1412;
-  font-family: 'Merriweather', Georgia, serif;
-  font-weight: 300;
-  font-variant-ligatures: none;
-  font-feature-settings: 'liga' 0, 'dlig' 0;
+/* ===== CONTENT LAYOUT ===== */
+.about-panel-wrap .content {
+  position: relative;
+  z-index: 4; /* Above parchment pseudo-elements */
 }
 
-.title {
-  font-family: 'Playfair Display', serif;
-  font-weight: 700;
-  font-size: clamp(1.25rem, 5vw, 1.5rem);
-  margin: 0 0 12px 0;
-  color: #28160b;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
+.about-panel-wrap .title {
+  margin-bottom: 0.75rem;
   text-align: center;
 }
 
-.lead {
-  margin: 0 0 10px 0;
-  color: #2b1f18;
-  font-size: clamp(0.94rem, 3.5vw, 1rem);
-  line-height: 1.52;
-  hyphens: auto;
-  text-align: left;
-}
-
-.motto {
-  margin-top: 14px;
-  font-size: clamp(0.96rem, 3.8vw, 1.08rem);
-  color: #3d2f24;
-  opacity: 0.94;
-  border-top: 1px dashed rgba(0,0,0,0.06);
-  padding-top: 10px;
-  font-family: 'Cormorant Garamond', serif;
-  font-style: oblique;
-  font-weight: 300;
+.about-panel-wrap .lead {
   text-align: center;
 }
 
-/* Clearfix */
-.about-panel::after { 
-  content: ''; 
-  display: table; 
-  clear: both; 
+.about-panel-wrap .motto {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  font-style: italic;
+  text-align: center;
 }
 
-/* ===== SMALL PHONES (<400px) ===== */
-@media (max-width: 400px) {
-  .about-panel-wrap {
-    margin: 1.25rem auto;
-    padding: 0 8px;
-  }
-  
-  .about-panel {
-    padding: 18px 16px;
-    border-radius: 14px;
-  }
-  
-  .float-emblem {
-    width: 88px;
-    height: 88px;
-    margin-bottom: 12px;
-  }
-  
-  .title {
-    font-size: clamp(1.15rem, 5.5vw, 1.35rem);
-    margin-bottom: 10px;
-  }
-  
-  .lead {
-    font-size: 0.92rem;
-    line-height: 1.48;
-  }
-  
-  .motto {
-    font-size: 0.94rem;
-    margin-top: 12px;
-    padding-top: 8px;
-  }
-}
+/* ===== RESPONSIVE ===== */
 
-/* ===== TABLETS (601px+) ===== */
-@media (min-width: 601px) {
-  .about-panel-wrap {
-    margin: 2rem auto;
-    --panel-width: clamp(520px, 85%, 900px);
-  }
-  
-  .about-panel {
-    padding: 28px 32px;
-    border-radius: 18px;
-  }
-  
-  /* Enable float wrapping on tablet+ */
-  .float-emblem {
-    float: left;
-    width: 110px;
-    height: 110px;
-    margin: 4px 16px 10px 4px;
-    shape-outside: inset(0 round 10px);
-    -webkit-shape-outside: inset(0 round 10px);
-    clip-path: inset(0 round 10px);
-    border-radius: 10px;
-  }
-  
-  .title {
-    font-size: clamp(1.5rem, 3.2vw, 1.8rem);
-    text-align: left;
-    margin-bottom: 14px;
-  }
-  
-  .lead {
-    font-size: clamp(1rem, 2vw, 1.08rem);
-    line-height: 1.56;
-  }
-  
-  .motto {
-    font-size: clamp(1.05rem, 2.2vw, 1.15rem);
-    text-align: left;
-    margin-top: 16px;
-    padding-top: 12px;
-  }
-}
-
-/* ===== DESKTOP (821px+) ===== */
-@media (min-width: 821px) {
+/* Tablets: enable float wrapping */
+@media (min-width: 641px) {
   .about-panel-wrap {
     margin: 2.5rem auto;
-    --panel-width: clamp(600px, 56ch, 900px);
   }
   
-  .about-panel {
-    padding: 36px 40px;
-    box-shadow: 0 36px 88px rgba(6,6,6,0.44), inset 0 2px 12px rgba(255,255,255,0.48);
+  .about-panel-wrap .float-emblem {
+    float: left;
+    margin: 0 2rem 1.5rem 1rem;
+    shape-outside: circle(50%);
   }
   
-  .float-emblem {
+  .about-panel-wrap .float-emblem img {
+    width: 140px;
+    height: 140px;
+  }
+  
+  .about-panel-wrap .title {
+    text-align: left;
+    font-size: clamp(1.6rem, 3.5vw, 1.85rem);
+  }
+  
+  .about-panel-wrap .lead {
+    text-align: left;
+  }
+  
+  .about-panel-wrap .motto {
+    text-align: left;
+  }
+}
+
+/* Small phones */
+@media (max-width: 640px) {
+  .about-panel-wrap {
+    padding: 0 0.5rem;
+  }
+  
+  .about-panel-wrap .float-emblem {
     width: 120px;
     height: 120px;
-    margin: 3px 18px 10px 4px;
-    border-radius: 8px;
-  }
-  
-  .title {
-    font-size: clamp(1.6rem, 2.8vw, 2rem);
-    margin-bottom: 16px;
-  }
-  
-  .lead {
-    font-size: clamp(1.05rem, 1.8vw, 1.12rem);
-    line-height: 1.58;
-  }
-  
-  .motto {
-    font-size: clamp(1.08rem, 2vw, 1.2rem);
-    margin-top: 18px;
-    padding-top: 14px;
   }
 }
 
 /* ===== REDUCED MOTION ===== */
 @media (prefers-reduced-motion: reduce) {
-  .about-panel {
-    transition: opacity 200ms ease !important;
+  .about-panel-wrap {
+    transition: opacity 0.3s ease-out !important;
+    transform: none !important;
+  }
+  
+  .about-panel-wrap.in {
     transform: none !important;
   }
 }
