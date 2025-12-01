@@ -1,6 +1,8 @@
-/* parchment.css - Artistic Aged Parchment Card System (Enhanced Aging)
+/* parchment.css - Simplified Aged Parchment Card System
    Place this in: site/src/styles/components/parchment.css
    Import tokens.css FIRST, then this
+   
+   Philosophy: Well-kept craftsman's notes, not ancient artifacts
 */
 
 @import '../tokens.css';
@@ -15,13 +17,13 @@
 /* ===== BASE PARCHMENT CARD ===== */
 .parchment {
   position: relative;
-  /* Warmer, more aged parchment tone */
+  /* Lighter, warmer parchment tone - lifted 8-10% for better readability */
   background: linear-gradient(135deg, 
-  #f5d7be 0%,    /* brighter #e8c5a0 */
-  #ebcba8 25%,   /* brighter #ddb890 */
-  #e4bb96 50%,   /* brighter #d4a574 */
-  #ebcdaa 75%,   /* brighter #dcb388 */
-  #eed0a7 100%   /* brighter #e0b98c */
+    #fae5d0 0%,    /* +10% lighter */
+    #f4dcc0 25%,
+    #eed7b8 50%,
+    #f4ddbc 75%,
+    #f7dfc0 100%
   );
   border: none;
   padding: calc(var(--space-8) + 32px) calc(var(--space-8) + 10px);
@@ -31,74 +33,49 @@
   color: #2a1f10;
   line-height: var(--leading-relaxed);
   
-  /* Torn edge effect using clip-path */
-  clip-path: polygon(
-    2% 1%, 5% 0.5%, 8% 1.5%, 12% 0.8%, 15% 1.2%, 18% 0.6%, 22% 1.8%, 
-    25% 1%, 28% 1.5%, 32% 0.9%, 35% 1.3%, 38% 0.7%, 42% 1.6%, 45% 1.1%, 
-    48% 1.4%, 52% 0.8%, 55% 1.7%, 58% 1.2%, 62% 0.9%, 65% 1.5%, 68% 1%, 
-    72% 1.3%, 75% 0.7%, 78% 1.6%, 82% 1.1%, 85% 1.4%, 88% 0.8%, 92% 1.5%, 
-    95% 1%, 97% 1.3%, 99% 1.8%,
-    
-    99.5% 5%, 99.8% 8%, 99.2% 12%, 99.6% 15%, 99.1% 18%, 99.7% 22%, 
-    99.3% 25%, 99.5% 28%, 99.1% 32%, 99.6% 35%, 99.2% 38%, 99.7% 42%, 
-    99.4% 45%, 99.6% 48%, 99.1% 52%, 99.5% 55%, 99.2% 58%, 99.7% 62%, 
-    99.3% 65%, 99.6% 68%, 99.1% 72%, 99.5% 75%, 99.2% 78%, 99.7% 82%, 
-    99.4% 85%, 99.6% 88%, 99.2% 92%, 99.5% 95%, 99.8% 97%,
-    
-    98% 99%, 95% 99.5%, 92% 98.5%, 88% 99.2%, 85% 98.8%, 82% 99.4%, 
-    78% 98.2%, 75% 99%, 72% 98.5%, 68% 99.1%, 65% 98.7%, 62% 99.3%, 
-    58% 98.4%, 55% 98.9%, 52% 99.2%, 48% 98.6%, 45% 98.3%, 42% 99.1%, 
-    38% 98.8%, 35% 99.3%, 32% 98.5%, 28% 99%, 25% 98.6%, 22% 99.2%, 
-    18% 98.4%, 15% 98.9%, 12% 99.1%, 8% 98.5%, 5% 99%, 2% 98.7%,
-    
-    0.5% 95%, 0.2% 92%, 0.8% 88%, 0.4% 85%, 0.9% 82%, 0.3% 78%, 
-    0.7% 75%, 0.5% 72%, 0.9% 68%, 0.4% 65%, 0.8% 62%, 0.3% 58%, 
-    0.6% 55%, 0.4% 52%, 0.9% 48%, 0.5% 45%, 0.8% 42%, 0.3% 38%, 
-    0.7% 35%, 0.4% 32%, 0.9% 28%, 0.5% 25%, 0.8% 22%, 0.3% 18%, 
-    0.6% 15%, 0.4% 12%, 0.8% 8%, 0.5% 5%
-  );
+  /* Simple rounded corners instead of complex torn edges */
+  border-radius: 12px;
   
+  /* Cleaner shadow - less dramatic, more refined */
   box-shadow: 
-    0 16px 56px rgba(0, 0, 0, 0.6),
-    0 6px 20px rgba(0, 0, 0, 0.4),
-    0 0 0 1px rgba(0, 0, 0, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.3),
-    inset 0 0 80px rgba(255, 245, 220, 0.2);
+    0 8px 32px rgba(0, 0, 0, 0.25),
+    0 2px 8px rgba(0, 0, 0, 0.15),
+    0 0 0 1px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
-/* Subtle paper texture overlay */
+/* Subtle paper texture overlay - reduced opacity for cleaner look */
 .parchment::before {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: 12px;
   pointer-events: none;
   /* Only paper grain - no coffee stains by default */
   background-image: 
     url('/assets/textures/paper-grain.png');
-    /* url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' /><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/></svg>"); */
   
   background-size: 400px 400px;
   background-position: center;
   background-repeat: repeat;
   
   mix-blend-mode: multiply;
-  opacity: 0.65;
+  opacity: 0.8; /* Reduced from 0.65 for subtlety */
 }
 
-.parchment,
+/* Brighter overall appearance */
+/* .parchment,
 .parchment::before {
-  filter: brightness(1.10);
-}
+  filter: brightness(1.15);
+} */
 
-
+/* Special styling for about panel - keeps coffee stain */
 .about-panel-wrap .parchment::before {
   /* Override with stain + grain */
   background-image: 
     /* Coffee stain - bottom right */
     url('/assets/textures/coffee-stain.png'),
     url('/assets/textures/paper-grain.png');
-    /* Paper grain */
-    /* url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='noise'><feTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='5' /><feColorMatrix type='saturate' values='0'/></filter><rect width='100%' height='100%' filter='url(%23noise)' opacity='0.25'/></svg>"); */
   
   background-size: 
     220px auto,      /* coffee stain */
@@ -110,181 +87,36 @@
   
   background-repeat: no-repeat, repeat;
   mix-blend-mode: multiply;
-  opacity: 0.65;
+  opacity: 0.4;
 }
 
-/* ===== 1) Reduce edge darkness ~20% & 2) Lighten center ===== */
-/* Enhanced aged/burnt edge effect optimized for 9:16 portrait */
+/* Simplified edge aging - much lighter and cleaner */
 .parchment::after {
   content: '';
   position: absolute;
   inset: 0;
+  border-radius: 12px;
   pointer-events: none;
   
-  /* Multiple radial gradients for realistic aging - adjusted for portrait aspect */
+  /* Only 2 gradients instead of 14 - cleaner, more subtle */
   background: 
-    /* Center glow/highlight - taller ellipse for portrait (brighter center) */
+    /* Subtle center glow for depth */
     radial-gradient(
-      ellipse 55% 70% at 48% 45%,
-      rgba(255, 250, 240, 0.45) 0%,
-      rgba(255, 250, 240, 0.20) 28%,
-      transparent 52%
+      ellipse 70% 80% at center,
+      rgba(255, 250, 245, 0.3) 0%,
+      transparent 50%
     ),
     
-    /* Main vignette - portrait optimized (opacities reduced ~20%) */
+    /* Very light edge darkening - barely noticeable */
     radial-gradient(
-      ellipse 60% 85% at center,
-      transparent 0%,
-      transparent 20%,
-      rgba(100, 60, 30, 0.096) 65%,
-      rgba(80, 45, 20, 0.224) 80%,
-      rgba(60, 35, 15, 0.384) 93%,
-      rgba(40, 25, 10, 0.576) 100%
-    ),
-    
-    /* Top edge darkening - spans width (softened) */
-    radial-gradient(
-      ellipse 80% 15% at 50% 0%,
-      rgba(45, 28, 12, 0.40) 0%,
-      rgba(55, 35, 18, 0.28) 20%,
-      transparent 70%
-    ),
-    
-    /* Bottom edge darkening - spans width (softened) */
-    radial-gradient(
-      ellipse 80% 15% at 50% 100%,
-      rgba(45, 28, 12, 0.44) 0%,
-      rgba(55, 35, 18, 0.32) 20%,
-      transparent 70%
-    ),
-    
-    /* Left edge burn - vertical span (softened) */
-    radial-gradient(
-      ellipse 12% 70% at 0% 50%,
-      rgba(50, 30, 15, 0.36) 0%,
-      rgba(60, 35, 20, 0.24) 15%,
-      transparent 60%
-    ),
-    
-    /* Right edge burn - vertical span (softened) */
-    radial-gradient(
-      ellipse 12% 70% at 100% 50%,
-      rgba(50, 30, 15, 0.36) 0%,
-      rgba(60, 35, 20, 0.24) 15%,
-      transparent 60%
-    ),
-    
-    /* Top-left burnt corner (reduced alpha) */
-    radial-gradient(
-      circle at 8% 5%,
-      rgba(40, 25, 12, 0.44) 0%,
-      rgba(55, 32, 18, 0.30) 12%,
-      rgba(65, 40, 22, 0.18) 25%,
-      transparent 60%
-    ),
-    
-    /* Top-right burnt corner (reduced alpha) */
-    radial-gradient(
-      circle at 92% 5%,
-      rgba(40, 25, 12, 0.40) 0%,
-      rgba(55, 32, 18, 0.28) 12%,
-      rgba(65, 40, 22, 0.16) 25%,
-      transparent 60%
-    ),
-    
-    /* Mid-left aged spot (reduced alpha) */
-    radial-gradient(
-      ellipse 15% 25% at 5% 35%,
-      rgba(70, 45, 25, 0.20) 0%,
-      rgba(80, 50, 28, 0.12) 30%,
-      transparent 70%
-    ),
-    
-    /* Mid-right water stain (reduced alpha) */
-    radial-gradient(
-      ellipse 18% 22% at 90% 55%,
-      rgba(75, 48, 26, 0.224) 0%,
-      rgba(85, 55, 30, 0.128) 35%,
-      transparent 75%
-    ),
-    
-    /* Bottom-left burnt corner (softened) */
-    radial-gradient(
-      circle at 8% 95%,
-      rgba(40, 25, 12, 0.48) 0%,
-      rgba(55, 32, 18, 0.336) 12%,
-      rgba(65, 40, 22, 0.20) 25%,
-      transparent 60%
-    ),
-    
-    /* Bottom-right burnt corner - most prominent but softened */
-    radial-gradient(
-      circle at 92% 95%,
-      rgba(38, 23, 10, 0.52) 0%,
-      rgba(52, 30, 16, 0.384) 12%,
-      rgba(62, 38, 20, 0.224) 25%,
-      transparent 62%
-    ),
-    
-    /* Additional aging spots along edges (softened) */
-    radial-gradient(
-      ellipse 10% 8% at 25% 2%,
-      rgba(60, 38, 20, 0.3) 0%,
-      transparent 80%
-    ),
-    radial-gradient(
-      ellipse 10% 8% at 75% 98%,
-      rgba(60, 38, 20, 0.35) 0%,
-      transparent 80%
+      ellipse 75% 90% at center,
+      transparent 35%,
+      rgba(80, 50, 30, 0.08) 85%,
+      rgba(60, 40, 25, 0.15) 100%
     );
   
   mix-blend-mode: multiply;
   z-index: 2;
-}
-
-/* Decorative hand-drawn style border - optimized for portrait 9:16 */
-.parchment-border {
-  position: absolute;
-  inset: 20px;
-  pointer-events: none;
-  z-index: 3;
-  
-  /* Hand-drawn border effect using multiple box-shadows */
-  border-radius: 3px;
-  box-shadow: 
-    /* Main border lines */
-    inset 0 0 0 2px rgba(80, 50, 25, 0.35),
-    inset 0 0 0 3px rgba(255, 250, 240, 0.3),
-    inset 0 0 0 4px rgba(80, 50, 25, 0.25);
-}
-
-/* Add decorative corner flourishes using pseudo-elements */
-.parchment-border::before,
-.parchment-border::after {
-  content: '';
-  position: absolute;
-  width: 40px;
-  height: 40px;
-  border: 2px solid rgba(80, 50, 25, 0.4);
-  pointer-events: none;
-}
-
-.parchment-border::before {
-  top: -2px;
-  left: -2px;
-  border-right: none;
-  border-bottom: none;
-  border-radius: 8px 0 0 0;
-  border-top-left-radius: 12px;
-}
-
-.parchment-border::after {
-  bottom: -2px;
-  right: -2px;
-  border-left: none;
-  border-top: none;
-  border-radius: 0 0 8px 0;
-  border-bottom-right-radius: 12px;
 }
 
 /* Content needs z-index above pseudo-elements */
@@ -307,8 +139,14 @@
 
 /* Nested parchment (lighter, for sections within parchment) */
 .parchment--nested {
-  background: linear-gradient(135deg, #f0e8db 0%, #e9dcd2 50%, #f0e8db 100%);
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #faf4ea 0%, #f2ebe0 50%, #faf4ea 100%);
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+}
+
+/* Remove complex aging from nested parchments */
+.parchment--nested::after {
+  display: none;
 }
 
 /* Centered parchment */
@@ -328,7 +166,7 @@
   line-height: 1.2;
   letter-spacing: 0.01em;
   margin-top: 0;
-  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.2);
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.3);
 }
 
 .parchment h1 {
@@ -362,7 +200,7 @@
   color: var(--parchment-text);
   line-height: 1.7;
   font-weight: 400;
-  text-shadow: 0 1px 0 rgba(255,255,250,0.03); /* tiny highlight to separate from grain */
+  text-shadow: 0 1px 0 rgba(255,255,250,0.05); /* Slightly stronger for better separation */
 }
 
 .parchment .lead {
@@ -378,7 +216,7 @@
 /* Price text - enhanced visibility */
 .parchment .price,
 .price {
-  color: var(--parchment-price) ;
+  color: var(--parchment-price);
   font-weight: 700;
   font-size: var(--text-lg);
   letter-spacing: 0.5px;
@@ -414,13 +252,13 @@
   height: 100px;
   margin-right: var(--space-5);
   margin-bottom: var(--space-3);
-  background: linear-gradient(135deg, #f0e8db 0%, #e4d9cc 100%);
+  background: linear-gradient(135deg, #faf4ea 0%, #f0e8db 100%);
   border: 3px solid #a0744a;
   border-radius: 12px;
   padding: var(--space-3);
   box-shadow: 
-    inset 0 2px 6px rgba(0, 0, 0, 0.1),
-    0 3px 8px rgba(0, 0, 0, 0.15);
+    inset 0 2px 6px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.12);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -451,7 +289,7 @@
   border-radius: 6px;
   font-family: 'Crimson Pro', Georgia, serif;
   font-size: var(--text-sm);
-  background: rgba(255, 250, 240, 0.8);
+  background: rgba(255, 250, 240, 0.9);
   color: var(--parchment-text);
   transition: border-color var(--transition-base),
               box-shadow var(--transition-base);
@@ -463,24 +301,24 @@
 .parchment select:focus {
   outline: none;
   border-color: #8b6235;
-  box-shadow: 0 0 0 3px rgba(139, 98, 53, 0.2);
+  box-shadow: 0 0 0 3px rgba(139, 98, 53, 0.15);
 }
 
 .parchment label {
   display: block;
   margin-bottom: var(--space-4);
   font-weight: 600;
-  color: var(--leading-normal);
+  color: var(--parchment-text);
   font-size: var(--text-sm);
   font-family: 'Crimson Pro', Georgia, serif;
 }
 
 .parchment fieldset {
-  border: 2px dashed rgba(80, 50, 25, 0.25);
+  border: 2px dashed rgba(80, 50, 25, 0.2);
   padding: var(--space-6);
   border-radius: 8px;
-  background: rgba(255, 250, 240, 0.5);
-  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.05);
+  background: rgba(255, 250, 240, 0.6);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
   margin-bottom: var(--space-6);
 }
 
@@ -505,14 +343,14 @@
   transition: transform var(--transition-base),
               box-shadow var(--transition-base);
   font-size: var(--text-base);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .parchment button:hover,
 .parchment .button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .parchment button:active,
@@ -532,7 +370,7 @@
   font-size: var(--text-xs);
   font-weight: 700;
   font-family: 'Crimson Pro', Georgia, serif;
-  border: 1px solid rgba(107, 74, 40, 0.4);
+  border: 1px solid rgba(107, 74, 40, 0.3);
   letter-spacing: 0.3px;
 }
 
@@ -566,7 +404,7 @@
   margin-top: var(--space-6);
   padding: var(--space-4);
   background: rgba(0, 0, 0, 0.04);
-  border-left: 3px solid rgba(107, 74, 40, 0.3);
+  border-left: 3px solid rgba(107, 74, 40, 0.25);
   border-radius: 4px;
   color: #3d2817;
   font-size: var(--text-sm);
@@ -617,6 +455,7 @@
   }
 }
 
+/* Special padding for about panel */
 body .about-panel-wrap .parchment {
   padding-top: var(--space-8);
   padding-bottom: var(--space-8);
