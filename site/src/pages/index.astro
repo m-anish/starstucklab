@@ -1,18 +1,11 @@
 ---
 // site/src/pages/index.astro
-// Main landing page with hero zoom effect
-// Build-time only: reads site/src/data/images.json
-
 import fs from 'fs';
 import path from 'path';
-import Layout from "../layouts/Layout.astro";
-import Navbar from "../components/Navbar.astro";
+import HeroLayout from "../layouts/HeroLayout.astro";
 import AboutPanel from '../components/aboutpanel.astro';
-import Footer from "../components/Footer.astro";
-import "../styles/components/navbar.css";
-import "../styles/components/index.css";
 
-// Read manifest relative to this file (site/src/data/images.json)
+// Read manifest relative to this file
 const manifestPath = new URL('../data/images.json', import.meta.url);
 let images: any;
 try {
@@ -24,7 +17,6 @@ try {
 const BASE_URL = String(import.meta.env.BASE_URL || '/') + 'assets/';
 const SCENES: Record<string, any> = images.scenes || {};
 
-/** Get filename from manifest by id/aspect/type heuristics */
 function findVariantFilename(sceneKey: string, opts: { id?: string; type?: string; aspect?: string } = {}): string | null {
   const scene = SCENES[sceneKey];
   if (!scene || !Array.isArray(scene.variants)) return null;
@@ -43,16 +35,13 @@ function findVariantFilename(sceneKey: string, opts: { id?: string; type?: strin
   return null;
 }
 
-/** Build deterministic static URL for "prefixed-only" filenames */
 function staticUrlFromManifest(sceneKey: string, manifestFilename: string | null): string | null {
   if (!manifestFilename) return null;
   return path.posix.join(BASE_URL, sceneKey, manifestFilename);
 }
 
-/** Build canonical source URLs for a scene (hero / workshop) */
 function buildSceneSources(sceneKey: string) {
   const byId = (id: string) => findVariantFilename(sceneKey, { id });
-
   const filenames: Record<string, string | null> = {
     generated: byId('generated'),
     master: byId('master'),
@@ -62,7 +51,6 @@ function buildSceneSources(sceneKey: string) {
     mobile: byId('mobile'),
     thumb: byId('thumb')
   };
-
   const urls: Record<string, string | null> = {};
   for (const [k, fname] of Object.entries(filenames)) {
     urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
@@ -72,8 +60,6 @@ function buildSceneSources(sceneKey: string) {
 
 const hero = buildSceneSources('hero');
 const workshop = buildSceneSources('workshop');
-
-// Preload important visuals
 const preloadUrls = [hero.desktop, hero.generated, workshop.desktop, workshop.generated].filter(Boolean);
 
 const MEDIA = {
@@ -83,9 +69,11 @@ const MEDIA = {
   tablet: '(min-width:640px)'
 };
 ---
-<Layout showHeader={false} showFooter={false} title="Starstuck Lab">
-  {preloadUrls.map(u => <link rel="preload" as="image" href={u} />)}
-
+<HeroLayout title="Starstuck Lab">
+  <Fragment slot="head">
+    {preloadUrls.map(u => <link rel="preload" as="image" href={u} />)}
+  </Fragment>
+  
   <script>
     // Force scroll to top on page load/reload
     if ('scrollRestoration' in window.history) {
@@ -93,7 +81,7 @@ const MEDIA = {
     }
     window.scrollTo(0, 0);
   </script>
-
+  
   <script>
     // Prevent initial transition flicker
     (function () {
@@ -107,56 +95,51 @@ const MEDIA = {
       } catch (e) { /* ignore */ }
     })();
   </script>
-
+  
   <div class="herozoom-root" id="herozoomRoot">
     <div
-      class="herozoom-spacer"
-      id="herozoomSpacer"
-      data-zoom-scale="1.9"
-      data-cross-start="0.40"
-      data-cross-end="0.85"
+    class="herozoom-spacer"
+    id="herozoomSpacer"
+    data-zoom-scale="1.9"
+    data-cross-start="0.40"
+    data-cross-end="0.85"
     ></div>
-
-    <!-- Top navigation: appears when inside workshop (uses Navbar component) -->
-    <nav id="pageNav" class="site-nav nav-hidden" aria-hidden="true" role="navigation">
-      <Navbar />
-    </nav>
-
+    
     <!-- Workshop (back layer) -->
     <picture>
       {workshop.desktop ? <source media={MEDIA.desktop} srcset={workshop.desktop} /> : null}
       {workshop.tablet ? <source media={MEDIA.tablet} srcset={workshop.tablet} /> : null}
       <img class="hero-layer layer-interior"
-           id="hzInterior"
-           src={workshop.mobile ?? workshop.generated ?? workshop.thumb ?? workshop.desktop ?? `${BASE_URL}workshop/workshop-master.webp`}
-           alt="Workshop interior"
-           loading="eager" />
+      id="hzInterior"
+      src={workshop.mobile ?? workshop.generated ?? workshop.thumb ?? workshop.desktop ?? `${BASE_URL}workshop/workshop-master.webp`}
+      alt="Workshop interior"
+      loading="eager" />
     </picture>
-
+    
     <!-- Forest hero (front layer) -->
     <picture>
       {hero.desktop ? <source media={MEDIA.desktop} srcset={hero.desktop} /> : null}
       {hero.laptop ? <source media={MEDIA.laptop} srcset={hero.laptop} /> : null}
       {hero.tablet ? <source media={MEDIA.tablet} srcset={hero.tablet} /> : null}
       <img class="hero-layer layer-forest"
-           id="hzForest"
-           src={hero.mobile ?? hero.generated ?? hero.thumb ?? hero.desktop ?? `${BASE_URL}hero/hero-master.webp`}
-           alt="Forest hero with cabin and STARSTUCKLAB sign"
-           loading="eager" />
+      id="hzForest"
+      src={hero.mobile ?? hero.generated ?? hero.thumb ?? hero.desktop ?? `${BASE_URL}hero/hero-master.webp`}
+      alt="Forest hero with cabin and STARSTUCKLAB sign"
+      loading="eager" />
     </picture>
-
+    
     <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
       <img
-        id="hzHeroLogo"
-        src="/assets/icons/starstucklab_logo_black_white.svg"
-        alt="Starstuck Lab Logo"
-        loading="eager"
+      id="hzHeroLogo"
+      src="/assets/icons/starstucklab_logo_black_white.svg"
+      alt="Starstuck Lab Logo"
+      loading="eager"
       />
       <h1 class="hero-title">Starstuck Lab</h1>
       <p class="hero-lead">Building small machines for an indifferent universe</p>
       <a href="#workbench" class="cta">Enter the Workshop</a>
     </div>
-
+    
     <div class="post-zoom" id="postZoomContent" aria-live="polite">
       <AboutPanel />
       <section id="workbench">
@@ -176,7 +159,7 @@ const MEDIA = {
       <section style="height:1200px;"></section>
     </div>
   </div>
-
+  
   <!-- Set --stage-vh for mobile 100vh quirks -->
   <script>
     (function(){
@@ -188,10 +171,9 @@ const MEDIA = {
       window.addEventListener('orientationchange', setVh);
     })();
   </script>
-
+  
   <!-- UNIFIED HERO ZOOM SCRIPT -->
   <script>
-    // SIMPLIFIED HERO FADE SCRIPT - opacity only, no zoom/parallax
     (function() {
       const spacerEl = document.getElementById('herozoomSpacer');
       const forestEl = document.getElementById('hzForest');
@@ -200,28 +182,27 @@ const MEDIA = {
       const navEl = document.getElementById('pageNav');
       const aboutEl = document.getElementById('aboutPanel');
       const postZoomEl = document.getElementById('postZoomContent');
-
+      
       if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
-
+      
       const ds = spacerEl.dataset;
       const CROSS_START = parseFloat(ds.crossStart ?? '0.40');
       const CROSS_END = parseFloat(ds.crossEnd ?? '0.85');
       const NAV_SHOW_THRESHOLD = 0.75;
       const ABOUT_SHOW_THRESHOLD = 0.85;
       const POST_ZOOM_THRESHOLD = 0.90;
-
       let ticking = false;
       let cachedSpacerTop = 0;
       let cachedSpacerHeight = 0;
       let measurementsValid = false;
-
+      
       function updateMeasurements() {
         const rect = spacerEl.getBoundingClientRect();
         cachedSpacerTop = window.scrollY + rect.top;
         cachedSpacerHeight = rect.height;
         measurementsValid = true;
       }
-
+      
       function spacerTopAbsolute() { 
         if (!measurementsValid) updateMeasurements();
         return cachedSpacerTop;
@@ -231,7 +212,7 @@ const MEDIA = {
         if (!measurementsValid) updateMeasurements();
         return cachedSpacerHeight;
       }
-
+      
       function computeProgress() {
         const top = spacerTopAbsolute();
         const duration = spacerHeight() - window.innerHeight;
@@ -240,7 +221,7 @@ const MEDIA = {
         const p = (window.scrollY - top) / duration;
         return Math.max(0, Math.min(1, p));
       }
-
+      
       function applyInitialFrame() {
         forestEl.style.opacity = '1';
         interiorEl.style.opacity = '0';
@@ -252,11 +233,10 @@ const MEDIA = {
           postZoomEl.setAttribute('aria-hidden', 'true');
         }
       }
-
+      
       function update() {
         const p = computeProgress();
         
-        // Calculate crossfade opacity
         let interiorOpacity = 0;
         if (p <= CROSS_START) {
           interiorOpacity = 0;
@@ -265,16 +245,14 @@ const MEDIA = {
         } else {
           interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
         }
-
+        
         const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
         const overlayOpacity = Math.max(0, 1 - p * 1.2);
-
-        // Apply simple opacity changes - no transforms
+        
         forestEl.style.opacity = `${forestOpacity}`;
         interiorEl.style.opacity = `${interiorOpacity}`;
         overlayEl.style.opacity = `${overlayOpacity}`;
-
-        // Show/hide navigation
+        
         if (interiorOpacity > NAV_SHOW_THRESHOLD) {
           navEl.classList.add('nav-visible', 'nav-sticky');
           navEl.classList.remove('nav-hidden');
@@ -284,8 +262,7 @@ const MEDIA = {
           navEl.classList.add('nav-hidden');
           navEl.setAttribute('aria-hidden', 'true');
         }
-
-        // Show/hide about panel
+        
         if (aboutEl) {
           const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
           if (shouldBeIn && !aboutEl.classList.contains('in')) {
@@ -294,8 +271,7 @@ const MEDIA = {
             aboutEl.classList.remove('in');
           }
         }
-
-        // Show/hide post-zoom content
+        
         if (postZoomEl) {
           const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
           if (shouldBeIn && !postZoomEl.classList.contains('in')) {
@@ -306,35 +282,32 @@ const MEDIA = {
             postZoomEl.setAttribute('aria-hidden', 'true');
           }
         }
-
+        
         ticking = false;
       }
-
+      
       function requestTick() { 
         if (!ticking) { 
           window.requestAnimationFrame(update); 
           ticking = true; 
         } 
       }
-
+      
       function onScroll() { 
         requestTick(); 
       }
-
-      // Initialize
+      
       requestAnimationFrame(() => requestAnimationFrame(() => { 
         applyInitialFrame(); 
         update(); 
       }));
-
-      // Event listeners
+      
       window.addEventListener('scroll', onScroll, { passive: true });
       window.addEventListener('resize', () => { 
         measurementsValid = false;
         requestTick(); 
       }, { passive: true });
-
-      // CTA smooth scroll
+      
       const cta = document.querySelector('.cta');
       const aboutPanel = document.getElementById('aboutPanel');
       if (cta && aboutPanel) {
@@ -346,8 +319,7 @@ const MEDIA = {
           history.replaceState(null, '', '#workbench');
         });
       }
-
-      // Fallback for non-scrollable pages
+      
       function pageIsScrollable() { 
         return document.documentElement.scrollHeight > window.innerHeight + 10; 
       }
@@ -380,32 +352,30 @@ const MEDIA = {
       }
     })();
   </script>
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        const res = await fetch("/data/hero.json");
-        const variants = await res.json();  // your uploaded file (:contentReference[oaicite:1]{index=1})
-
-        const keys = Object.keys(variants);
-        if (!keys.length) return;
-
-        // Pick random variant
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
-        const hero = variants[randomKey];
-
-        // Replace text
-        const titleEl = document.querySelector(".hero-title");
-        const leadEl = document.querySelector(".hero-lead");
-        const ctaEl = document.querySelector(".cta");
-
-        if (titleEl) titleEl.textContent = hero.title;
-        if (leadEl) leadEl.textContent = hero.subtitle;
-        if (ctaEl) ctaEl.textContent = hero.cta;
-
-      } catch (err) {
-        console.error("Hero variant loading failed:", err);
-      }
-    });
-   </script>
-   <Footer />
-</Layout>
+  <script> 
+    document.addEventListener("DOMContentLoaded", 
+    async () => { 
+      try { 
+        const res = await fetch("/data/hero.json"); 
+        const variants = await res.json(); 
+        const keys = Object.keys(variants); 
+        if (!keys.length) 
+        return; 
+        const randomKey = keys[Math.floor(Math.random() * keys.length)]; 
+        const hero = variants[randomKey]; 
+        const titleEl = document.querySelector(".hero-title"); 
+        const leadEl = document.querySelector(".hero-lead"); 
+        const ctaEl = document.querySelector(".cta"); 
+        if (titleEl) 
+        titleEl.textContent = hero.title; 
+        if (leadEl) 
+        leadEl.textContent = hero.subtitle; 
+        if (ctaEl) 
+        ctaEl.textContent = hero.cta; 
+      } 
+      catch (err) { 
+        console.error("Hero variant loading failed:", err); 
+      } 
+    }); 
+  </script> 
+</HeroLayout> 

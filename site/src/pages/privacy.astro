@@ -1,12 +1,11 @@
 ---
 // site/src/pages/privacy.astro
-import Layout from "../layouts/Layout.astro";
-import "../styles/components/legal.css";
+import StandardPageLayout from "../layouts/StandardPageLayout.astro";
+import "../styles/components/standard-page.css";
 ---
-
-<Layout title="Privacy Policy - Starstuck Lab">
-  <div class="legal-page">
-    <div class="legal-container">
+<StandardPageLayout title="Privacy Policy - Starstuck Lab" pageClass="standard-page" backgroundScene="shop">
+  <div class="standard-page">
+    <div class="standard-page-inner">
       <h1>Privacy Policy</h1>
       <p class="last-updated">Last Updated: December 2, 2024</p>
 
@@ -144,7 +143,7 @@ import "../styles/components/legal.css";
         </p>
       </section>
 
-      <div class="legal-footer">
+      <div class="contact-footer-note">
         <p>
           By using our website, you consent to our use of cookies as described in this Privacy Policy. 
           You can disable cookies in your browser settings, but this may affect website functionality.
@@ -152,4 +151,4 @@ import "../styles/components/legal.css";
       </div>
     </div>
   </div>
-</Layout>
+</StandardPageLayout>

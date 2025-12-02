@@ -1,20 +1,15 @@
 ---
-// SPDX-License-Identifier: DWYWBDBM-1.0
+/* SPDX-License-Identifier: DWYWBDBM-1.0 */
+/* Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0. */
+/* See the COPYING file or visit https://starstucklab.com/license for details. */
 // site/src/pages/shop.astro
-import Layout from "../layouts/Layout.astro";
-import Navbar from "../components/Navbar.astro";
+import StandardPageLayout from "../layouts/StandardPageLayout.astro";
 import ProductCard from "../components/ProductCard.astro";
-import "../styles/tokens.css";
 import "../styles/components/parchment.css";
-import "../styles/components/navbar.css";
 import "../styles/components/shop.css";
 import fs from 'fs';
 import path from 'path';
-import process from 'process';
 
-const manifestPath = new URL('../data/images.json', import.meta.url);
-
-// Read from public/data/products (generated products)
 const PUBLIC_PRODUCTS_DIR = path.resolve('./public/data/products');
 
 let products = [];
@@ -33,101 +28,26 @@ if (fs.existsSync(PUBLIC_PRODUCTS_DIR)) {
   products.push(...publicProducts);
 }
 
-// Sort by date (newest first)
 products.sort((a,b) => (b.date || '').localeCompare(a.date || ''));
 
-// Read shop background manifest --- now using same logic as index.astro
-let images = {};
-try {
-  images = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-} catch (err) {
-  console.warn(`Could not read images manifest at ${manifestPath.pathname}:`, err);
-}
-
-const BASE_URL = String(import.meta.env.BASE_URL || '/') + 'assets/';
-const SCENES = images.scenes || {};
-
-function findVariantFilename(sceneKey, opts = {}) {
-  const scene = SCENES[sceneKey];
-  if (!scene || !Array.isArray(scene.variants)) return null;
-
-  if (opts.id) {
-    const byId = scene.variants.find(v => v.id === opts.id && v.filename);
-    if (byId) return byId.filename;
-  }
-  if (opts.aspect) {
-    const byAspect = scene.variants.find(v => v.aspect === opts.aspect && v.filename);
-    if (byAspect) return byAspect.filename;
-  }
-  if (opts.type) {
-    const byType = scene.variants.find(v => v.type === opts.type && v.filename);
-    if (byType) return byType.filename;
-  }
-  return null;
-}
-
-function staticUrlFromManifest(sceneKey, manifestFilename) {
-  if (!manifestFilename) return null;
-  return path.posix.join(BASE_URL, sceneKey, manifestFilename);
-}
-
-function buildSceneSources(sceneKey) {
-  const byId = id => findVariantFilename(sceneKey, { id });
-
-  const filenames = {
-    generated: byId('generated'),
-    master: byId('master'),
-    desktop: byId('desktop'),
-    laptop: byId('laptop'),
-    tablet: byId('tablet'),
-    mobile: byId('mobile'),
-    thumb: byId('thumb'),
-  };
-
-  const urls = {};
-  for (const k in filenames) {
-    const fname = filenames[k];
-    urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
-  }
-  return urls;
-}
-
-const shopSources = buildSceneSources('shop');
 const SHOP_FALLBACK = `/assets/shop/shop-master.webp`;
 ---
-<Layout title="Shop — Starstuck Lab" showHeader={false} showFooter={true}>
-  <!-- Static navbar (always visible) -->
-  <nav class="site-nav nav-static">
-    <Navbar />
-  </nav>
-  
-  <div class="shop-stage">
-    <picture>
-      {shopSources.desktop ? <source media="(min-width:1000px)" srcset={shopSources.desktop} /> : null}
-      {shopSources.tablet ? <source media="(min-width:640px)" srcset={shopSources.tablet} /> : null}
-      <img
-        src={shopSources.mobile ?? shopSources.generated ?? shopSources.thumb ?? shopSources.desktop ?? SHOP_FALLBACK}
-        alt="Workshop background"
-        class="shop-bg"
-        loading="eager"
-      />
-    </picture>    
-    <main class="shop-content">
-      <!-- REMOVED .parchment classes - hero should be transparent -->
-      <header class="shop-hero">
-        <h1>Shop — Artifacts from the Bench</h1>
-        <p class="lead">Handmade, printed, lightly cursed. Pick something that will outlive your patience.</p>
-      </header>
+<!-- Request the shared shop background by setting backgroundScene="shop" -->
+<StandardPageLayout title="Shop — Starstuck Lab" pageClass="shop-page" backgroundScene="shop">
+  <div class="shop-content">
+    <header class="shop-hero">
+      <h1>Shop — Artifacts from the Bench</h1>
+      <p class="lead">Handmade, printed, lightly cursed. Pick something that will outlive your patience.</p>
+    </header>
 
-      {products.length === 0 ? (
-        <div class="parchment parchment--centered no-products">
-          <p>No products available yet. Check back soon!</p>
-        </div>
-      ) : (
-        <section class="product-grid" role="list">
-          {products.map(p => <ProductCard product={p} />)}
-        </section>
-      )}
-    </main>
+    {products.length === 0 ? (
+      <div class="parchment parchment--centered no-products">
+        <p>No products available yet. Check back soon!</p>
+      </div>
+    ) : (
+      <section class="product-grid" role="list">
+        {products.map(p => <ProductCard product={p} />)}
+      </section>
+    )}
   </div>
-</Layout>
+</StandardPageLayout>
