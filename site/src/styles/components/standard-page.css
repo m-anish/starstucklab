@@ -6,15 +6,15 @@
 
 /* ===== STANDARD PAGE CONTAINER ===== */
 .standard-page {
-  background: var(--page-bg);
+  background: transparent;
   min-height: 100vh;
   color: var(--starry-white);
   position: relative;
 }
 
-/* When page has background image, make content background transparent */
-.standard-page.page-has-bg {
-  background: transparent;
+/* When page has NO background image, apply black background */
+.standard-page.page-no-bg {
+  background: var(--page-bg);
 }
 
 .standard-page-inner {

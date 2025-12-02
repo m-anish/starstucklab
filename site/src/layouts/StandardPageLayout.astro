@@ -108,7 +108,7 @@ const sceneSources = backgroundScene ? buildSceneSources(backgroundScene) : null
         />
       </picture>
 
-      <main class={`page-content ${pageClass} ${backgroundScene ? 'page-has-bg' : ''}`}>
+      <main class={`page-content ${pageClass} ${!backgroundScene ? 'page-no-bg' : ''}`}>
         <slot />
       </main>
     </div>
