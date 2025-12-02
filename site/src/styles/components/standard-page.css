@@ -12,16 +12,9 @@
   position: relative;
 }
 
-/* Fixed background for all standard pages */
-.standard-page::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: var(--page-bg);
-  z-index: -1;
+/* When page has background image, make content background transparent */
+.standard-page.page-has-bg {
+  background: transparent;
 }
 
 .standard-page-inner {

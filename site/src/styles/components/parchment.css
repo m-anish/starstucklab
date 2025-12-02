@@ -202,7 +202,15 @@
   font-weight: 400;
   text-shadow: 0 1px 0 rgba(255,255,250,0.05); /* Slightly stronger for better separation */
 }
-
+.parchment li{
+  margin-bottom: var(--space-2);
+  font-size: var(--text-base);
+  font-family: 'Crimson Pro', Georgia, serif;
+  color: var(--parchment-text);
+  line-height: 1.7;
+  font-weight: 400;
+  text-shadow: 0 1px 0 rgba(255,255,250,0.05); /* Slightly stronger for better separation */
+}
 .parchment .lead {
   font-size: var(--text-lg);
   line-height: 1.6;

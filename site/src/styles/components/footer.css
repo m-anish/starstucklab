@@ -69,14 +69,15 @@
 }
 
 @media (max-width: 640px) {
-  .site-footer {
-    padding: 32px 16px 20px;
-  }
-
-  .footer-content {
-    grid-template-columns: 1fr;
-    gap: 24px;
-  }
+.site-footer {
+  background: rgba(5, 6, 10, 0.95);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ddd;
+  padding: 48px 20px 24px;
+  font-family: Inter, system-ui, sans-serif;
+  position: relative;
+  z-index: 2;
+}
 
   .footer-section {
     text-align: center;
