@@ -1,5 +1,7 @@
 ---
 import '../styles/global.css';
+import FaviconHead from "../components/FaviconHead.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
 
 const {
   title = 'Starstuck Lab',
@@ -15,7 +17,8 @@ const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+    <FaviconHead />
+    <GoogleAnalytics />
     <title>{title}</title>
     <meta name="description" content={description} />
 

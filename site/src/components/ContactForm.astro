@@ -1,0 +1,116 @@
+---
+// site/src/components/ContactForm.astro
+// Contact form using Formspree (simple!)
+import "../styles/components/contact-form.css";
+---
+
+<div class="contact-form-wrapper">
+  <form 
+    id="contactForm" 
+    class="contact-form"
+    action="https://formspree.io/f/xdkqzdvk"
+    method="POST"
+  >
+    <div class="form-group">
+      <label for="name">Name *</label>
+      <input 
+        type="text" 
+        id="name" 
+        name="name" 
+        required 
+        minlength="2"
+        placeholder="Your name"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input 
+        type="email" 
+        id="email" 
+        name="email" 
+        required 
+        placeholder="your.email@example.com"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="subject">Subject</label>
+      <input 
+        type="text" 
+        id="subject" 
+        name="subject" 
+        placeholder="What's this about?"
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="message">Message *</label>
+      <textarea 
+        id="message" 
+        name="message" 
+        required 
+        minlength="10"
+        rows="6"
+        placeholder="Tell us more..."
+      ></textarea>
+    </div>
+
+    <!-- Formspree honeypot spam protection -->
+    <input type="text" name="_gotcha" style="display:none" />
+
+    <button type="submit" class="submit-btn" id="submitBtn">
+      Send Message
+    </button>
+
+    <div class="form-status" id="formStatus" style="display: none;"></div>
+  </form>
+</div>
+
+<script>
+  const form = document.getElementById('contactForm') as HTMLFormElement;
+  const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+  const formStatus = document.getElementById('formStatus') as HTMLElement;
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Disable form
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+    formStatus.style.display = 'none';
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        // Success
+        formStatus.textContent = '✓ Message sent successfully! We\'ll get back to you soon.';
+        formStatus.className = 'form-status success';
+        formStatus.style.display = 'block';
+        form.reset();
+      } else {
+        // Error
+        formStatus.textContent = '✗ Something went wrong. Please try again or email us directly.';
+        formStatus.className = 'form-status error';
+        formStatus.style.display = 'block';
+      }
+    } catch (error) {
+      // Network error
+      console.error('Form submission error:', error);
+      formStatus.textContent = '✗ Network error. Please check your connection and try again.';
+      formStatus.className = 'form-status error';
+      formStatus.style.display = 'block';
+    } finally {
+      // Re-enable form
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Message';
+    }
+  });
+</script>

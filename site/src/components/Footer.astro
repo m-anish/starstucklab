@@ -1,0 +1,35 @@
+---
+// site/src/components/Footer.astro
+import "../styles/components/footer.css";
+---
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <div class="footer-section">
+      <h4>Starstuck Lab</h4>
+      <p>Building small machines for an indifferent universe</p>
+    </div>
+
+    <div class="footer-section">
+      <h4>Quick Links</h4>
+      <ul>
+        <li><a href="/#workbench">Workbench</a></li>
+        <li><a href="/#projects">Projects</a></li>
+        <li><a href="/#shop">Shop</a></li>
+        <li><a href="/contact">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="footer-section">
+      <h4>Legal</h4>
+      <ul>
+        <li><a href="/privacy">Privacy Policy</a></li>
+        <li><a href="/terms">Terms of Service</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>&copy; {new Date().getFullYear()} Starstuck Lab. All rights reserved.</p>
+  </div>
+</footer>
