@@ -79,8 +79,8 @@
       "master": "public/assets/shop/shop-master.png",
       "variants": "shared_variants"
     },
-    "product-hadley": {
-      "master": "public/assets/product-hadley/product-hadley-master.png",
+    "product-m42": {
+      "master": "public/assets/product-m42/product-m42-master.png",
       "variants": "shared_variants"
     }
   }

@@ -347,7 +347,7 @@ parser = argparse.ArgumentParser(description="Starstuck Lab Multi-Page Regenerat
 parser.add_argument("--page", type=str, default="all", help="Page to regenerate (about, …)")
 parser.add_argument("--num-variants", type=int, default=5)
 parser.add_argument("--model", type=str, default=None)
-parser.add_argument("--provider", choices=["openai", "together"], default=None,
+parser.add_argument("--provider", choices=["openai", "together"], default="openai",
                     help="Choose which provider to use for generation.")
 args = parser.parse_args()
 
@@ -392,7 +392,7 @@ if TARGET_PAGE == "all":
     # add special 'products' marker if you want to process products in 'all'
     target_pages.append("products")
 else:
-    # allow 'product:hadley' and 'products'
+    # allow 'product:m42' and 'products'
     if TARGET_PAGE.startswith("product:"):
         # single product slug generation
         target_pages = [TARGET_PAGE]  # keep it; we branch later
