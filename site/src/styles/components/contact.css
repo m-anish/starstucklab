@@ -1,7 +1,6 @@
 /* site/src/styles/pages/contact.css */
 
 .contact-page {
-  background: var(--page-bg, #05060a);
   color: #ddd;
   min-height: 100vh;
   padding: 80px 20px 60px;
@@ -23,6 +22,26 @@
   color: var(--starry-white, #f8f4e8);
   margin: 0 0 16px 0;
   font-weight: 700;
+}
+
+.contact-form-section {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  border-radius: 10px !important; /* Rounded corners for a softer look */
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important; /* Right-side border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Bottom border */
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important; /* Subtle shadow for depth */
+}
+
+.info-card  {
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  border-radius: 10px !important; /* Rounded corners for a softer look */
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important; /* Right-side border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Bottom border */
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important; /* Subtle shadow for depth */
 }
 
 .contact-lead {
@@ -89,11 +108,15 @@
 .contact-footer-note {
   text-align: center;
   padding: 24px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
   font-size: 0.9rem;
   color: rgba(255, 255, 255, 0.6);
+  background-color: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px); /* For Safari support */
+  border-radius: 10px !important; /* Rounded corners for a softer look */
+  border-right: 1px solid rgba(255, 255, 255, 0.2) !important; /* Right-side border */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2) !important; /* Bottom border */
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37) !important; /* Subtle shadow for depth */
 }
 
 .contact-footer-note p {
