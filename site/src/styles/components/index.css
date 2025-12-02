@@ -16,7 +16,7 @@
 }
 
 .herozoom-spacer { 
-  height: 100vh;
+  height: 300vh;
   width: 100%; 
   position: relative;
 }
@@ -38,13 +38,13 @@
 .layer-forest {
   z-index: 15;
   opacity: 1;
-  transition: opacity 300ms ease-out;
+  /* transition: opacity 300ms ease-out; */
 }
 
 .layer-interior { 
   z-index: 10; 
   opacity: 0; 
-  transition: opacity 300ms ease-out;
+  /* transition: opacity 300ms ease-out; */
 }
 
 /* Hero overlay - also fixed */

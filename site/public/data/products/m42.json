@@ -1,26 +1,37 @@
 {
-  "id": "g-2025-12-02T18-27-14",
-  "date": "2025-12-02T18:27:14.120916",
+  "id": "g-2025-12-02T20-41-12",
+  "date": "2025-12-02T20:41:12.994174",
   "mood": 55,
   "prompt_selection_reason": "default",
   "prompt_id_used": "_default",
   "model": "gpt-5.1",
-  "excerpt": "A compact Dobsonian made for small patios and large existential questions.",
+  "excerpt": "An ultra-light Dobsonian made for small patios and large existential questions.",
   "slug": "m42",
-  "title": "M42 3D — Desktop Dobsonian (3D-printed)",
-  "price": "129.00",
-  "currency": "USD",
+  "title": "M42 Dobsonian",
+  "price": "28000.00",
+  "currency": "₹",
   "status": "available",
   "tags": [
     "telescope",
-    "3d-printed"
+    "3d-printed",
+    "customizable"
   ],
   "specs": {
-    "aperture": "90 mm",
-    "focal_length": "500 mm",
-    "material": "PETG/PLA",
-    "weight": "1.8 kg"
+    "Mirror Diameter": "114 mm",
+    "Focal Length": "900 mm",
+    "Type": "Truss type dobsonian reflector",
+    "Materials": "PETG, Aluminium, HDF, Teflon",
+    "Weight": "2.5 kg"
   },
-  "html": "<p>M42 3D — Desktop Dobsonian (3D-printed) is a small, stubborn altar to distant light, shrunk to fit between a coffee ring and a half-finished schematic. Its 3D-printed frame remembers every layer it was built from, stacked plastic like quiet sediment, holding a simple mirror and tube that try, in their limited way, to steal photons from impossible distances. It does not promise the universe; it offers instead a careful nudge toward Orion’s shoulder, Jupiter’s bands, the moon’s old scars, all balanced on a base that turns with the same resigned patience as the night sky. It is not precise enough to impress a committee and not grand enough to justify its own existence, but it points upward anyway, as if that were reason enough to be made. On the desk, under the lamp, it waits for a hand to nudge it toward some faint blur, while outside the real stars continue burning, indifferent and generous in equal measure.</p>",
-  "raw": "M42 3D — Desktop Dobsonian (3D-printed) is a small, stubborn altar to distant light, shrunk to fit between a coffee ring and a half-finished schematic. Its 3D-printed frame remembers every layer it was built from, stacked plastic like quiet sediment, holding a simple mirror and tube that try, in their limited way, to steal photons from impossible distances. It does not promise the universe; it offers instead a careful nudge toward Orion’s shoulder, Jupiter’s bands, the moon’s old scars, all balanced on a base that turns with the same resigned patience as the night sky. It is not precise enough to impress a committee and not grand enough to justify its own existence, but it points upward anyway, as if that were reason enough to be made. On the desk, under the lamp, it waits for a hand to nudge it toward some faint blur, while outside the real stars continue burning, indifferent and generous in equal measure."
+  "included": [
+    "3D-printed customizable optical tube assembly with non-rotating helical focuser",
+    "3D-printed dobsonian mount with altitude bearings and Teflon pads",
+    "25mm/52°FOV Plössl & 9mm/68°FOV Plössl eyepieces",
+    "Red-dot finder",
+    "Collimation cheshire",
+    "Mount tensioner to control friction",
+    "Assembly instructions"
+  ],
+  "html": "<p>The M42 Dobsonian is a stubborn wooden altar to distant light, a simple tube on a swiveling base that turns late nights into quiet negotiations with gravity and glass. Its mirrors are ground to catch photons that left home before anyone here was born, only to end their long fall on a backyard of damp grass and extension cords. No electronics beg for updates, no screens pretend to interpret the sky; just bearings that move like a slow nod and a focuser that creaks toward clarity. It does not promise answers, only slightly sharper questions etched in starlight along the edge of Orion’s shoulder. Under its weight, the universe remains just as indifferent, but at least the indifference comes into focus.</p>",
+  "raw": "The M42 Dobsonian is a stubborn wooden altar to distant light, a simple tube on a swiveling base that turns late nights into quiet negotiations with gravity and glass. Its mirrors are ground to catch photons that left home before anyone here was born, only to end their long fall on a backyard of damp grass and extension cords. No electronics beg for updates, no screens pretend to interpret the sky; just bearings that move like a slow nod and a focuser that creaks toward clarity. It does not promise answers, only slightly sharper questions etched in starlight along the edge of Orion’s shoulder. Under its weight, the universe remains just as indifferent, but at least the indifference comes into focus."
 }

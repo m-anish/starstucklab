@@ -96,30 +96,53 @@
   margin-bottom: 28px;
 }
 
+.product-specs .specs-list {
+  margin: 0;
+  padding-left: 0.2em;
+  line-height: 1.1;
+}
+
 .specs-list {
+  display: grid;
+  gap: 4px;
+}
+
+.product-specs.parchment--nested {
+  padding: 1.5rem 0.5rem 0.5rem 2.5rem!important; /* use !important if needed to override */
+  margin: 0.25em 0 1.5em 0 !important;
+}
+
+/* ===== INCLUDED SECTION ===== */
+
+.product-included {
+  margin-bottom: 28px;
+}
+
+.product-included .included-list {
+  margin: 0;
+  padding-left: 0.2em;
+  line-height: 1.1;
+}
+
+.product-included .included-list li {
+  margin: 0.1em 0; /* minimal vertical spacing */
+  padding: 0;
+}
+
+.included-list {
   display: grid;
   gap: 8px;
 }
 
-.specs-list dt {
-  font-weight: 700;
-  color: var(--parchment-heading);
-  font-size: var(--text-sm);
-  margin-top: 4px;
+.specs-list li,
+.included-list li {
+  margin: 0.1em 0;
+  padding: 0;
 }
 
-.specs-list dd {
-  margin-bottom: 12px;
-  padding-bottom: 12px;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
-  font-size: var(--text-sm);
-  color: var(--parchment-text);
-}
-
-.specs-list dd:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
+.product-included.parchment--nested {
+  padding: 1.5rem 0.5rem 0.5rem 2.5rem!important; /* use !important if needed to override */
+  margin: 0.25em 0 1.5em 0 !important;
 }
 
 /* ===== ORDER FORM ===== */

@@ -289,6 +289,7 @@ Tone: melancholic, witty, slightly nihilistic. Respond only with the product blu
         "status": src.get("status","available"),
         "tags": src.get("tags", []),
         "specs": src.get("specs", {}),
+        "included": src.get("included", []),
         "html": "<p>" + html.escape(text) + "</p>",
         "raw": text
     }
