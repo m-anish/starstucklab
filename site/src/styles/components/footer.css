@@ -6,6 +6,8 @@
   color: #ddd;
   padding: 48px 20px 24px;
   font-family: Inter, system-ui, sans-serif;
+  position: relative;
+  z-index: 2;
 }
 
 .footer-content {
