@@ -86,19 +86,26 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   border-radius: 12px;        /* slightly smaller so the frame is visible */
   background: transparent;
   outline: none;
+  transition: transform var(--transition-base, 0.25s ease);
 }
 
 .product-card:hover .product-thumb img {
   transform: scale(1.05);
 }
 
+/* Product title - clear hierarchy */
 .product-title {
   font-family: var(--font-display, 'Playfair Display', serif);
   font-weight: var(--weight-bold, 700);
-  font-size: var(--text-base, 1rem);
+  font-size: 1.1rem;
   margin: 0 0 var(--space-2, 8px) 0;
   color: var(--ink-dark, #28160b);
   line-height: var(--leading-snug, 1.3);
+  transition: color var(--transition-fast);
+}
+
+.product-card:hover .product-title {
+  color: var(--accent-green, #2a7a4f);
 }
 
 .product-price {
@@ -136,7 +143,7 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   }
   
   .product-title {
-    font-size: 0.95rem;
+    font-size: 1rem;
   }
 }
 </style>
