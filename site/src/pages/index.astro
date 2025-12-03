@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import HeroLayout from "../layouts/HeroLayout.astro";
 import AboutPanel from '../components/aboutpanel.astro';
+import FeaturedSections from '../components/FeaturedSections.astro'; // NEW
 
 // Read manifest relative to this file
 const manifestPath = new URL('../data/images.json', import.meta.url);
@@ -142,21 +143,15 @@ const MEDIA = {
     
     <div class="post-zoom" id="postZoomContent" aria-live="polite">
       <AboutPanel />
-      <section id="workbench">
-        <h2>Inside the Workshop</h2>
-        <p>Welcome — this is where your workbench / featured products / logs begin.</p>
-      </section>
-      <section id="projects" style="height:800px;">
-        <h3>Projects</h3>
-        <p>Project tiles go here.</p>
-      </section>
-      <section id="shop" style="height:600px;">
-        <h3>Shop</h3>
-      </section>
+      
+      <!-- NEW: Featured sections (projects + shop) -->
+      <FeaturedSections />
+      
+      <!-- REMOVED: Old placeholder sections -->
+      <!-- Keep contact if you want, or move to footer -->
       <section id="contact" style="height:500px;">
         <h3>Contact</h3>
       </section>
-      <section style="height:1200px;"></section>
     </div>
   </div>
   
@@ -352,6 +347,7 @@ const MEDIA = {
       }
     })();
   </script>
+  
   <script> 
     document.addEventListener("DOMContentLoaded", 
     async () => { 
@@ -378,4 +374,4 @@ const MEDIA = {
       } 
     }); 
   </script> 
-</HeroLayout> 
+</HeroLayout>
