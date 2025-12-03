@@ -77,6 +77,7 @@
   gap: var(--space-8);
   margin-bottom: var(--space-10);
   justify-items: center;
+  z-index: var(--z-elevated);
 }
 
 /* Section Footer with CTA */
@@ -222,7 +223,7 @@
 
   opacity: 0.60; /* 60% opacity */
   pointer-events: none; /* do not block clicks */
-  z-index: -1; /* above the glass texture, below content */
+  z-index: var(--z-base); /* above the glass texture, below content */
 }
 
 /* Slightly distinct tint for shop so eyeballs know they're different */
