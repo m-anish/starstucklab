@@ -351,6 +351,65 @@ def choose_from_list(prompt: str, options: list, default: Optional[str] = None) 
     print(colorize(f"⚠️  Invalid choice '{raw}', using default '{default_display}'", Color.YELLOW))
     return default or options[0]
 
+# --- IMAGE PROMPT HELPERS ---------------------------------------------------
+
+def build_image_prompt(title: str, slug: str, excerpt: str, ai_content: Optional[Dict] = None) -> str:
+    """
+    Build a strict, high-quality hero-image prompt.
+    This version enforces:
+        - no text
+        - studio ghibli inspired painting style
+        - warm color palette
+        - minimal, web-friendly composition
+    """
+
+    base = [
+        f"Hero image for a project titled \"{title}\" (slug: {slug}).",
+        f"Concept summary: {excerpt}",
+        "Create a cinematic 16:9 landscape illustration in a Studio Ghibli-inspired painterly style.",
+        "Use a warm color palette: soft golds, oranges, warm greens, warm blues, gentle warm light.",
+        "Absolutely no text, no letters, no signage, no typography, no logos, no symbols.",
+        "Minimal composition suitable for a website hero banner — a single clear focal subject, soft depth of field, atmospheric background.",
+        "Soft, whimsical lighting; hand-painted texture; gentle gradients; organic shapes; subtle rim-light where appropriate.",
+        "Avoid clutter. Avoid overly complex scenes. Avoid dark or cold palettes.",
+        "High detail but calm; expressive, warm atmosphere."
+    ]
+
+    # Optional content-based cues
+    if ai_content:
+        mood = ai_content.get("reflections") or ai_content.get("overview") or ""
+        mood = " ".join(mood.split()[:25]).strip()
+        if mood:
+            base.append(f"Mood inspiration from project text: {mood}")
+
+        comps = ai_content.get("components", [])
+        if isinstance(comps, list) and comps:
+            base.append(f"Potential symbolic elements (use only if they make the composition cleaner): {', '.join(comps[:4])}")
+
+    # Technical output specs
+    base.append("Output resolution: 3840×2160 (4k) or 1920×1080 if unsupported.")
+    base.append("File should contain no added text or watermarks. Pure illustrated scene only.")
+
+    return " ".join(base)
+
+
+
+def maybe_copy_to_clipboard(text: str, filename: str) -> None:
+    """
+    Try to copy `text` to clipboard if pyperclip installed.
+    If not available, write to filename and inform the user.
+    """
+    try:
+        import pyperclip
+        pyperclip.copy(text)
+        print(colorize(f"✅ Prompt copied to clipboard.", Color.GREEN))
+        # still save a copy
+        Path(filename).write_text(text, encoding='utf-8')
+        print(colorize(f"   Saved a copy at: {filename}", Color.CYAN))
+    except Exception:
+        Path(filename).write_text(text, encoding='utf-8')
+        print(colorize(f"ℹ️  pyperclip not available — prompt saved to {filename}", Color.YELLOW))
+
 def build_markdown_content(
     title: str,
     slug: str,
@@ -589,6 +648,103 @@ def cmd_add(args):
         
         if ai_content:
             print(colorize("   ✨ AI-generated content included", Color.CYAN))
+
+        # --- Image generation / prompt option ---
+        want_image = input("\nCreate a hero image for this project now? [y/N]: ").strip().lower() in ['y', 'yes']
+        if want_image:
+            # Build a prompt
+            image_prompt = build_image_prompt(title, slug, excerpt, ai_content)
+
+            # Ask whether to generate automatically or print prompt
+            print("\nHow would you like to proceed with the image?")
+            print("  1) Attempt automatic generation (external tool/api)")
+            print("  2) Print prompt to console for manual use / copy")
+            print("  3) Save prompt to file (no clipboard)")
+            choice = input("Choose [1/2/3] (default 2): ").strip() or "2"
+
+            if choice == "1":
+                print(colorize("🔌 Attempting automatic generation (this will call an external tool)...", Color.CYAN))
+
+                # Ensure assets dir exists under public so the site can serve it
+                assets_dir = ROOT / "public" / "assets" / "projects" / slug
+                assets_dir.mkdir(parents=True, exist_ok=True)
+
+                # Output filename and web path (frontmatter should use the web path)
+                out_name = "hero.webp"
+                out_path = assets_dir / out_name
+                out_web_path = f"/assets/projects/{slug}/{out_name}"
+
+                # Build a prompt file (temp) that can be consumed by generator
+                tmp_prompt = PROJECTS_DIR / f"{slug}-image-prompt.txt"
+                tmp_prompt.write_text(image_prompt, encoding='utf-8')
+
+                # Default command — user can override PROJECT_IMAGE_CMD in env.
+                # The default expects a CLI that accepts a prompt file and an output path.
+                default_cmd = f"python3 site/tools/image_gen_cli.py --prompt-file {tmp_prompt} --out {out_path}"
+                external_cmd = os.environ.get("PROJECT_IMAGE_CMD", default_cmd)
+
+                # Replace placeholders if user used them
+                external_cmd = external_cmd.replace("{prompt_file}", str(tmp_prompt)).replace("{out_file}", str(out_path)).replace("{out_path}", str(out_path))
+
+                # Tokenize safely (so users can set quoted args)
+                try:
+                    cmd_list = shlex.split(external_cmd)
+                except Exception:
+                    cmd_list = external_cmd.split()
+
+                try:
+                    # Run generator
+                    subprocess.run(cmd_list, check=True)
+
+                    # Verify output exists
+                    if not out_path.exists() or out_path.stat().st_size == 0:
+                        raise FileNotFoundError(f"Expected output not found: {out_path}")
+
+                    print(colorize(f"✅ Image generated: {out_path}", Color.GREEN))
+
+                    # Update frontmatter in the markdown file to point to the generated image
+                    # Load current file content
+                    raw = path.read_text(encoding='utf-8')
+                    fm, body = parse_frontmatter(raw)
+
+                    if not isinstance(fm, dict):
+                        fm = {}
+
+                    fm['image'] = out_web_path
+                    fm['image_alt'] = fm.get('image_alt', f"{title} hero image")
+                    fm['updated'] = datetime.now().strftime('%Y-%m-%d')
+
+                    # Dump YAML frontmatter back and rewrite file
+                    new_fm_yaml = yaml.dump(fm, default_flow_style=False, allow_unicode=True, sort_keys=False)
+                    new_content = f"---\n{new_fm_yaml.strip()}\n---\n\n{body}"
+                    path.write_text(new_content, encoding='utf-8')
+
+                    print(colorize(f"✅ Frontmatter updated to use {out_web_path}", Color.GREEN))
+
+                except subprocess.CalledProcessError as e:
+                    print(colorize(f"❌ Automatic generation command failed: {e}", Color.RED))
+                    print(colorize("   Falling back to printing the prompt below.\n", Color.YELLOW))
+                    print(image_prompt)
+                except FileNotFoundError as e:
+                    print(colorize(f"❌ Image not created: {e}", Color.RED))
+                    print(colorize("   Falling back to printing the prompt below.\n", Color.YELLOW))
+                    print(image_prompt)
+                except Exception as e:
+                    print(colorize(f"❌ Unexpected error while generating image: {e}", Color.RED))
+                    print(colorize("   Falling back to printing the prompt below.\n", Color.YELLOW))
+                    print(image_prompt)
+            elif choice == "3":
+                out_file = PROJECTS_DIR / f"{slug}-image-prompt.txt"
+                out_file.write_text(image_prompt, encoding='utf-8')
+                print(colorize(f"✅ Prompt saved to {out_file}", Color.GREEN))
+                print(colorize("Tip: install 'pyperclip' to enable automatic clipboard copying.", Color.CYAN))
+            else:
+                # Default: print to console and try clipboard
+                print(colorize("\n--- IMAGE PROMPT (copy & paste) ---\n", Color.BOLD))
+                print(image_prompt)
+                print(colorize("\n--- end prompt ---\n", Color.BOLD))
+                prompt_file = PROJECTS_DIR / f"{slug}-image-prompt.txt"
+                maybe_copy_to_clipboard(image_prompt, str(prompt_file))
 
         # Ask if they want to edit now
         edit_now = input("\nOpen in editor now? [Y/n]: ").strip().lower()
