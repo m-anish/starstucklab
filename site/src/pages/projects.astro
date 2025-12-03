@@ -21,7 +21,7 @@ const sortedProjects = allProjects
 // Transform to ProjectCard format
 const projectsForCards = sortedProjects.map(entry => ({
   id: entry.id,
-  slug: entry.data.slug || entry.slug,
+  slug: entry.slug,
   title: entry.data.title,
   excerpt: entry.data.excerpt,
   category: entry.data.category,
@@ -30,7 +30,7 @@ const projectsForCards = sortedProjects.map(entry => ({
   date: entry.data.date,
   image: entry.data.image || `/assets/projects/${entry.slug}/hero.webp`,
   image_fallback: `/assets/projects/${entry.slug}/master.png`,
-  url: `/projects/${entry.data.slug || entry.slug}`
+  url: `/projects/${entry.slug}`
 }));
 
 // Group by category for optional filtering UI

@@ -1,0 +1,25 @@
+allowed_categories:
+  - Electronics
+  - Mechanical
+  - Software
+  - Weather
+  - Telescope
+  - Other
+
+allowed_status:
+  - ongoing
+  - completed
+  - experimental
+  - dormant
+  - abandoned
+
+default_tags:
+  - arduino
+  - raspberry-pi
+  - sensor
+  - prototype
+
+ai_config:
+  enabled: true
+  provider: openai
+  default_model: gpt-5.1

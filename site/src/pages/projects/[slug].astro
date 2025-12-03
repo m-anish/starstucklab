@@ -8,7 +8,7 @@ import "../../styles/components/project-detail.css";
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
   return projects.map(entry => ({
-    params: { slug: entry.data.slug || entry.slug },
+    params: { slug: entry.slug },
     props: { entry }
   }));
 }

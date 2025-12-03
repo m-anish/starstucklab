@@ -11,9 +11,14 @@
   "dependencies": {
     "@emailjs/browser": "^4.4.1",
     "astro": "^4.0.0",
-    "markdown-it": "^14.1.0"
+    "js-yaml": "^4.1.1",
+    "markdown-it": "^14.1.0",
+    "yaml": "^2.8.2",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@types/node": "^24.10.1"
+    "@types/node": "^24.10.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }
