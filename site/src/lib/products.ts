@@ -68,3 +68,4 @@ export function getFeaturedProducts(limit: number = 3): Product[] {
   return getAllProducts().slice(0, limit);
 }
 
+

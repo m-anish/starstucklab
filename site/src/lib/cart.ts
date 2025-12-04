@@ -116,3 +116,4 @@ export function getCartTotal(): { total: number; currency: string } {
   return { total, currency };
 }
 
+

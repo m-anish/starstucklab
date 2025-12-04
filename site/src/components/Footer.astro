@@ -1,35 +1,54 @@
 ---
 // site/src/components/Footer.astro
+// Dynamic footer that reads from footer.json
+import { getFooterData } from '../lib/footer';
 import "../styles/components/footer.css";
+
+const footerData = getFooterData();
+const sections = footerData.sections;
+const settings = footerData.settings;
+
+// Compute base path for links
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+
+function resolveHref(href: string): string {
+  if (!href) return base;
+  // External / absolute URLs and mailto: should pass through untouched
+  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('#')) {
+    return href;
+  }
+  // Normalize relative paths against base; strip leading slash to avoid //
+  const trimmed = href.startsWith('/') ? href.slice(1) : href;
+  return base + trimmed;
+}
 ---
 
 <footer class="site-footer">
   <div class="footer-content">
-    <div class="footer-section">
-      <h4>Starstuck Lab</h4>
-      <p>Building small machines for an indifferent universe</p>
-    </div>
-
-    <div class="footer-section">
-      <h4>Quick Links</h4>
-      <ul>
-        <li><a href="/#workbench">Workbench</a></li>
-        <li><a href="/#projects">Projects</a></li>
-        <li><a href="/#shop">Shop</a></li>
-        <li><a href="/contact">Contact</a></li>
-      </ul>
-    </div>
-
-    <div class="footer-section">
-      <h4>Legal</h4>
-      <ul>
-        <li><a href="/privacy">Privacy Policy</a></li>
-        <li><a href="/terms">Terms of Service</a></li>
-      </ul>
-    </div>
+    {sections.map((section) => (
+      <div class="footer-section">
+        <h4>{section.title}</h4>
+        
+        {section.description && (
+          <p>{section.description}</p>
+        )}
+        
+        {section.links && section.links.length > 0 && (
+          <ul>
+            {section.links
+              .sort((a, b) => (a.order || 999) - (b.order || 999))
+              .map((link) => (
+                <li>
+                  <a href={resolveHref(link.href)}>{link.label}</a>
+                </li>
+              ))}
+          </ul>
+        )}
+      </div>
+    ))}
   </div>
 
   <div class="footer-bottom">
-    <p>&copy; {new Date().getFullYear()} Starstuck Lab. All rights reserved.</p>
+    <p>&copy; {new Date().getFullYear()} {settings.copyrightText}</p>
   </div>
 </footer>

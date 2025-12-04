@@ -7,6 +7,10 @@ Usage:
   python site_cli.py nav list
   python site_cli.py nav add "Blog" /blog --priority 4
   python site_cli.py nav remove "Contact"
+  python site_cli.py footer list
+  python site_cli.py footer add "workbench" "Blog" /blog --order 5
+  python site_cli.py footer remove "workbench" "Blog"
+  python site_cli.py footer sections
   python site_cli.py layouts list
 """
 
@@ -25,6 +29,7 @@ DATA_DIR = SRC_DIR / "data"
 LAYOUTS_DIR = SRC_DIR / "layouts"
 TEMPLATES_DIR = SCRIPT_DIR / "templates"
 NAV_FILE = DATA_DIR / "navigation.json"
+FOOTER_FILE = DATA_DIR / "footer.json"
 
 # Ensure data directory exists
 DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -158,6 +163,186 @@ def nav_reorder():
     save_navigation(nav)
     print_success("Navigation order updated")
 
+# ===== Footer Management =====
+
+def load_footer():
+    """Load footer.json"""
+    if not FOOTER_FILE.exists():
+        # Default structure
+        return {
+            "sections": [
+                {
+                    "id": "about",
+                    "title": "Starstuck Lab",
+                    "description": "Building small machines for an indifferent universe",
+                    "links": []
+                },
+                {
+                    "id": "workbench",
+                    "title": "Quick Links",
+                    "links": [
+                        {"label": "Workbench", "href": "/#workbench", "order": 1},
+                        {"label": "Projects", "href": "/#projects", "order": 2},
+                        {"label": "Shop", "href": "/#shop", "order": 3},
+                        {"label": "Contact", "href": "/contact", "order": 4}
+                    ]
+                },
+                {
+                    "id": "legal",
+                    "title": "Legal",
+                    "links": [
+                        {"label": "Privacy Policy", "href": "/privacy", "order": 1},
+                        {"label": "Terms of Service", "href": "/terms", "order": 2}
+                    ]
+                }
+            ],
+            "settings": {
+                "copyrightText": "Starstuck Lab. All rights reserved."
+            }
+        }
+    with open(FOOTER_FILE, 'r') as f:
+        return json.load(f)
+
+def save_footer(footer_data):
+    """Save footer.json"""
+    with open(FOOTER_FILE, 'w') as f:
+        json.dump(footer_data, f, indent=2)
+
+def footer_sections():
+    """List all footer sections"""
+    footer = load_footer()
+    
+    print(f"\n{Colors.BOLD}Footer Sections:{Colors.END}")
+    for section in footer['sections']:
+        print(f"\n  {Colors.BLUE}[{section['id']}]{Colors.END} {section['title']}")
+        if 'description' in section:
+            print(f"    Description: {section['description']}")
+        if section.get('links'):
+            print(f"    Links: {len(section['links'])}")
+    print()
+
+def footer_list(section_id: Optional[str] = None):
+    """List footer links (all or filtered by section)"""
+    footer = load_footer()
+    
+    sections = footer['sections']
+    if section_id:
+        sections = [s for s in sections if s['id'] == section_id]
+        if not sections:
+            print_error(f"Section '{section_id}' not found")
+            return
+    
+    print(f"\n{Colors.BOLD}Footer Links:{Colors.END}")
+    
+    for section in sections:
+        if not section.get('links'):
+            continue
+        
+        print(f"\n  {Colors.BLUE}[{section['id']}]{Colors.END} {section['title']}")
+        print(f"  {'Order':<10} {'Label':<25} {'URL':<30}")
+        print("  " + "-" * 65)
+        
+        sorted_links = sorted(section['links'], key=lambda x: x.get('order', 999))
+        for link in sorted_links:
+            order = link.get('order', '-')
+            print(f"  {str(order):<10} {link['label']:<25} {link['href']:<30}")
+    print()
+
+def footer_add(section_id: str, label: str, href: str, order: Optional[int] = None):
+    """Add a footer link to a section"""
+    footer = load_footer()
+    
+    # Find section
+    section = next((s for s in footer['sections'] if s['id'] == section_id), None)
+    if not section:
+        print_error(f"Section '{section_id}' not found")
+        print_info("Available sections: " + ", ".join(s['id'] for s in footer['sections']))
+        return False
+    
+    # Initialize links if needed
+    if 'links' not in section:
+        section['links'] = []
+    
+    # Auto-assign order if not provided
+    if order is None:
+        if section['links']:
+            order = max(link.get('order', 0) for link in section['links']) + 1
+        else:
+            order = 1
+    
+    # Check if label already exists in section
+    if any(link['label'] == label for link in section['links']):
+        print_error(f"Link '{label}' already exists in section '{section_id}'")
+        return False
+    
+    section['links'].append({
+        "label": label,
+        "href": href,
+        "order": order
+    })
+    
+    save_footer(footer)
+    print_success(f"Added '{label}' to footer section '{section_id}' (order: {order})")
+    return True
+
+def footer_remove(section_id: str, label: str):
+    """Remove a footer link from a section"""
+    footer = load_footer()
+    
+    # Find section
+    section = next((s for s in footer['sections'] if s['id'] == section_id), None)
+    if not section:
+        print_error(f"Section '{section_id}' not found")
+        return False
+    
+    if 'links' not in section:
+        print_error(f"Section '{section_id}' has no links")
+        return False
+    
+    original_count = len(section['links'])
+    section['links'] = [link for link in section['links'] if link['label'] != label]
+    
+    if len(section['links']) == original_count:
+        print_error(f"Link '{label}' not found in section '{section_id}'")
+        return False
+    
+    save_footer(footer)
+    print_success(f"Removed '{label}' from footer section '{section_id}'")
+    return True
+
+def footer_update(section_id: str, label: str, new_label: Optional[str] = None, 
+                  new_href: Optional[str] = None, new_order: Optional[int] = None):
+    """Update a footer link"""
+    footer = load_footer()
+    
+    # Find section
+    section = next((s for s in footer['sections'] if s['id'] == section_id), None)
+    if not section:
+        print_error(f"Section '{section_id}' not found")
+        return False
+    
+    if 'links' not in section:
+        print_error(f"Section '{section_id}' has no links")
+        return False
+    
+    # Find link
+    link = next((l for l in section['links'] if l['label'] == label), None)
+    if not link:
+        print_error(f"Link '{label}' not found in section '{section_id}'")
+        return False
+    
+    # Update fields
+    if new_label:
+        link['label'] = new_label
+    if new_href:
+        link['href'] = new_href
+    if new_order is not None:
+        link['order'] = new_order
+    
+    save_footer(footer)
+    print_success(f"Updated link '{label}' in section '{section_id}'")
+    return True
+
 # ===== Page Management =====
 
 def pages_list():
@@ -176,7 +361,9 @@ def pages_list():
         print(f"  • {page.stem}")
     print()
 
-def pages_create(name: str, layout: str = "standard", add_to_nav: bool = False, priority: Optional[int] = None):
+def pages_create(name: str, layout: str = "standard", add_to_nav: bool = False, 
+                 priority: Optional[int] = None, add_to_footer: Optional[str] = None,
+                 footer_order: Optional[int] = None):
     """Create a new page"""
     # Sanitize name
     slug = name.lower().replace(" ", "-").replace("_", "-")
@@ -222,6 +409,12 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
         href = f"/{slug}"
         if nav_add(name, href, priority):
             print_success(f"Added to navigation: {name} → {href}")
+    
+    # Add to footer if requested
+    if add_to_footer:
+        href = f"/{slug}"
+        if footer_add(add_to_footer, name, href, footer_order):
+            print_success(f"Added to footer section '{add_to_footer}': {name} → {href}")
     
     return True
 
@@ -270,6 +463,8 @@ def print_usage():
       --layout <layout>            Layout to use (default: standard)
       --add-to-nav                 Add to navigation
       --priority <num>             Navigation priority
+      --add-to-footer <section>    Add to footer section (e.g., workbench, legal)
+      --footer-order <num>         Footer link order
 
   {Colors.BLUE}nav{Colors.END}
     list                           List navigation items
@@ -278,15 +473,28 @@ def print_usage():
     remove <label>                 Remove navigation item
     reorder                        Interactively reorder navigation
 
+  {Colors.BLUE}footer{Colors.END}
+    sections                       List all footer sections
+    list [section]                 List footer links (all or by section)
+    add <section> <label> <href>   Add link to footer section
+      --order <num>                Set order (auto if not provided)
+    remove <section> <label>       Remove link from footer section
+    update <section> <label>       Update a footer link
+      --new-label <label>          New label
+      --new-href <href>            New href
+      --new-order <num>            New order
+
   {Colors.BLUE}layouts{Colors.END}
     list                           List available layouts and templates
 
 {Colors.BOLD}Examples:{Colors.END}
-  python site_cli.py pages list
-  python site_cli.py pages create "About Us" --layout standard --add-to-nav --priority 4
+  python site_cli.py pages create "About Us" --layout standard --add-to-nav --add-to-footer workbench
+  python site_cli.py footer sections
+  python site_cli.py footer list workbench
+  python site_cli.py footer add workbench "Blog" /blog --order 5
+  python site_cli.py footer remove workbench "Blog"
+  python site_cli.py footer update workbench "Contact" --new-href /contact-us
   python site_cli.py nav add "Blog" /blog --priority 5
-  python site_cli.py nav remove "Contact"
-  python site_cli.py layouts list
 """)
 
 def main():
@@ -335,7 +543,9 @@ def main():
                 layout = flags.get('layout', 'standard')
                 add_to_nav = 'add-to-nav' in flags
                 priority = int(flags['priority']) if 'priority' in flags else None
-                pages_create(name, layout, add_to_nav, priority)
+                add_to_footer = flags.get('add-to-footer')
+                footer_order = int(flags['footer-order']) if 'footer-order' in flags else None
+                pages_create(name, layout, add_to_nav, priority, add_to_footer, footer_order)
             else:
                 print_error(f"Unknown subcommand: {subcommand}")
                 sys.exit(1)
@@ -369,6 +579,48 @@ def main():
                 print_error(f"Unknown subcommand: {subcommand}")
                 sys.exit(1)
         
+        elif command == "footer":
+            if not positional:
+                print_error("Missing subcommand for 'footer'")
+                print_usage()
+                sys.exit(1)
+            
+            subcommand = positional[0]
+            if subcommand == "sections":
+                footer_sections()
+            elif subcommand == "list":
+                section = positional[1] if len(positional) > 1 else None
+                footer_list(section)
+            elif subcommand == "add":
+                if len(positional) < 4:
+                    print_error("Usage: footer add <section> <label> <href> [--order <num>]")
+                    sys.exit(1)
+                section = positional[1]
+                label = positional[2]
+                href = positional[3]
+                order = int(flags['order']) if 'order' in flags else None
+                footer_add(section, label, href, order)
+            elif subcommand == "remove":
+                if len(positional) < 3:
+                    print_error("Usage: footer remove <section> <label>")
+                    sys.exit(1)
+                section = positional[1]
+                label = positional[2]
+                footer_remove(section, label)
+            elif subcommand == "update":
+                if len(positional) < 3:
+                    print_error("Usage: footer update <section> <label> [--new-label <label>] [--new-href <href>] [--new-order <num>]")
+                    sys.exit(1)
+                section = positional[1]
+                label = positional[2]
+                new_label = flags.get('new-label')
+                new_href = flags.get('new-href')
+                new_order = int(flags['new-order']) if 'new-order' in flags else None
+                footer_update(section, label, new_label, new_href, new_order)
+            else:
+                print_error(f"Unknown subcommand: {subcommand}")
+                sys.exit(1)
+        
         elif command == "layouts":
             if not positional:
                 print_error("Missing subcommand for 'layouts'")
@@ -389,6 +641,8 @@ def main():
     
     except Exception as e:
         print_error(f"Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
 if __name__ == "__main__":

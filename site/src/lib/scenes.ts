@@ -100,3 +100,4 @@ export function getDefaultFallback(sceneKey: string, baseUrl?: string): string {
   return `${base.replace(/\/?$/, '/')}assets/${sceneKey}/${sceneKey}-master.webp`;
 }
 
+
