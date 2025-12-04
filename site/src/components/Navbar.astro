@@ -66,110 +66,147 @@ const settings = navData.settings;
 
 <!-- Smart collapse script -->
 <script>
-  // More menu toggle functionality
-  const moreBtn = document.querySelector('.nav-more-toggle');
-  const moreMenu = document.getElementById('navMore');
-  
-  if (moreBtn && moreMenu) {
-    moreBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isOpen = moreMenu.classList.toggle('open');
-      moreBtn.setAttribute('aria-expanded', isOpen.toString());
-    });
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (moreMenu && !moreMenu.contains(e.target)) {
-        moreMenu.classList.remove('open');
-        if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
-      }
-    });
-    
-    // Close dropdown on Escape
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && moreMenu && moreMenu.classList.contains('open')) {
-        moreMenu.classList.remove('open');
-        if (moreBtn) {
-          moreBtn.setAttribute('aria-expanded', 'false');
-          moreBtn.focus();
-        }
-      }
-    });
-  }
-
-  // Smart collapse: measure actual space and adjust dynamically
-  function smartCollapse() {
-    const navRight = document.querySelector('.nav-right');
-    const navLinks = document.getElementById('navLinks');
-    const navMore = document.getElementById('navMore');
-    const moreDropdown = navMore?.querySelector('.nav-more-dropdown');
-    const navActions = document.querySelector('.nav-actions');
-    
-    if (!navRight || !navLinks || !navMore || !moreDropdown) return;
-    
-    // Get all nav items sorted by priority (lowest priority = collapse first)
-    const allItems = Array.from(navLinks.querySelectorAll('li'));
-    const sortedItems = allItems.sort((a, b) => {
-      const aPriority = parseInt(a.dataset.priority || '999');
-      const bPriority = parseInt(b.dataset.priority || '999');
-      return bPriority - aPriority; // Higher priority = collapse later
-    });
-    
-    // Calculate available space
-    const navRightWidth = navRight.offsetWidth;
-    const moreButtonWidth = 80; // Estimated width of More button
-    const cartSpace = 40; // Reserved space for cart icon (even if hidden)
-    const padding = 20; // Safety padding
-    const availableWidth = navRightWidth - moreButtonWidth - cartSpace - padding;
-    
-    // Measure current nav links width
-    let currentWidth = 0;
-    const visibleItems = [];
-    const overflowItems = [];
-    
-    for (const item of sortedItems.reverse()) { // Process high priority first
-      const itemWidth = item.offsetWidth;
-      if (currentWidth + itemWidth <= availableWidth && visibleItems.length < allItems.length) {
-        visibleItems.push(item);
-        currentWidth += itemWidth;
-      } else {
-        overflowItems.push(item);
-      }
-    }
-    
-    // Always keep at least one item visible
-    if (visibleItems.length === 0 && sortedItems.length > 0) {
-      visibleItems.push(sortedItems[sortedItems.length - 1]);
-      overflowItems.splice(overflowItems.indexOf(sortedItems[sortedItems.length - 1]), 1);
-    }
-    
-    // Show/hide More button based on overflow
-    if (overflowItems.length > 0) {
-      navMore.style.display = 'block';
-      
-      // Move overflow items to dropdown
-      moreDropdown.innerHTML = '';
-      overflowItems.reverse().forEach(item => {
-        const link = item.querySelector('a');
-        if (link) {
-          const clone = link.cloneNode(true);
-          moreDropdown.appendChild(clone);
-        }
-      });
-    } else {
-      navMore.style.display = 'none';
-    }
-  }
-  
-  // Run on load and resize
   if (typeof window !== 'undefined') {
-    // Delay initial measurement to ensure proper layout
-    setTimeout(smartCollapse, 100);
-    
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(smartCollapse, 150);
-    });
+    const navRoot = document.querySelector('.nav-inner');
+    if (!navRoot) {
+      // No navbar rendered
+    } else {
+      const moreMenu = navRoot.querySelector('#navMore');
+      const moreBtn = moreMenu?.querySelector('.nav-more-toggle');
+
+      // More menu toggle functionality
+      if (moreBtn && moreMenu) {
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = moreMenu.classList.toggle('open');
+          moreBtn.setAttribute('aria-expanded', isOpen.toString());
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          if (moreMenu && !moreMenu.contains(e.target)) {
+            moreMenu.classList.remove('open');
+            if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        // Close dropdown on Escape
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && moreMenu && moreMenu.classList.contains('open')) {
+            moreMenu.classList.remove('open');
+            if (moreBtn) {
+              moreBtn.setAttribute('aria-expanded', 'false');
+              moreBtn.focus();
+            }
+          }
+        });
+      }
+
+      // Smart collapse: measure actual space and adjust dynamically
+      function smartCollapse() {
+        const navRight = navRoot.querySelector('.nav-right');
+        const navLinks = navRoot.querySelector('#navLinks');
+        const navMore = navRoot.querySelector('#navMore');
+        const moreDropdown = navMore?.querySelector('.nav-more-dropdown');
+        const navCart = navRoot.querySelector('.nav-cart');
+
+        if (!navRight || !navLinks || !navMore || !moreDropdown) return;
+
+        // Get all nav items sorted by priority (lowest priority = collapse first)
+        const allItems = Array.from(navLinks.querySelectorAll('li'));
+        if (!allItems.length) {
+          navMore.style.display = 'none';
+          moreDropdown.innerHTML = '';
+          return;
+        }
+
+        const sortedItems = allItems.slice().sort((a, b) => {
+          const aPriority = parseInt(a.dataset.priority || '999', 10);
+          const bPriority = parseInt(b.dataset.priority || '999', 10);
+          // Higher priority value = keep visible longer
+          return aPriority - bPriority; // lower = collapse earlier
+        });
+
+        // Calculate available space using real measurements
+        const navRightWidth = navRight.offsetWidth;
+        const moreButtonEl = navMore.querySelector('.nav-more-toggle');
+        const moreButtonWidth = moreButtonEl ? moreButtonEl.offsetWidth : 0;
+        const cartWidth = navCart && (navCart as HTMLElement).style.display !== 'none'
+          ? navCart.offsetWidth
+          : 0;
+        const padding = 24; // safety padding
+        const availableWidth = Math.max(
+          0,
+          navRightWidth - moreButtonWidth - cartWidth - padding
+        );
+
+        let currentWidth = 0;
+        const visibleItems = [];
+        const overflowItems = [];
+
+        // Process highest-priority items last so they are kept visible longer
+        for (let i = sortedItems.length - 1; i >= 0; i--) {
+          const item = sortedItems[i];
+          const itemWidth = item.offsetWidth;
+
+          if (currentWidth + itemWidth <= availableWidth || !visibleItems.length) {
+            visibleItems.push(item);
+            currentWidth += itemWidth;
+          } else {
+            overflowItems.push(item);
+          }
+        }
+
+        // Reset all items to visible, then hide overflowed ones
+        allItems.forEach((item) => {
+          item.style.display = '';
+        });
+        overflowItems.forEach((item) => {
+          item.style.display = 'none';
+        });
+
+        // Show/hide More button based on overflow
+        if (overflowItems.length > 0) {
+          navMore.style.display = 'block';
+
+          // Populate dropdown with overflow links
+          moreDropdown.innerHTML = '';
+          // Keep dropdown order consistent with original document order
+          overflowItems
+            .slice()
+            .sort((a, b) => allItems.indexOf(a) - allItems.indexOf(b))
+            .forEach((item) => {
+              const link = item.querySelector('a');
+              if (link) {
+                const clone = link.cloneNode(true);
+                moreDropdown.appendChild(clone);
+              }
+            });
+        } else {
+          navMore.style.display = 'none';
+          moreDropdown.innerHTML = '';
+        }
+      }
+
+      // Run on load (after layout) and on resize (debounced)
+      const runInitial = () => {
+        smartCollapse();
+      };
+
+      window.addEventListener('load', runInitial);
+
+      // Fallback if load fires before fonts/layout settle
+      setTimeout(runInitial, 150);
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        if (resizeTimeout) {
+          window.clearTimeout(resizeTimeout);
+        }
+        resizeTimeout = window.setTimeout(() => {
+          smartCollapse();
+        }, 150);
+      });
+    }
   }
 </script>
