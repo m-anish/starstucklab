@@ -92,14 +92,11 @@ const RECAPTCHA_SITE_KEY = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAc
   })();
 </script>
 
-<script>
+<script define:vars={{ RECAPTCHA_SITE_KEY }}>
   const form = document.getElementById('contactForm') as HTMLFormElement;
   const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
   const formStatus = document.getElementById('formStatus') as HTMLElement;
   const recaptchaInput = document.getElementById('recaptchaResponse') as HTMLInputElement;
-
-  // Get the site key from the inline script
-  const SITE_KEY = document.currentScript?.parentElement?.querySelector('script[define\\:vars]')?.textContent?.match(/RECAPTCHA_SITE_KEY\s*=\s*"([^"]+)"/)?.[1] || '';
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -114,7 +111,7 @@ const RECAPTCHA_SITE_KEY = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAc
       await (window as any).grecaptcha.ready(async () => {
         try {
           const token = await (window as any).grecaptcha.execute(
-            SITE_KEY,
+            RECAPTCHA_SITE_KEY,
             { action: 'submit_contact_form' }
           );
           
