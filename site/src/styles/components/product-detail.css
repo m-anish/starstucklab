@@ -145,6 +145,14 @@
   margin: 0.25em 0 1.5em 0 !important;
 }
 
+/* ===== PRODUCT ACTIONS ===== */
+
+.product-actions {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid rgba(80, 50, 25, 0.15);
+}
+
 /* ===== ORDER FORM ===== */
 
 .order-form {

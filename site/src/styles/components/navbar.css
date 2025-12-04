@@ -191,6 +191,7 @@
 }
 
 .nav-cart {
+  position: relative;
   padding: 6px 10px;
   background: transparent;
   border: none;

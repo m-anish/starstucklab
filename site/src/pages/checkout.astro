@@ -1,0 +1,235 @@
+---
+// site/src/pages/checkout.astro
+import StandardPageLayout from "../layouts/StandardPageLayout.astro";
+import "../styles/components/parchment.css";
+import "../styles/components/checkout.css";
+
+// Indian states list
+const indianStates = [
+  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
+  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya", "Mizoram",
+  "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim", "Tamil Nadu",
+  "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand", "West Bengal",
+  "Andaman and Nicobar Islands", "Chandigarh", "Dadra and Nagar Haveli",
+  "Daman and Diu", "Delhi", "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry"
+];
+---
+
+<StandardPageLayout title="Checkout — Starstuck Lab" pageClass="checkout-page" backgroundScene="shop">
+  <div class="checkout-container">
+    <h1>Checkout</h1>
+    
+    <div class="checkout-grid">
+      <!-- Order Summary -->
+      <div class="checkout-summary parchment parchment--large">
+        <h2>Order Summary</h2>
+        <div id="checkoutItems" class="checkout-items">
+          <!-- Items will be populated by script -->
+        </div>
+        <div class="checkout-total">
+          <strong>Total: <span id="checkoutTotal">₹0</span></strong>
+        </div>
+      </div>
+      
+      <!-- Shipping Form -->
+      <div class="checkout-form-section parchment parchment--large">
+        <h2>Shipping Information</h2>
+        <form id="checkoutForm" class="checkout-form" action="https://formspree.io/f/xblpnpgb" method="POST">
+          <!-- Hidden fields for cart data -->
+          <input type="hidden" name="_subject" value="New Order - Starstuck Lab" />
+          <input type="hidden" name="_replyto" id="formEmail" />
+          <input type="hidden" name="cart_items" id="formCartItems" />
+          <input type="hidden" name="total_amount" id="formTotal" />
+          <input type="text" name="_gotcha" style="display:none" />
+          
+          <div class="form-group">
+            <label for="name"><b>Full Name</b> *</label>
+            <input type="text" id="name" name="name" required minlength="2" placeholder="Your full name" />
+          </div>
+          
+          <div class="form-group">
+            <label for="email"><b>Email</b> *</label>
+            <input type="email" id="email" name="email" required placeholder="your.email@example.com" />
+          </div>
+          
+          <div class="form-group">
+            <label for="phone"><b>Phone Number</b> *</label>
+            <input type="tel" id="phone" name="phone" required pattern="[0-9]{10}" placeholder="10-digit mobile number" />
+            <small>10-digit Indian mobile number</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="address"><b>Street Address</b> *</label>
+            <textarea id="address" name="address" required minlength="10" rows="3" placeholder="House/Flat number, Street, Area"></textarea>
+          </div>
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="city"><b>City</b> *</label>
+              <input type="text" id="city" name="city" required minlength="2" placeholder="City" />
+            </div>
+            
+            <div class="form-group">
+              <label for="state"><b>State</b> *</label>
+              <select id="state" name="state" required>
+                <option value="">Select State</option>
+                {indianStates.map(state => (
+                  <option value={state}>{state}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="pincode"><b>PIN Code</b> *</label>
+            <input type="text" id="pincode" name="pincode" required pattern="[0-9]{6}" placeholder="6-digit PIN code" />
+            <small>6-digit Indian PIN code</small>
+          </div>
+          
+          <div class="form-group">
+            <label for="comments"><b>Additional Comments</b></label>
+            <textarea id="comments" name="comments" rows="4" placeholder="Special instructions, delivery preferences, etc."></textarea>
+          </div>
+          
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Place Order
+          </button>
+          
+          <div class="form-status" id="formStatus" style="display: none;"></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</StandardPageLayout>
+
+<script>
+  if (typeof window !== 'undefined') {
+    const checkoutItems = document.getElementById('checkoutItems');
+    const checkoutTotal = document.getElementById('checkoutTotal');
+    const form = document.getElementById('checkoutForm') as HTMLFormElement;
+    const formEmail = document.getElementById('formEmail') as HTMLInputElement;
+    const formCartItems = document.getElementById('formCartItems') as HTMLInputElement;
+    const formTotal = document.getElementById('formTotal') as HTMLInputElement;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const formStatus = document.getElementById('formStatus') as HTMLElement;
+    
+    function loadCart() {
+      try {
+        const stored = localStorage.getItem('starstucklab_cart');
+        if (!stored) {
+          checkoutItems!.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
+          return;
+        }
+        
+        const data = JSON.parse(stored);
+        const items = data.items || [];
+        
+        if (items.length === 0) {
+          checkoutItems!.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
+          return;
+        }
+        
+        const currency = items[0]?.currency || 'INR';
+        const currencySymbol = currency === '₹' ? '₹' : currency;
+        const total = items.reduce((sum: number, item: any) => {
+          return sum + (parseFloat(item.price) || 0) * item.quantity;
+        }, 0);
+        
+        checkoutTotal!.textContent = `${currencySymbol} ${total.toFixed(2)}`;
+        
+        checkoutItems!.innerHTML = items.map((item: any) => `
+          <div class="checkout-item">
+            <div>
+              <strong>${item.title}</strong>
+              <span class="checkout-item-qty">× ${item.quantity}</span>
+            </div>
+            <div class="checkout-item-price">${item.currency} ${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
+          </div>
+        `).join('');
+        
+        // Set hidden form fields
+        formCartItems!.value = JSON.stringify(items);
+        formTotal!.value = total.toFixed(2);
+        
+      } catch (e) {
+        console.error('Error loading cart:', e);
+        checkoutItems!.innerHTML = '<p>Error loading cart. Please try again.</p>';
+      }
+    }
+    
+    // PIN code validation
+    const pincodeInput = document.getElementById('pincode') as HTMLInputElement;
+    pincodeInput?.addEventListener('input', (e) => {
+      const value = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      (e.target as HTMLInputElement).value = value.slice(0, 6);
+    });
+    
+    // Phone validation
+    const phoneInput = document.getElementById('phone') as HTMLInputElement;
+    phoneInput?.addEventListener('input', (e) => {
+      const value = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      (e.target as HTMLInputElement).value = value.slice(0, 10);
+    });
+    
+    form?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Get email for reply-to
+      const emailInput = document.getElementById('email') as HTMLInputElement;
+      if (emailInput && formEmail) {
+        formEmail.value = emailInput.value;
+      }
+      
+      // Disable form
+      submitBtn!.disabled = true;
+      submitBtn!.textContent = 'Placing Order...';
+      formStatus!.style.display = 'none';
+      
+      try {
+        const formData = new FormData(form);
+        const response = await fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          formStatus!.textContent = '✓ Order placed successfully! We\'ll contact you soon to confirm.';
+          formStatus!.className = 'form-status success';
+          formStatus!.style.display = 'block';
+          
+          // Clear cart
+          localStorage.removeItem('starstucklab_cart');
+          window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: [] } }));
+          
+          // Reset form
+          form.reset();
+          
+          // Redirect after delay
+          setTimeout(() => {
+            window.location.href = '/shop';
+          }, 3000);
+        } else {
+          formStatus!.textContent = '✗ Something went wrong. Please try again or email us at contact@starstucklab.com';
+          formStatus!.className = 'form-status error';
+          formStatus!.style.display = 'block';
+        }
+      } catch (error) {
+        console.error('Form submission error:', error);
+        formStatus!.textContent = '✗ Network error. Please check your connection and try again.';
+        formStatus!.className = 'form-status error';
+        formStatus!.style.display = 'block';
+      } finally {
+        submitBtn!.disabled = false;
+        submitBtn!.textContent = 'Place Order';
+      }
+    });
+    
+    // Load cart on page load
+    loadCart();
+  }
+</script>
+

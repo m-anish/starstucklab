@@ -1,0 +1,59 @@
+---
+// site/src/components/CartBadge.astro
+// Cart item count badge for navbar
+---
+
+<span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+
+<script>
+  function updateCartBadge() {
+    if (typeof window === 'undefined') return;
+    
+    try {
+      const stored = localStorage.getItem('starstucklab_cart');
+      if (!stored) {
+        const badge = document.getElementById('cartBadge');
+        if (badge) badge.style.display = 'none';
+        return;
+      }
+      
+      const data = JSON.parse(stored);
+      const count = (data.items || []).reduce((sum: number, item: any) => sum + item.quantity, 0);
+      const badge = document.getElementById('cartBadge');
+      if (badge) {
+        badge.textContent = count.toString();
+        badge.style.display = count > 0 ? 'inline-flex' : 'none';
+      }
+    } catch (e) {
+      // Ignore errors
+    }
+  }
+  
+  // Update on load
+  if (typeof window !== 'undefined') {
+    updateCartBadge();
+    window.addEventListener('cart:updated', updateCartBadge);
+  }
+</script>
+
+<style>
+  .cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent-green, #2a7a4f);
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-ui, 'Space Grotesk', sans-serif);
+    line-height: 1;
+  }
+</style>
+
