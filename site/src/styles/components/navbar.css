@@ -1,5 +1,5 @@
-/* navbar.css - Unified Navigation System with Progressive Degradation
-   Place this in: site/src/styles/components/navbar.css
+/* navbar.css - Dynamic Navigation System
+   site/src/styles/components/navbar.css
 */
 
 @import '../tokens.css';
@@ -58,14 +58,14 @@
   transition: opacity 0.2s ease;
 }
 
-/* ===== NAV CENTER (LINKS + MORE) ===== */
+/* ===== NAV RIGHT (LINKS + MORE + ACTIONS) ===== */
 
 .nav-right {
   display: flex;
-  align-items: right;
+  align-items: center;
   gap: 6px;
   flex: 1;
-  justify-content: right;
+  justify-content: flex-end;
   max-width: 1280px;
 }
 
@@ -110,7 +110,7 @@
 
 .nav-more {
   position: relative;
-  display: none; /* Hidden by default, shown via JS when needed */
+  /* Display controlled by JavaScript based on available space */
 }
 
 .nav-more-toggle {
@@ -127,6 +127,7 @@
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.14s ease;
+  white-space: nowrap;
 }
 
 .nav-more-toggle:hover {
@@ -157,6 +158,7 @@
   flex-direction: column;
   gap: 2px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
 }
 
 .nav-more.open .nav-more-dropdown {
@@ -178,17 +180,17 @@
   background: rgba(255, 255, 255, 0.08);
 }
 
-/* ===== NAV ACTIONS (FUTURE CART) ===== */
+/* ===== NAV ACTIONS (CART) ===== */
 
 .nav-actions {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  min-width: 40px; /* Reserve space even when cart is hidden */
 }
 
 .nav-cart {
-  display: none; /* Hidden for now, ready for future implementation */
   padding: 6px 10px;
   background: transparent;
   border: none;
@@ -196,6 +198,9 @@
   cursor: pointer;
   border-radius: 6px;
   transition: background 0.14s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .nav-cart:hover {
@@ -242,8 +247,8 @@
   }
 }
 
-/* Stage 2: Reduce spacing (720px) */
-@media (max-width: 720px) {
+/* Stage 2: Slightly reduce spacing (640px) */
+@media (max-width: 640px) {
   .nav-links {
     gap: 4px;
   }
@@ -254,24 +259,8 @@
   }
 }
 
-/* Stage 3: Show More menu, hide overflow items (640px) */
-@media (max-width: 640px) {
-  .nav-more {
-    display: block;
-  }
-  
-  /* Hide last 2 items on mobile, show in More menu */
-  .nav-links li:nth-last-child(-n+2) {
-    display: none;
-  }
-}
-
-/* Stage 4: Extreme mobile - show only 2 items + More (480px) */
+/* Stage 3: Minimal spacing on very small screens (480px) */
 @media (max-width: 480px) {
-  .nav-links li:nth-last-child(-n+3) {
-    display: none;
-  }
-  
   .nav-links {
     gap: 2px;
   }
@@ -280,12 +269,17 @@
     padding: 6px;
     font-size: 0.8rem;
   }
+  
+  .nav-inner {
+    padding: 10px 16px;
+  }
 }
 
 /* ===== ACCESSIBILITY ===== */
 
 .nav-links a:focus,
-.nav-more-toggle:focus {
+.nav-more-toggle:focus,
+.nav-cart:focus {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   outline-offset: 2px;
   border-radius: 4px;

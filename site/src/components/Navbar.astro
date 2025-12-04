@@ -1,38 +1,62 @@
 ---
 // site/src/components/Navbar.astro
-// Shared navigation component with responsive More menu
+// Dynamic navigation component that reads from navigation.json
+import fs from 'fs';
+import path from 'path';
+
+// Load navigation data
+const navPath = path.resolve('./src/data/navigation.json');
+let navData = {
+  primary: [],
+  settings: { showCart: false, logoText: "STARSTUCK LAB" }
+};
+
+try {
+  const rawData = fs.readFileSync(navPath, 'utf8');
+  navData = JSON.parse(rawData);
+} catch (err) {
+  console.warn('Could not load navigation.json, using defaults');
+}
+
+// Sort by priority
+const navItems = navData.primary.sort((a, b) => a.priority - b.priority);
+const settings = navData.settings;
 ---
+
 <div class="nav-inner">
   <a href="/" class="nav-logo">
     <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
-    <span class="nav-logo-text">STARSTUCK LAB</span>
+    <span class="nav-logo-text">{settings.logoText}</span>
   </a>
   
   <nav class="nav-right">
-    <ul class="nav-links">
-      <li><a href="/projects">Projects</a></li>
-      <li><a href="/shop">Shop</a></li>
-      <li><a href="/contact">Contact</a></li>
+    <ul class="nav-links" id="navLinks">
+      {navItems.map(item => (
+        <li data-priority={item.priority}>
+          <a href={item.href}>{item.label}</a>
+        </li>
+      ))}
     </ul>
     
     <!-- More dropdown for overflow items -->
-    <div class="nav-more" id="navMore">
+    <div class="nav-more" id="navMore" style="display: none;">
       <button class="nav-more-toggle" aria-label="More menu" aria-expanded="false">
         More
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      <div class="nav-more-dropdown">
-        <a href="/shop">Shop</a>
-        <a href="/contact">Contact</a>
-      </div>
+      <div class="nav-more-dropdown"></div>
     </div>
   </nav>
   
   <div class="nav-actions">
-    <!-- Cart button (hidden for now, ready for future) -->
-    <button class="nav-cart" aria-label="Shopping cart">
+    <!-- Cart button (hidden by default, shown via settings) -->
+    <button 
+      class="nav-cart" 
+      aria-label="Shopping cart"
+      style={settings.showCart ? 'display: flex;' : 'display: none;'}
+    >
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
       </svg>
@@ -40,9 +64,9 @@
   </div>
 </div>
 
-<!-- More menu toggle script -->
+<!-- Smart collapse script -->
 <script>
-  // Toggle More dropdown
+  // More menu toggle functionality
   const moreBtn = document.querySelector('.nav-more-toggle');
   const moreMenu = document.getElementById('navMore');
   
@@ -55,19 +79,97 @@
     
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-      if (!moreMenu.contains(e.target)) {
+      if (moreMenu && !moreMenu.contains(e.target)) {
         moreMenu.classList.remove('open');
-        moreBtn.setAttribute('aria-expanded', 'false');
+        if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
       }
     });
     
     // Close dropdown on Escape
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && moreMenu.classList.contains('open')) {
+      if (e.key === 'Escape' && moreMenu && moreMenu.classList.contains('open')) {
         moreMenu.classList.remove('open');
-        moreBtn.setAttribute('aria-expanded', 'false');
-        moreBtn.focus();
+        if (moreBtn) {
+          moreBtn.setAttribute('aria-expanded', 'false');
+          moreBtn.focus();
+        }
       }
+    });
+  }
+
+  // Smart collapse: measure actual space and adjust dynamically
+  function smartCollapse() {
+    const navRight = document.querySelector('.nav-right');
+    const navLinks = document.getElementById('navLinks');
+    const navMore = document.getElementById('navMore');
+    const moreDropdown = navMore?.querySelector('.nav-more-dropdown');
+    const navActions = document.querySelector('.nav-actions');
+    
+    if (!navRight || !navLinks || !navMore || !moreDropdown) return;
+    
+    // Get all nav items sorted by priority (lowest priority = collapse first)
+    const allItems = Array.from(navLinks.querySelectorAll('li'));
+    const sortedItems = allItems.sort((a, b) => {
+      const aPriority = parseInt(a.dataset.priority || '999');
+      const bPriority = parseInt(b.dataset.priority || '999');
+      return bPriority - aPriority; // Higher priority = collapse later
+    });
+    
+    // Calculate available space
+    const navRightWidth = navRight.offsetWidth;
+    const moreButtonWidth = 80; // Estimated width of More button
+    const cartSpace = 40; // Reserved space for cart icon (even if hidden)
+    const padding = 20; // Safety padding
+    const availableWidth = navRightWidth - moreButtonWidth - cartSpace - padding;
+    
+    // Measure current nav links width
+    let currentWidth = 0;
+    const visibleItems = [];
+    const overflowItems = [];
+    
+    for (const item of sortedItems.reverse()) { // Process high priority first
+      const itemWidth = item.offsetWidth;
+      if (currentWidth + itemWidth <= availableWidth && visibleItems.length < allItems.length) {
+        visibleItems.push(item);
+        currentWidth += itemWidth;
+      } else {
+        overflowItems.push(item);
+      }
+    }
+    
+    // Always keep at least one item visible
+    if (visibleItems.length === 0 && sortedItems.length > 0) {
+      visibleItems.push(sortedItems[sortedItems.length - 1]);
+      overflowItems.splice(overflowItems.indexOf(sortedItems[sortedItems.length - 1]), 1);
+    }
+    
+    // Show/hide More button based on overflow
+    if (overflowItems.length > 0) {
+      navMore.style.display = 'block';
+      
+      // Move overflow items to dropdown
+      moreDropdown.innerHTML = '';
+      overflowItems.reverse().forEach(item => {
+        const link = item.querySelector('a');
+        if (link) {
+          const clone = link.cloneNode(true);
+          moreDropdown.appendChild(clone);
+        }
+      });
+    } else {
+      navMore.style.display = 'none';
+    }
+  }
+  
+  // Run on load and resize
+  if (typeof window !== 'undefined') {
+    // Delay initial measurement to ensure proper layout
+    setTimeout(smartCollapse, 100);
+    
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(smartCollapse, 150);
     });
   }
 </script>
