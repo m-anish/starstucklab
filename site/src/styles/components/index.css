@@ -1,4 +1,4 @@
-/* herozoom.css – Simplified fade-only transition (no zoom/parallax) */
+/* index.css – Simplified fade-only transition (no zoom/parallax) */
 
 :root {
   --page-bg: #05060a;
@@ -38,13 +38,11 @@
 .layer-forest {
   z-index: 15;
   opacity: 1;
-  /* transition: opacity 300ms ease-out; */
 }
 
 .layer-interior { 
   z-index: 10; 
   opacity: 0; 
-  /* transition: opacity 300ms ease-out; */
 }
 
 /* Hero overlay - also fixed */
@@ -63,6 +61,13 @@
   pointer-events: auto;
   color: var(--starry-white);
   padding: 20px;
+  transition: opacity 300ms ease-out;
+}
+
+/* CRITICAL FIX: When overlay fades out, disable pointer events */
+.hero-overlay.faded {
+  pointer-events: none;
+  z-index: -1;
 }
 
 #hzHeroLogo {
@@ -124,6 +129,8 @@
 
 /* Post-zoom content */
 .post-zoom {
+  position: relative;
+  z-index: 50; /* Above hero overlay when faded */
   background: var(--page-bg);
   color: #ddd;
   padding: 40px 20px;

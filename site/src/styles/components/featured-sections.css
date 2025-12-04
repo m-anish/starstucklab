@@ -85,8 +85,6 @@
 .section-footer {
   text-align: center;
   position: relative;
-  z-index: 20; /* Above everything else */
-  pointer-events: auto; /* iOS Safari fix */
 }
 
 .section-cta {
@@ -105,20 +103,6 @@
               box-shadow var(--transition-base);
   letter-spacing: 0.02em;
   cursor: pointer;
-  pointer-events: auto;
-  position: relative;
-  z-index: 20;
-  /* iOS Safari optimizations */
-  -webkit-tap-highlight-color: rgba(78, 197, 122, 0.2);
-  touch-action: manipulation;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* Ensure minimum tap target size for iOS */
-  min-height: 44px;
-  min-width: 44px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .section-cta:hover {
@@ -211,15 +195,6 @@
   box-shadow: 0 6px 28px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.02);
   width: 100%;
   transition: opacity 0.5s ease;
-  will-change: opacity;
-  /* iOS Safari fix: ensure clicks pass through to child elements */
-  pointer-events: none;
-  isolation: isolate; /* Create new stacking context */
-}
-
-/* Re-enable pointer events for interactive children */
-.featured-card > * {
-  pointer-events: auto;
 }
 
 /* Slight emphasis variant for Projects (bigger) */
@@ -246,11 +221,8 @@
   background-repeat: no-repeat;
   background-position: bottom right;
   opacity: 0.60;
-  pointer-events: none; /* Critical for iOS */
+  pointer-events: none;
   z-index: 1;
-  /* iOS Safari optimization */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 /* Slightly distinct tint for shop so eyeballs know they're different */
@@ -275,39 +247,19 @@
   border-radius: 4px;
   background: linear-gradient(180deg, rgba(78,197,122,0.95), rgba(125,95,255,0.95));
   box-shadow: 0 6px 18px rgba(78,197,122,0.08);
-  z-index: 0;
-  pointer-events: none; /* Critical for iOS */
-  /* iOS Safari optimization */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
+  pointer-events: none;
 }
-
-/* REMOVED: Container hover effect that was causing the issue */
-/* .featured-card:hover,
-.featured-card:focus-within {
-  transform: translateY(-6px);
-  box-shadow: 0 18px 48px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.03);
-  border-color: rgba(255,255,255,0.18);
-  filter: saturate(1.05);
-} */
 
 /* Ensure grid items stretch naturally inside the card */
 .featured-card .featured-grid {
   margin-bottom: var(--space-6);
   position: relative;
-  z-index: 10;
-  /* iOS Safari: ensure grid is interactive */
-  pointer-events: auto;
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
 }
 
 /* Card inner header spacing */
 .featured-card .section-header {
   margin-bottom: var(--space-6);
   position: relative;
-  z-index: 10;
-  pointer-events: auto; /* iOS Safari fix */
 }
 
 /* ============================================================
@@ -322,7 +274,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: rgba(90, 50, 20, 0.5); /* More muted brown for parchment */
+  color: rgba(90, 50, 20, 0.5);
   margin-bottom: var(--space-2);
   opacity: 0.7;
 }
@@ -389,17 +341,11 @@
   overflow: hidden;
   background: transparent;
   position: relative;
-  z-index: 10;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
-  /* iOS Safari fixes */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  -webkit-tap-highlight-color: transparent;
 }
 
 .shop-card:hover {
   transform: translateY(-4px);
-  z-index: 15;
 }
 
 .shop-card-link {
@@ -410,11 +356,6 @@
   color: inherit;
   gap: var(--space-3);
   cursor: pointer;
-  position: relative;
-  z-index: 10;
-  /* iOS Safari: ensure link is tappable */
-  -webkit-tap-highlight-color: rgba(78, 197, 122, 0.1);
-  touch-action: manipulation;
 }
 
 /* media */
@@ -479,17 +420,11 @@
 /* Project cards need their own hover states */
 .featured-grid > * {
   position: relative;
-  z-index: 10;
   transition: transform var(--transition-base), box-shadow var(--transition-base);
-  /* iOS Safari fixes */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  pointer-events: auto;
 }
 
 .featured-grid > *:hover {
   transform: translateY(-4px);
-  z-index: 15;
 }
 
 /* Ensure all links inside cards are visible and clickable */
@@ -497,12 +432,6 @@
   color: var(--starry-white);
   text-decoration: none;
   cursor: pointer;
-  position: relative;
-  z-index: 10;
-  /* iOS Safari: make links always tappable */
-  -webkit-tap-highlight-color: rgba(78, 197, 122, 0.1);
-  touch-action: manipulation;
-  display: block; /* Critical for iOS tap area */
 }
 
 .featured-grid a:hover {
