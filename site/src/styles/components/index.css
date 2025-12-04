@@ -131,7 +131,7 @@
 .post-zoom {
   position: relative;
   z-index: 50; /* Above hero overlay when faded */
-  background: var(--page-bg);
+  background: transparent;
   color: #ddd;
   padding: 40px 20px;
   min-height: 60vh;
