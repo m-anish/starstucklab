@@ -4,8 +4,8 @@ import fs from "fs";
 import path from "path";
 import HeroLayout from "../layouts/HeroLayout.astro";
 import AboutPanel from "../components/aboutpanel.astro";
-import FeaturedSections from "../components/FeaturedSections.astro"; // NEW
-
+import FeaturedSections from "../components/FeaturedSections.astro"; 
+import Footer from "../components/Footer.astro";
 // Read manifest relative to this file
 const manifestPath = new URL("../data/images.json", import.meta.url);
 let images: any;
@@ -204,11 +204,7 @@ const MEDIA = {
       <!-- NEW: Featured sections (projects + shop) -->
       <FeaturedSections />
 
-      <!-- REMOVED: Old placeholder sections -->
-      <!-- Keep contact if you want, or move to footer -->
-      <section id="contact" style="height:500px;">
-        <h3>Contact</h3>
-      </section>
+      <Footer />
     </div>
   </div>
 

@@ -1,11 +1,10 @@
-/* navbar.css - Unified Navigation System
+/* navbar.css - Unified Navigation System with Progressive Degradation
    Place this in: site/src/styles/components/navbar.css
 */
 
 @import '../tokens.css';
 
 /* ===== BASE NAVBAR STYLES ===== */
-/* Matches the index.astro workshop navbar EXACTLY */
 
 .site-nav {
   position: fixed;
@@ -30,6 +29,8 @@
   gap: 10px;
 }
 
+/* ===== NAV LOGO ===== */
+
 .nav-logo {
   display: flex;
   align-items: center;
@@ -40,6 +41,7 @@
   font-size: 0.95rem;
   font-family: 'Space Grotesk', system-ui, sans-serif;
   letter-spacing: 0.5px;
+  flex-shrink: 0;
 }
 
 .nav-logo img {
@@ -48,10 +50,23 @@
   display: block;
 }
 
-.nav-logo span {
+.nav-logo-text {
   color: #fff;
   display: inline-block;
   font-size: 0.85rem;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+/* ===== NAV CENTER (LINKS + MORE) ===== */
+
+.nav-right {
+  display: flex;
+  align-items: right;
+  gap: 6px;
+  flex: 1;
+  justify-content: right;
+  max-width: 1280px;
 }
 
 .nav-links {
@@ -79,6 +94,7 @@
   padding: 6px 10px;
   border-radius: 6px;
   opacity: 0.92;
+  white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -90,8 +106,108 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* ===== MORE DROPDOWN ===== */
+
+.nav-more {
+  position: relative;
+  display: none; /* Hidden by default, shown via JS when needed */
+}
+
+.nav-more-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.14s ease;
+}
+
+.nav-more-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-more-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.nav-more.open .nav-more-toggle svg {
+  transform: rotate(180deg);
+}
+
+.nav-more-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.nav-more.open .nav-more-dropdown {
+  display: flex;
+}
+
+.nav-more-dropdown a {
+  display: block;
+  padding: 8px 12px;
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  transition: background 0.14s ease;
+}
+
+.nav-more-dropdown a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== NAV ACTIONS (FUTURE CART) ===== */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.nav-cart {
+  display: none; /* Hidden for now, ready for future implementation */
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.14s ease;
+}
+
+.nav-cart:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-cart svg {
+  width: 20px;
+  height: 20px;
+}
+
 /* ===== INDEX PAGE ANIMATED NAV ===== */
-/* Hidden by default, appears on scroll */
 
 #pageNav.nav-hidden {
   opacity: 0;
@@ -106,7 +222,6 @@
 }
 
 /* ===== STATIC NAV (SHOP/PRODUCT PAGES) ===== */
-/* Always visible, no animation */
 
 .nav-static {
   opacity: 1 !important;
@@ -114,39 +229,63 @@
   transform: translateY(0) !important;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE BREAKPOINTS ===== */
 
+/* Stage 1: Hide logo text (820px) */
 @media (max-width: 820px) {
+  .nav-logo-text {
+    display: none;
+  }
+  
   .nav-inner {
     padding: 12px 20px;
   }
-  
+}
+
+/* Stage 2: Reduce spacing (720px) */
+@media (max-width: 720px) {
   .nav-links {
-    gap: 16px;
+    gap: 4px;
   }
   
   .nav-links a {
-    font-size: 0.9rem;
+    padding: 6px 8px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Stage 3: Show More menu, hide overflow items (640px) */
+@media (max-width: 640px) {
+  .nav-more {
+    display: block;
   }
   
-  .nav-logo span {
+  /* Hide last 2 items on mobile, show in More menu */
+  .nav-links li:nth-last-child(-n+2) {
     display: none;
   }
 }
 
-@media (max-width: 640px) {
+/* Stage 4: Extreme mobile - show only 2 items + More (480px) */
+@media (max-width: 480px) {
+  .nav-links li:nth-last-child(-n+3) {
+    display: none;
+  }
+  
   .nav-links {
-    gap: 12px;
+    gap: 2px;
   }
   
   .nav-links a {
-    font-size: 0.85rem;
+    padding: 6px;
+    font-size: 0.8rem;
   }
 }
 
 /* ===== ACCESSIBILITY ===== */
 
-.nav-links a:focus {
+.nav-links a:focus,
+.nav-more-toggle:focus {
   outline: 2px solid rgba(255, 255, 255, 0.5);
   outline-offset: 2px;
   border-radius: 4px;
@@ -159,5 +298,9 @@
   
   #pageNav {
     transform: none !important;
+  }
+  
+  .nav-more-toggle svg {
+    transition: none !important;
   }
 }

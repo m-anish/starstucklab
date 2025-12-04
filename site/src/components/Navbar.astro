@@ -1,16 +1,73 @@
 ---
 // site/src/components/Navbar.astro
-// Shared navigation component (styles in navbar.css)
+// Shared navigation component with responsive More menu
 ---
 <div class="nav-inner">
   <a href="/" class="nav-logo">
     <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
-    <span>STARSTUCK LAB</span>
+    <span class="nav-logo-text">STARSTUCK LAB</span>
   </a>
-  <ul class="nav-links">
-    <li><a href="/#workbench">Workbench</a></li>
-    <li><a href="/#projects">Projects</a></li>
-    <li><a href="/shop">Shop</a></li>
-    <li><a href="/contact">Contact</a></li>
-  </ul>
+  
+  <nav class="nav-right">
+    <ul class="nav-links">
+      <li><a href="/projects">Projects</a></li>
+      <li><a href="/shop">Shop</a></li>
+      <li><a href="/contact">Contact</a></li>
+    </ul>
+    
+    <!-- More dropdown for overflow items -->
+    <div class="nav-more" id="navMore">
+      <button class="nav-more-toggle" aria-label="More menu" aria-expanded="false">
+        More
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="nav-more-dropdown">
+        <a href="/shop">Shop</a>
+        <a href="/contact">Contact</a>
+      </div>
+    </div>
+  </nav>
+  
+  <div class="nav-actions">
+    <!-- Cart button (hidden for now, ready for future) -->
+    <button class="nav-cart" aria-label="Shopping cart">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+    </button>
+  </div>
 </div>
+
+<!-- More menu toggle script -->
+<script>
+  // Toggle More dropdown
+  const moreBtn = document.querySelector('.nav-more-toggle');
+  const moreMenu = document.getElementById('navMore');
+  
+  if (moreBtn && moreMenu) {
+    moreBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = moreMenu.classList.toggle('open');
+      moreBtn.setAttribute('aria-expanded', isOpen.toString());
+    });
+    
+    // Close dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!moreMenu.contains(e.target)) {
+        moreMenu.classList.remove('open');
+        moreBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+    
+    // Close dropdown on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && moreMenu.classList.contains('open')) {
+        moreMenu.classList.remove('open');
+        moreBtn.setAttribute('aria-expanded', 'false');
+        moreBtn.focus();
+      }
+    });
+  }
+</script>
