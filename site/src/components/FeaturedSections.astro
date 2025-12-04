@@ -1,13 +1,14 @@
 ---
 // site/src/components/FeaturedSections.astro
 // Updated to use Astro Content Collections for projects (markdown)
-// Still uses JSON files for products
+// Uses shared product loader for products
 import { getCollection } from 'astro:content';
 import ProjectCard from './ProjectCard.astro';
 import ProductCard from './ProductCard.astro';
+import { getFeaturedProducts } from '../lib/products';
 import '../styles/components/featured-sections.css';
-import fs from 'fs';
-import path from 'path';
+
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
 
 // Load featured projects from content collection (newest 3)
 let featuredProjects = [];
@@ -31,32 +32,16 @@ try {
     status: entry.data.status,
     tags: entry.data.tags || [],
     date: entry.data.date,
-    image: entry.data.image || `/assets/projects/${entry.slug}/hero.webp`,
-    image_fallback: `/assets/projects/${entry.slug}/master.png`,
-    url: `/projects/${entry.data.slug || entry.slug}`
+    image: entry.data.image || `${base}assets/projects/${entry.slug}/hero.webp`,
+    image_fallback: `${base}assets/projects/${entry.slug}/master.png`,
+    url: `${base}projects/${entry.data.slug || entry.slug}`
   }));
 } catch (e) {
   console.warn('Could not load projects collection:', e);
 }
 
-// Load featured products (newest 3) - still from JSON
-let featuredProducts = [];
-const productsDir = path.resolve('./public/data/products');
-if (fs.existsSync(productsDir)) {
-  try {
-    const files = fs.readdirSync(productsDir)
-      .filter(f => f.endsWith('.json'))
-      .map(f => {
-        const raw = fs.readFileSync(path.join(productsDir, f), 'utf8');
-        return JSON.parse(raw);
-      })
-      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    
-    featuredProducts = files.slice(0, 3); // Take 3 most recent
-  } catch (e) {
-    console.warn('Could not load products:', e);
-  }
-}
+// Load featured products (newest 3) using shared loader
+const featuredProducts = getFeaturedProducts(3);
 ---
 
 <div class="featured-sections-wrap">
@@ -77,7 +62,7 @@ if (fs.existsSync(productsDir)) {
       </div>
       
       <div class="section-footer">
-        <a href="/projects" class="section-cta">
+        <a href={`${base}projects`} class="section-cta">
           See All Projects <span aria-hidden="true">→</span>
         </a>
       </div>
@@ -101,7 +86,7 @@ if (fs.existsSync(productsDir)) {
       </div>
       
       <div class="section-footer">
-        <a href="/shop" class="section-cta">
+        <a href={`${base}shop`} class="section-cta">
           Browse the Shop <span aria-hidden="true">→</span>
         </a>
       </div>

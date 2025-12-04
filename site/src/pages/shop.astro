@@ -1,36 +1,15 @@
 ---
 /* SPDX-License-Identifier: DWYWBDBM-1.0 */
-/* Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0. */
+/* Licensed under the "Do What You Want But Don't Blame Me" License, Version 1.0. */
 /* See the COPYING file or visit https://starstucklab.com/license for details. */
 // site/src/pages/shop.astro
 import StandardPageLayout from "../layouts/StandardPageLayout.astro";
 import ProductCard from "../components/ProductCard.astro";
+import { getAllProducts } from "../lib/products";
 import "../styles/components/parchment.css";
 import "../styles/components/shop.css";
-import fs from 'fs';
-import path from 'path';
 
-const PUBLIC_PRODUCTS_DIR = path.resolve('./public/data/products');
-
-let products = [];
-
-if (fs.existsSync(PUBLIC_PRODUCTS_DIR)) {
-  const files = fs.readdirSync(PUBLIC_PRODUCTS_DIR).filter(f => f.endsWith('.json'));
-  const publicProducts = files.map(f => {
-    try {
-      const raw = fs.readFileSync(path.join(PUBLIC_PRODUCTS_DIR, f), 'utf8');
-      return JSON.parse(raw);
-    } catch (e) {
-      console.warn('Skipping bad product JSON:', f, e);
-      return null;
-    }
-  }).filter(Boolean);
-  products.push(...publicProducts);
-}
-
-products.sort((a,b) => (b.date || '').localeCompare(a.date || ''));
-
-const SHOP_FALLBACK = `/assets/shop/shop-master.webp`;
+const products = getAllProducts();
 ---
 <!-- Request the shared shop background by setting backgroundScene="shop" -->
 <StandardPageLayout title="Shop — Starstuck Lab" pageClass="shop-page" backgroundScene="shop">

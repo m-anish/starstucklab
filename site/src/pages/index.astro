@@ -1,80 +1,14 @@
 ---
 // site/src/pages/index.astro
-import fs from "fs";
-import path from "path";
 import HeroLayout from "../layouts/HeroLayout.astro";
 import AboutPanel from "../components/aboutpanel.astro";
 import FeaturedSections from "../components/FeaturedSections.astro"; 
 import Footer from "../components/Footer.astro";
-// Read manifest relative to this file
-const manifestPath = new URL("../data/images.json", import.meta.url);
-let images: any;
-try {
-  images = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-} catch (err) {
-  throw new Error(
-    `Failed to read manifest at ${manifestPath.pathname}: ${err}`,
-  );
-}
+import { getSceneSources } from "../lib/scenes";
 
-const BASE_URL = String(import.meta.env.BASE_URL || "/") + "assets/";
-const SCENES: Record<string, any> = images.scenes || {};
-
-function findVariantFilename(
-  sceneKey: string,
-  opts: { id?: string; type?: string; aspect?: string } = {},
-): string | null {
-  const scene = SCENES[sceneKey];
-  if (!scene || !Array.isArray(scene.variants)) return null;
-  if (opts.id) {
-    const byId = scene.variants.find(
-      (v: any) => v.id === opts.id && v.filename,
-    );
-    if (byId) return byId.filename;
-  }
-  if (opts.aspect) {
-    const byAspect = scene.variants.find(
-      (v: any) => v.aspect === opts.aspect && v.filename,
-    );
-    if (byAspect) return byAspect.filename;
-  }
-  if (opts.type) {
-    const byType = scene.variants.find(
-      (v: any) => v.type === opts.type && v.filename,
-    );
-    if (byType) return byType.filename;
-  }
-  return null;
-}
-
-function staticUrlFromManifest(
-  sceneKey: string,
-  manifestFilename: string | null,
-): string | null {
-  if (!manifestFilename) return null;
-  return path.posix.join(BASE_URL, sceneKey, manifestFilename);
-}
-
-function buildSceneSources(sceneKey: string) {
-  const byId = (id: string) => findVariantFilename(sceneKey, { id });
-  const filenames: Record<string, string | null> = {
-    generated: byId("generated"),
-    master: byId("master"),
-    desktop: byId("desktop"),
-    laptop: byId("laptop"),
-    tablet: byId("tablet"),
-    mobile: byId("mobile"),
-    thumb: byId("thumb"),
-  };
-  const urls: Record<string, string | null> = {};
-  for (const [k, fname] of Object.entries(filenames)) {
-    urls[k] = fname ? staticUrlFromManifest(sceneKey, fname) : null;
-  }
-  return urls;
-}
-
-const hero = buildSceneSources("hero");
-const workshop = buildSceneSources("workshop");
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+const hero = getSceneSources("hero", base);
+const workshop = getSceneSources("workshop", base);
 const preloadUrls = [
   hero.desktop,
   hero.generated,
@@ -92,7 +26,8 @@ const MEDIA = {
 
 <HeroLayout title="Starstuck Lab">
   <Fragment slot="head">
-    {preloadUrls.map((u) => <link rel="preload" as="image" href={u} />)}
+    {preloadUrls.map((u) => u && <link rel="preload" as="image" href={u} />)}
+    <meta name="base-url" content={base} />
   </Fragment>
 
   <script>
@@ -148,7 +83,7 @@ const MEDIA = {
           workshop.generated ??
           workshop.thumb ??
           workshop.desktop ??
-          `${BASE_URL}workshop/workshop-master.webp`}
+          `${base}assets/workshop/workshop-master.webp`}
         alt="Workshop interior"
         loading="eager"
       />
@@ -178,7 +113,7 @@ const MEDIA = {
           hero.generated ??
           hero.thumb ??
           hero.desktop ??
-          `${BASE_URL}hero/hero-master.webp`}
+          `${base}assets/hero/hero-master.webp`}
         alt="Forest hero with cabin and STARSTUCKLAB sign"
         loading="eager"
       />
@@ -187,7 +122,7 @@ const MEDIA = {
     <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
       <img
         id="hzHeroLogo"
-        src="/assets/icons/starstucklab_logo_black_white.svg"
+        src={`${base}assets/icons/starstucklab_logo_black_white.svg`}
         alt="Starstuck Lab Logo"
         loading="eager"
       />
@@ -425,7 +360,9 @@ const MEDIA = {
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
       try {
-        const res = await fetch("/data/hero.json");
+        const baseMeta = document.querySelector('meta[name="base-url"]');
+        const base = baseMeta ? baseMeta.getAttribute('content') || '/' : '/';
+        const res = await fetch(`${base}data/hero.json`);
         const variants = await res.json();
         const keys = Object.keys(variants);
         if (!keys.length) return;

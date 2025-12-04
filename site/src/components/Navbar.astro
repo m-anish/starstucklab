@@ -1,25 +1,10 @@
 ---
 // site/src/components/Navbar.astro
 // Dynamic navigation component that reads from navigation.json
-import fs from 'fs';
-import path from 'path';
+import { getNavigation } from '../lib/navigation';
 
-// Load navigation data
-const navPath = path.resolve('./src/data/navigation.json');
-let navData = {
-  primary: [],
-  settings: { showCart: false, logoText: "STARSTUCK LAB" }
-};
-
-try {
-  const rawData = fs.readFileSync(navPath, 'utf8');
-  navData = JSON.parse(rawData);
-} catch (err) {
-  console.warn('Could not load navigation.json, using defaults');
-}
-
-// Sort by priority
-const rawItems = navData.primary.sort((a, b) => a.priority - b.priority);
+const navData = getNavigation();
+const rawItems = navData.primary;
 const settings = navData.settings;
 
 // Compute base path for static hosting / GitHub Pages
