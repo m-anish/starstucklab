@@ -19,21 +19,41 @@ try {
 }
 
 // Sort by priority
-const navItems = navData.primary.sort((a, b) => a.priority - b.priority);
+const rawItems = navData.primary.sort((a, b) => a.priority - b.priority);
 const settings = navData.settings;
+
+// Compute base path for static hosting / GitHub Pages
+const base =
+  (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+
+function resolveHref(href: string): string {
+  if (!href) return base;
+  // External / absolute URLs and mailto: should pass through untouched
+  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:')) {
+    return href;
+  }
+  // Normalize relative paths against base; strip leading slash to avoid //
+  const trimmed = href.startsWith('/') ? href.slice(1) : href;
+  return base + trimmed;
+}
+
+const navItems = rawItems.map((item) => ({
+  ...item,
+  resolvedHref: resolveHref(item.href),
+}));
 ---
 
 <div class="nav-inner">
-  <a href="/" class="nav-logo">
-    <img src="/assets/icons/starstucklab_logo_black_white.svg" alt="Starstuck Lab logo">
+  <a href={base} class="nav-logo">
+    <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab logo">
     <span class="nav-logo-text">{settings.logoText}</span>
   </a>
   
   <nav class="nav-right">
     <ul class="nav-links" id="navLinks">
-      {navItems.map(item => (
+      {navItems.map((item) => (
         <li data-priority={item.priority}>
-          <a href={item.href}>{item.label}</a>
+          <a href={item.resolvedHref}>{item.label}</a>
         </li>
       ))}
     </ul>
@@ -112,7 +132,8 @@ const settings = navData.settings;
 
         if (!navRight || !navLinks || !navMore || !moreDropdown) return;
 
-        // Get all nav items sorted by priority (lowest priority = collapse first)
+        // Get all nav items sorted by priority
+        // Lower numeric priority = more important = should stay visible longer
         const allItems = Array.from(navLinks.querySelectorAll('li'));
         if (!allItems.length) {
           navMore.style.display = 'none';
@@ -123,8 +144,7 @@ const settings = navData.settings;
         const sortedItems = allItems.slice().sort((a, b) => {
           const aPriority = parseInt(a.dataset.priority || '999', 10);
           const bPriority = parseInt(b.dataset.priority || '999', 10);
-          // Higher priority value = keep visible longer
-          return aPriority - bPriority; // lower = collapse earlier
+          return aPriority - bPriority; // 1,2,3,...
         });
 
         // Calculate available space using real measurements
@@ -144,9 +164,9 @@ const settings = navData.settings;
         const visibleItems = [];
         const overflowItems = [];
 
-        // Process highest-priority items last so they are kept visible longer
-        for (let i = sortedItems.length - 1; i >= 0; i--) {
-          const item = sortedItems[i];
+        // Walk from most important (lowest priority number) to least,
+        // keeping earlier items visible and overflowing the later ones.
+        for (const item of sortedItems) {
           const itemWidth = item.offsetWidth;
 
           if (currentWidth + itemWidth <= availableWidth || !visibleItems.length) {
