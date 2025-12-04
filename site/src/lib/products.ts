@@ -69,3 +69,4 @@ export function getFeaturedProducts(limit: number = 3): Product[] {
 }
 
 
+
