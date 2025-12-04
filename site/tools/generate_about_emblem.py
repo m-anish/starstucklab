@@ -98,9 +98,9 @@ if not TEMPLATE_FILE.exists():
         "Title: {title}\n"
         "Lead: {lead}\n"
         "Motto: {motto}\n\n"
+        "Strict Rule: ABSOLUTELY NO text or letters in the image. No words. No labels.\n\n"
         "Style: restrained Studio Ghibli watercolor; muted palette; soft hand-drawn lines; "
-        "one centered object or vignette; plenty of negative space; no background scene.\n\n"
-        "ABSOLUTELY NO text or letters in the image. No words. No labels."
+        "one centered object or vignette; plenty of negative space; no background scene."
     )
 else:
     template_text = TEMPLATE_FILE.read_text(encoding="utf-8")
