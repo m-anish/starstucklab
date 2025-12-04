@@ -73,6 +73,11 @@ const projectUrl = project.url || `/projects/${project.slug}`;
     display: block;
     text-decoration: none;
     transition: transform var(--transition-base);
+    /* iOS Safari fixes */
+    -webkit-tap-highlight-color: rgba(78, 197, 122, 0.1);
+    touch-action: manipulation;
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
   }
   
   .project-link:hover {

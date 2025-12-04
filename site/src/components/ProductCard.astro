@@ -43,6 +43,11 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
   width: 100%;
   max-width: 420px;
   transition: transform var(--transition-base, 0.25s ease);
+  /* iOS Safari fixes */
+  -webkit-tap-highlight-color: rgba(78, 197, 122, 0.1);
+  touch-action: manipulation;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .product-card:hover {
