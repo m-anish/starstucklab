@@ -132,19 +132,19 @@ const indianStates = [
   if (typeof window !== 'undefined') {
     const checkoutItems = document.getElementById('checkoutItems');
     const checkoutTotal = document.getElementById('checkoutTotal');
-    const form = document.getElementById('checkoutForm');
-    const formEmail = document.getElementById('formEmail');
-    const formCartItems = document.getElementById('formCartItems');
-    const formTotal = document.getElementById('formTotal');
-    const submitBtn = document.getElementById('submitBtn');
-    const formStatus = document.getElementById('formStatus');
-    const recaptchaResponse = document.getElementById('recaptchaResponse');
+    const form = document.getElementById('checkoutForm') as HTMLFormElement;
+    const formEmail = document.getElementById('formEmail') as HTMLInputElement;
+    const formCartItems = document.getElementById('formCartItems') as HTMLInputElement;
+    const formTotal = document.getElementById('formTotal') as HTMLInputElement;
+    const submitBtn = document.getElementById('submitBtn') as HTMLButtonElement;
+    const formStatus = document.getElementById('formStatus') as HTMLElement;
+    const recaptchaResponse = document.getElementById('recaptchaResponse') as HTMLInputElement;
 
     function loadCart() {
       try {
         const stored = localStorage.getItem('starstucklab_cart');
         if (!stored) {
-          checkoutItems.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
+          checkoutItems!.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
           return;
         }
         
@@ -152,7 +152,7 @@ const indianStates = [
         const items = data.items || [];
         
         if (items.length === 0) {
-          checkoutItems.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
+          checkoutItems!.innerHTML = '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
           return;
         }
         
@@ -162,9 +162,9 @@ const indianStates = [
           return sum + (parseFloat(item.price) || 0) * item.quantity;
         }, 0);
         
-        checkoutTotal.textContent = `${currencySymbol} ${total.toFixed(2)}`;
-
-        checkoutItems.innerHTML = items.map((item: any) => `
+        checkoutTotal!.textContent = `${currencySymbol} ${total.toFixed(2)}`;
+        
+        checkoutItems!.innerHTML = items.map((item: any) => `
           <div class="checkout-item">
             <div>
               <strong>${item.title}</strong>
@@ -175,48 +175,48 @@ const indianStates = [
         `).join('');
         
         // Set hidden form fields
-        formCartItems.value = JSON.stringify(items);
-        formTotal.value = total.toFixed(2);
+        formCartItems!.value = JSON.stringify(items);
+        formTotal!.value = total.toFixed(2);
         
       } catch (e) {
         console.error('Error loading cart:', e);
-        checkoutItems.innerHTML = '<p>Error loading cart. Please try again.</p>';
+        checkoutItems!.innerHTML = '<p>Error loading cart. Please try again.</p>';
       }
     }
     
     // PIN code validation
-    const pincodeInput = document.getElementById('pincode');
+    const pincodeInput = document.getElementById('pincode') as HTMLInputElement;
     pincodeInput?.addEventListener('input', (e) => {
-      const value = (e.target).value.replace(/\D/g, '');
-      (e.target).value = value.slice(0, 6);
+      const value = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      (e.target as HTMLInputElement).value = value.slice(0, 6);
     });
     
     // Phone validation
-    const phoneInput = document.getElementById('phone');
+    const phoneInput = document.getElementById('phone') as HTMLInputElement;
     phoneInput?.addEventListener('input', (e) => {
-      const value = (e.target).value.replace(/\D/g, '');
-      (e.target).value = value.slice(0, 10);
+      const value = (e.target as HTMLInputElement).value.replace(/\D/g, '');
+      (e.target as HTMLInputElement).value = value.slice(0, 10);
     });
     
     form?.addEventListener('submit', async (e) => {
       e.preventDefault();
 
       // Get email for reply-to
-      const emailInput = document.getElementById('email');
+      const emailInput = document.getElementById('email') as HTMLInputElement;
       if (emailInput && formEmail) {
         formEmail.value = emailInput.value;
       }
 
       // Disable form
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Verifying...';
-      formStatus.style.display = 'none';
+      submitBtn!.disabled = true;
+      submitBtn!.textContent = 'Verifying...';
+      formStatus!.style.display = 'none';
 
       try {
         // Execute reCAPTCHA v3
-        await window.grecaptcha.ready(async () => {
+        await (window as any).grecaptcha.ready(async () => {
           try {
-            const token = await window.grecaptcha.execute(
+            const token = await (window as any).grecaptcha.execute(
               RECAPTCHA_SITE_KEY,
               { action: 'submit_checkout_form' }
             );
@@ -225,7 +225,7 @@ const indianStates = [
             recaptchaResponse.value = token;
 
             // Now submit the form
-            submitBtn.textContent = 'Placing Order...';
+            submitBtn!.textContent = 'Placing Order...';
 
             const formData = new FormData(form);
 
@@ -238,9 +238,9 @@ const indianStates = [
             });
 
             if (response.ok) {
-              formStatus.textContent = '✓ Order placed successfully! We\'ll contact you soon to confirm.';
-              formStatus.className = 'form-status success';
-              formStatus.style.display = 'block';
+              formStatus!.textContent = '✓ Order placed successfully! We\'ll contact you soon to confirm.';
+              formStatus!.className = 'form-status success';
+              formStatus!.style.display = 'block';
 
               // Clear cart
               localStorage.removeItem('starstucklab_cart');
@@ -256,28 +256,28 @@ const indianStates = [
             } else {
               const data = await response.json();
               if (data.errors && data.errors.some((e: any) => e.field === 'g-recaptcha-response')) {
-                formStatus.textContent = '✗ Security verification failed. Please try again.';
+                formStatus!.textContent = '✗ Security verification failed. Please try again.';
               } else {
-                formStatus.textContent = '✗ Something went wrong. Please try again or email us at contact@starstucklab.com';
+                formStatus!.textContent = '✗ Something went wrong. Please try again or email us at contact@starstucklab.com';
               }
-              formStatus.className = 'form-status error';
-              formStatus.style.display = 'block';
+              formStatus!.className = 'form-status error';
+              formStatus!.style.display = 'block';
             }
           } catch (recaptchaError) {
             console.error('reCAPTCHA error:', recaptchaError);
-            formStatus.textContent = '✗ Security verification failed. Please refresh the page and try again.';
-            formStatus.className = 'form-status error';
-            formStatus.style.display = 'block';
+            formStatus!.textContent = '✗ Security verification failed. Please refresh the page and try again.';
+            formStatus!.className = 'form-status error';
+            formStatus!.style.display = 'block';
           }
         });
-    } catch (error) {
-      console.error('Form submission error:', error);
-      formStatus.textContent = '✗ Network error. Please check your connection and try again.';
-      formStatus.className = 'form-status error';
-      formStatus.style.display = 'block';
-    } finally {
-      submitBtn.disabled = false;
-      submitBtn.textContent = 'Place Order';
+      } catch (error) {
+        console.error('Form submission error:', error);
+        formStatus!.textContent = '✗ Network error. Please check your connection and try again.';
+        formStatus!.className = 'form-status error';
+        formStatus!.style.display = 'block';
+      } finally {
+        submitBtn!.disabled = false;
+        submitBtn!.textContent = 'Place Order';
       }
     });
     
