@@ -1,0 +1,89 @@
+# Starstuck Lab Site Configuration
+# This file controls behavior for all CLI tools and site generation
+
+site:
+  # Core site structure
+  root: .
+  src: src
+  public: public
+  data: src/data
+
+ai:
+  # AI generation settings
+  enabled: true
+  provider: openai  # or 'together'
+  default_model: gpt-4o-mini
+  temperature: 0.7
+  
+  # Provider-specific settings (from environment)
+  # OPENAI_API_KEY or TOGETHER_API_KEY + TOGETHER_BASE_URL
+
+content:
+  # Content generation settings
+  max_variants: 20
+  persona_file: src/data/persona_preamble.txt
+
+projects:
+  # Project management settings
+  allowed_categories:
+    - Hardware
+    - Software
+    - Art
+    - Science
+  
+  allowed_status:
+    - ongoing
+    - completed
+    - experimental
+    - abandoned
+    - dormant
+  
+  default_tags: []
+  
+  # Image generation for projects
+  image_generation:
+    enabled: true
+    prompt_template: src/data/project_image_prompt_template.txt
+
+products:
+  # Product catalog settings
+  default_currency: INR
+  default_status: available
+
+images:
+  # Image processing settings
+  default_quality: 75
+  default_format: webp
+  
+  generation:
+    size: "1024x1024"
+    model: gpt-image-1
+    
+  processing:
+    auto_optimize: true
+    max_width: 1920
+    max_height: 1080
+
+cli:
+  # CLI behavior settings
+  interactive: true           # Enable interactive prompts
+  confirm_destructive: true   # Confirm before deleting
+  suggest_next_steps: true    # Suggest follow-up actions
+  emoji: true                 # Use emoji in output
+  
+  # Workflow preferences
+  workflows:
+    after_project_create:
+      - suggest_image_generation
+      - suggest_navigation_add
+      - offer_editor
+    
+    after_content_regenerate:
+      - suggest_image_process
+      - suggest_index_rebuild
+
+# Developer settings (optional)
+dev:
+  auto_reload: true
+  verbose_logging: false
+  debug_mode: false
