@@ -30,6 +30,11 @@ projects:
     - Software
     - Art
     - Science
+    - Electronics      
+    - Mechanical       
+    - Weather          
+    - Telescope        
+    - Other            
   
   allowed_status:
     - ongoing

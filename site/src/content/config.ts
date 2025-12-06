@@ -1,6 +1,6 @@
 // site/src/content/config.ts
 // Astro Content Collections configuration
-// Reads allowed values from config.yaml to stay in sync with CLI tool
+// Now reads from central config.yaml at site root
 
 import { defineCollection, z } from 'astro:content';
 import { readFileSync, existsSync } from 'fs';
@@ -8,12 +8,12 @@ import { parse as parseYaml } from 'yaml';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
-// Read config.yaml from same directory
+// Read config.yaml from site root (two levels up from this file)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const configPath = join(__dirname, '../data/projects/config.yaml');
+const configPath = join(__dirname, '../../config.yaml');
 
-// Load and parse config.yaml with better error handling
+// Load and parse central config.yaml
 let siteConfig: {
   allowed_categories: string[];
   allowed_status: string[];
@@ -27,28 +27,46 @@ let siteConfig: {
 
 try {
   if (!existsSync(configPath)) {
-    throw new Error('config.yaml not found');
+    throw new Error(`Central config.yaml not found at ${configPath}`);
   }
+  
+  console.log('📍 Reading config from:', configPath);
   const configYaml = readFileSync(configPath, 'utf-8');
   const parsed = parseYaml(configYaml);
   
-  // Validate parsed config
   if (!parsed || typeof parsed !== 'object') {
-    throw new Error('Invalid config.yaml format');
+    throw new Error('Invalid config.yaml format - not an object');
+  }
+  
+  // Debug: log what we found
+  console.log('📦 Config keys:', Object.keys(parsed));
+  console.log('📦 Projects config:', JSON.stringify(parsed.projects, null, 2));
+  
+  // Extract projects section
+  const projectsConfig = parsed.projects || {};
+  
+  if (!projectsConfig.allowed_categories || projectsConfig.allowed_categories.length === 0) {
+    throw new Error('projects.allowed_categories is missing or empty in config.yaml');
   }
   
   siteConfig = {
-    allowed_categories: parsed.allowed_categories || ['Other'],
-    allowed_status: parsed.allowed_status || ['ongoing', 'completed'],
-    default_tags: parsed.default_tags || [],
-    ai_config: parsed.ai_config || {
+    allowed_categories: projectsConfig.allowed_categories,
+    allowed_status: projectsConfig.allowed_status || ['ongoing', 'completed'],
+    default_tags: projectsConfig.default_tags || [],
+    ai_config: parsed.ai || {
       enabled: false,
       provider: 'openai',
       default_model: 'gpt-4'
     }
   };
+  
+  console.log(`✅ Loaded ${siteConfig.allowed_categories.length} categories:`, siteConfig.allowed_categories);
+  console.log(`✅ Loaded ${siteConfig.allowed_status.length} statuses:`, siteConfig.allowed_status);
 } catch (error) {
-  console.warn('⚠️  Failed to load config.yaml, using fallback defaults');
+  console.error('❌ Failed to load config.yaml:', error);
+  console.error('   Path attempted:', configPath);
+  console.error('   Using fallback defaults');
+  
   siteConfig = {
     allowed_categories: ['Other'],
     allowed_status: ['ongoing', 'completed'],
@@ -74,7 +92,7 @@ const statusEnum = statuses.length > 0
   ? [statuses[0], ...statuses.slice(1)] as [string, ...string[]]
   : ['ongoing'] as [string, ...string[]];
 
-// Define projects collection with dynamic enums from config.yaml
+// Define projects collection with dynamic enums from central config.yaml
 const projectsCollection = defineCollection({
   type: 'content', // markdown/mdx files
   schema: z.object({
@@ -82,7 +100,7 @@ const projectsCollection = defineCollection({
     title: z.string(),
     category: z.enum(categoryEnum),
     status: z.enum(statusEnum),
-    date: z.coerce.date(), // Use coerce to handle string dates
+    date: z.coerce.date(),
     excerpt: z.string(),
     
     // Optional fields
