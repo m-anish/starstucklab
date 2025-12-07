@@ -43,7 +43,11 @@ projects:
     - abandoned
     - dormant
   
-  default_tags: []
+  default_tags:      # Add these
+    - arduino
+    - raspberry-pi
+    - sensor
+    - prototype
   
   # Image generation for projects
   image_generation:

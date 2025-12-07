@@ -30,17 +30,12 @@ try {
     throw new Error(`Central config.yaml not found at ${configPath}`);
   }
   
-  console.log('📍 Reading config from:', configPath);
   const configYaml = readFileSync(configPath, 'utf-8');
   const parsed = parseYaml(configYaml);
   
   if (!parsed || typeof parsed !== 'object') {
     throw new Error('Invalid config.yaml format - not an object');
   }
-  
-  // Debug: log what we found
-  console.log('📦 Config keys:', Object.keys(parsed));
-  console.log('📦 Projects config:', JSON.stringify(parsed.projects, null, 2));
   
   // Extract projects section
   const projectsConfig = parsed.projects || {};
@@ -59,9 +54,6 @@ try {
       default_model: 'gpt-4'
     }
   };
-  
-  console.log(`✅ Loaded ${siteConfig.allowed_categories.length} categories:`, siteConfig.allowed_categories);
-  console.log(`✅ Loaded ${siteConfig.allowed_status.length} statuses:`, siteConfig.allowed_status);
 } catch (error) {
   console.error('❌ Failed to load config.yaml:', error);
   console.error('   Path attempted:', configPath);
