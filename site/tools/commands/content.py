@@ -3,6 +3,7 @@ Content Generation Commands
 
 Migrated from regenerate_content.py to use the new lib structure.
 Generates AI content for About page, Hero section, and other dynamic content.
+Also handles emblem generation for About page variants.
 """
 
 import sys
@@ -10,8 +11,10 @@ import json
 import uuid
 import datetime
 import os
+import base64
 from pathlib import Path
 from typing import Optional, Dict, List
+from io import BytesIO
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -21,6 +24,19 @@ load_dotenv()
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lib import Output, Config, Paths
+
+# Try to import PIL and pytesseract for emblem generation
+try:
+    from PIL import Image as PILImage
+    PIL_AVAILABLE = True
+except ImportError:
+    PIL_AVAILABLE = False
+
+try:
+    import pytesseract
+    PYTESSERACT_AVAILABLE = True
+except ImportError:
+    PYTESSERACT_AVAILABLE = False
 
 
 def cmd_regenerate(args):
@@ -34,6 +50,7 @@ def cmd_regenerate(args):
     num_variants = args.num_variants
     model = args.model if hasattr(args, 'model') and args.model else 'gpt-5.1'
     max_variants = config.get('content.max_variants', 20)
+    generate_emblems = args.generate_emblems if hasattr(args, 'generate_emblems') else True
     
     # Validate page argument
     valid_pages = ['about', 'hero', 'all']
@@ -107,6 +124,17 @@ def cmd_regenerate(args):
         if not success:
             Output.error(f"Failed to regenerate {page_name}")
             return False
+        
+        # Generate emblems for about page if requested
+        if page_name == 'about' and generate_emblems:
+            Output.header("Generating emblems for about page")
+            emblem_success = _generate_emblems_for_about(
+                client=client,
+                paths=paths,
+                force=False
+            )
+            if not emblem_success:
+                Output.warning("Emblem generation had errors but continuing...")
     
     Output.success(f"Content regeneration complete")
     return True
@@ -246,3 +274,215 @@ def _next_variant_indexes(existing_len: int, max_variants: int, num_new: int) ->
     else:
         # Roll over from the beginning
         return [((i) % max_variants) + 1 for i in range(1, num_new + 1)]
+
+
+def cmd_generate_emblems(args):
+    """Generate emblems for about page variants"""
+    
+    if not PIL_AVAILABLE:
+        Output.error("PIL (Pillow) not installed")
+        Output.info("Install with: pip install pillow")
+        return False
+    
+    # Get configuration
+    paths = Paths()
+    force = args.force if hasattr(args, 'force') else False
+    
+    # Setup OpenAI client
+    try:
+        from openai import OpenAI
+        
+        api_key = os.getenv('OPENAI_API_KEY')
+        if not api_key:
+            Output.error("OPENAI_API_KEY not set")
+            return False
+        
+        client = OpenAI(api_key=api_key)
+        Output.info("Using OpenAI for emblem generation")
+    
+    except ImportError:
+        Output.error("openai package not installed")
+        Output.info("Install with: pip install openai")
+        return False
+    
+    Output.section("Emblem Generation")
+    
+    success = _generate_emblems_for_about(
+        client=client,
+        paths=paths,
+        force=force
+    )
+    
+    if success:
+        Output.success("Emblem generation complete")
+    else:
+        Output.error("Emblem generation failed")
+    
+    return success
+
+
+def _generate_emblems_for_about(client, paths: Paths, force: bool = False) -> bool:
+    """Generate emblems for all about page variants"""
+    
+    # Load about.json
+    about_json = paths.public_data / "about.json"
+    if not about_json.exists():
+        Output.error(f"About content not found: {about_json}")
+        Output.info("Generate content first with: cli.py content regenerate --page about")
+        return False
+    
+    try:
+        about_data = json.loads(about_json.read_text(encoding='utf-8'))
+    except Exception as e:
+        Output.error(f"Failed to load about.json: {e}")
+        return False
+    
+    # Load emblem prompt template
+    template_file = paths.data / "about_emblem_prompt_template.txt"
+    if not template_file.exists():
+        Output.warning(f"Emblem template not found: {template_file}")
+        Output.info("Using built-in template")
+        template = _get_default_emblem_template()
+    else:
+        template = template_file.read_text(encoding='utf-8')
+    
+    # Process each variant
+    variant_keys = sorted(about_data.keys(), key=lambda x: int(x) if x.isdigit() else 0)
+    
+    Output.info(f"Found {len(variant_keys)} about variants")
+    
+    emblems_dir = paths.public_data
+    success_count = 0
+    skip_count = 0
+    error_count = 0
+    
+    for key in variant_keys:
+        emblem_path = emblems_dir / f"about-emblem-{key}.png"
+        
+        if emblem_path.exists() and not force:
+            Output.dim(f"  Variant {key}: emblem exists → {emblem_path.name}")
+            skip_count += 1
+            continue
+        
+        Output.progress(f"Generating emblem for variant {key}...")
+        
+        variant_data = about_data[key]
+        title = variant_data.get('title', '')
+        lead = variant_data.get('lead', '')
+        motto = variant_data.get('motto', '')
+        
+        # Build prompt
+        prompt = template.format(title=title, lead=lead, motto=motto)
+        
+        # Generate emblem with retry logic for OCR
+        max_retries = 3
+        emblem_generated = False
+        
+        for attempt in range(1, max_retries + 1):
+            try:
+                Output.dim(f"    Attempt {attempt}/{max_retries}...")
+                
+                # Generate image
+                result = client.images.generate(
+                    model="dall-e-3",
+                    prompt=prompt,
+                    size="1024x1024",
+                    quality="standard",
+                    n=1
+                )
+                
+                # Get image data
+                image_data = _extract_image_from_response(result)
+                
+                # Check for text with OCR
+                if PYTESSERACT_AVAILABLE and _image_has_text(image_data):
+                    Output.warning(f"    OCR detected text, retrying...")
+                    continue
+                
+                # Resize to 320x320
+                img = PILImage.open(BytesIO(image_data))
+                img = img.resize((320, 320), PILImage.LANCZOS)
+                
+                # Save
+                emblems_dir.mkdir(parents=True, exist_ok=True)
+                img.save(emblem_path, 'PNG')
+                
+                Output.success(f"  Variant {key}: emblem saved → {emblem_path.name}")
+                emblem_generated = True
+                success_count += 1
+                break
+            
+            except Exception as e:
+                Output.error(f"    Generation error: {e}")
+                if attempt == max_retries:
+                    Output.error(f"  Variant {key}: failed after {max_retries} attempts")
+                    error_count += 1
+        
+        if not emblem_generated and attempt >= max_retries:
+            error_count += 1
+    
+    # Summary
+    Output.info(f"\nSummary: {success_count} generated, {skip_count} skipped, {error_count} failed")
+    
+    return error_count == 0
+
+
+def _extract_image_from_response(result) -> bytes:
+    """Extract image bytes from OpenAI response"""
+    try:
+        entry = result.data[0]
+    except Exception:
+        raise RuntimeError(f"Unexpected image response format")
+    
+    # Try b64_json first
+    b64 = getattr(entry, 'b64_json', None)
+    if b64:
+        return base64.b64decode(b64)
+    
+    # Try URL
+    url = getattr(entry, 'url', None)
+    if url:
+        import requests
+        resp = requests.get(url, timeout=30)
+        resp.raise_for_status()
+        return resp.content
+    
+    raise RuntimeError("No image data in response")
+
+
+def _image_has_text(image_bytes: bytes) -> bool:
+    """Check if image contains text using OCR"""
+    if not PYTESSERACT_AVAILABLE:
+        return False
+    
+    try:
+        img = PILImage.open(BytesIO(image_bytes))
+        text = pytesseract.image_to_string(img)
+        return bool(text and text.strip())
+    except Exception:
+        return False
+
+
+def _get_default_emblem_template() -> str:
+    """Built-in emblem prompt template"""
+    return """Using the following About-page content, generate a single emblem concept:
+
+Title: {title}
+Lead: {lead}
+Motto: {motto}
+
+Create a small watercolor emblem or vignette that visually expresses the themes and emotions above.
+
+STYLE REQUIREMENTS:
+- Restrained Studio Ghibli watercolor aesthetic
+- Muted palette: ochre, moss green, washed teal, blue-gray, soft umber
+- Hand-drawn linework with slight wobble; gentle wash textures
+- One simple focal object or vignette only
+- Composition centered, with minimal background detail
+- Objects may include: simple tools, lamps, saplings, starlight motifs, windows, notebooks, workshop elements
+- Mood: quiet, melancholic, contemplative; no optimism, no drama
+- CRITICAL: Absolutely no text, letters, words, or typography of any kind
+- Avoid characters, animals, faces, complex scenes, machines with sharp angles
+
+The emblem should look like a small illustration tucked into a worn notebook inside the workshop.
+"""

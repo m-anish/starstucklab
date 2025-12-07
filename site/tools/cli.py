@@ -81,16 +81,23 @@ Examples:
     # ===== CONTENT =====
     content_parser = subparsers.add_parser('content', help='Manage content')
     content_sub = content_parser.add_subparsers(dest='subcommand')
-    
+
     regen_parser = content_sub.add_parser('regenerate', 
-                                          help='Regenerate AI content')
+                                        help='Regenerate AI content')
     regen_parser.add_argument('--page', default='all', 
-                             help='Page to regenerate (about, hero, all)')
+                            help='Page to regenerate (about, hero, all)')
     regen_parser.add_argument('--num-variants', type=int, default=5,
-                             help='Number of variants to generate')
-    regen_parser.add_argument('--model', help='Override AI model')
+                            help='Number of variants to generate')
+    regen_parser.add_argument('--model', help='AI model (default: gpt-5.1)')
     regen_parser.add_argument('--provider', choices=['openai', 'together'],
-                             help='AI provider')
+                            help='AI provider')
+    regen_parser.add_argument('--no-emblems', action='store_true',
+                            help='Skip emblem generation for about page')
+
+    emblem_parser = content_sub.add_parser('generate-emblems',
+                                        help='Generate emblems for about page')
+    emblem_parser.add_argument('--force', action='store_true',
+                            help='Regenerate existing emblems')
     
     # ===== PRODUCTS =====
     products_parser = subparsers.add_parser('products', help='Manage products')
@@ -307,6 +314,8 @@ def handle_content(args):
         
         if args.subcommand == 'regenerate':
             content.cmd_regenerate(args)
+        elif args.subcommand == 'generate-emblems':
+            content.cmd_generate_emblems(args)
     except ImportError as e:
         Output.error(f"Content module import failed: {e}")
         Output.info("Make sure commands/content.py exists")
