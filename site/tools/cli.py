@@ -307,9 +307,13 @@ def handle_content(args):
         
         if args.subcommand == 'regenerate':
             content.cmd_regenerate(args)
-    except ImportError:
-        Output.error("Content module not yet implemented")
-        Output.info("This command will be available soon")
+    except ImportError as e:
+        Output.error(f"Content module import failed: {e}")
+        Output.info("Make sure commands/content.py exists")
+    except Exception as e:
+        Output.error(f"Content command failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def handle_products(args):
@@ -329,7 +333,19 @@ def handle_images(args):
         Output.info("Try: cli.py images --help")
         return
     
-    Output.info("Image processing - coming soon!")
+    try:
+        from commands import images
+        
+        if args.subcommand == 'process':
+            images.cmd_process(args)
+    except ImportError as e:
+        Output.error(f"Images module import failed: {e}")
+        Output.info("Make sure commands/images.py exists and PIL is installed")
+        Output.info("Install with: pip install pillow")
+    except Exception as e:
+        Output.error(f"Images command failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def handle_site(args):
