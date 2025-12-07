@@ -13,7 +13,7 @@ from typing import Optional, Dict, List
 # Add parent to path for lib imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from lib import Output, Style, Config, Paths, Prompt
+from lib import Output, Style, Config, Paths, Prompt, AIHelper
 
 
 def cmd_list(args):
@@ -223,9 +223,11 @@ def cmd_generate_images(args):
         Output.progress(f"Generating image {image_count}...")
 
         try:
-            image_url, revised_prompt = _generate_product_image(
-                ai_client, prompt, image_type, product_data
-            )
+            from lib.ai import AIHelper
+            ai_helper = AIHelper(config)
+            result = ai_helper.generate_product_image(prompt, product_data, image_type)
+            image_url = result["url"]
+            revised_prompt = result.get("revised_prompt", prompt)
 
             if image_url:
                 # Download and save image
@@ -304,23 +306,11 @@ def cmd_generate_images(args):
 def _setup_image_generation_client(config: dict):
     """Setup AI client for image generation"""
     try:
-        from openai import OpenAI
-        import os
+        ai_helper = AIHelper(config)
+        client = ai_helper.get_client()
+        Output.info("✅ AI client ready for image generation")
+        return client.client  # Return the raw client for backward compatibility
 
-        api_key = os.getenv('OPENAI_API_KEY')
-        if not api_key:
-            Output.error("OPENAI_API_KEY not set")
-            Output.info("Set your OpenAI API key to enable image generation")
-            return None
-
-        client = OpenAI(api_key=api_key)
-        Output.info("✅ OpenAI client ready for image generation")
-        return client
-
-    except ImportError:
-        Output.error("OpenAI package not available")
-        Output.info("Install with: pip install openai")
-        return None
     except Exception as e:
         Output.error(f"Failed to setup AI client: {e}")
         return None
@@ -328,37 +318,16 @@ def _setup_image_generation_client(config: dict):
 
 def _generate_product_image(client, prompt: str, image_type: str, product_data: dict):
     """Generate a single product image using AI"""
-    # Enhance prompt based on image type
-    type_enhancements = {
-        "photo": "Professional product photography, clean white background, well-lit, commercial product shot, high quality",
-        "illustration": "Digital illustration, clean design, product visualization, modern aesthetic",
-        "diagram": "Technical diagram, exploded view, clear labeling, educational illustration",
-        "lifestyle": "Lifestyle photography, contextual use, natural setting, aspirational imagery"
-    }
-
-    enhanced_prompt = f"{prompt}. {type_enhancements.get(image_type, '')}"
-
-    # Add product context
-    product_context = f"Product: {product_data['title']}. "
-    if product_data.get('tags'):
-        product_context += f"Category: {', '.join(product_data['tags'])}. "
-
-    full_prompt = product_context + enhanced_prompt
+    # Use the new AI module for consistency
+    from lib.ai import AIHelper
+    config = {}  # We'll get this from the global config somehow
+    # For now, create a minimal config for AI
+    ai_config = {"ai": {"provider": "openai"}}
+    ai_helper = AIHelper(ai_config)
 
     try:
-        response = client.images.generate(
-            model="dall-e-3",
-            prompt=full_prompt,
-            size="1792x1024",  # Wide format good for product shots
-            quality="standard",
-            n=1
-        )
-
-        image_url = response.data[0].url
-        revised_prompt = getattr(response.data[0], 'revised_prompt', full_prompt)
-
-        return image_url, revised_prompt
-
+        result = ai_helper.generate_product_image(prompt, product_data, image_type)
+        return result["url"], result.get("revised_prompt", prompt)
     except Exception as e:
         Output.error(f"AI image generation failed: {e}")
         return None, None
@@ -574,35 +543,34 @@ def cmd_create(args):
     if Prompt.confirm("Generate AI content for this product?", default=True):
         Output.info("Generating AI content...")
         try:
-            # Setup AI client
-            ai_client = None
-            try:
-                from openai import OpenAI
-                import os
+            ai_helper = AIHelper(config)
+            generated_content = ai_helper.generate_product_content(product_data)
 
-                ai_config = config.get('ai', {})
-                provider = ai_config.get('provider', 'openai')
+            if generated_content:
+                # Update excerpt if it's different
+                if generated_content != product_data.get("excerpt"):
+                    product_data["excerpt"] = generated_content
 
-                if provider == 'openai':
-                    api_key = os.getenv('OPENAI_API_KEY')
-                    if api_key:
-                        ai_client = OpenAI(api_key=api_key)
+                    # Add to generated audit
+                    audit_entry = {
+                        "id": f"g-{datetime.datetime.utcnow().isoformat().replace(':', '-')}",
+                        "date": datetime.datetime.utcnow().isoformat(),
+                        "mood": product_data.get("mood_default", 50),
+                        "prompt_selection_reason": "interactive_create",
+                        "model": "gpt-4o-mini",
+                        "excerpt": product_data["excerpt"]
+                    }
+                    product_data.setdefault("generated", []).append(audit_entry)
 
-            except ImportError:
-                pass
+                    # Save updated product
+                    product_file.write_text(
+                        json.dumps(product_data, indent=2, ensure_ascii=False),
+                        encoding='utf-8'
+                    )
 
-            if ai_client:
-                # Generate content for this specific product
-                success = _generate_product_content(product_file, ai_client, config, use_ai=True)
-                if success:
-                    Output.success("✅ AI content generated!")
-                    # Reload product data to get the updated content for image generation
-                    product_data = json.loads(product_file.read_text(encoding='utf-8'))
-                else:
-                    Output.warning("AI content generation completed with warnings")
+                Output.success("✅ AI content generated!")
             else:
-                Output.warning("OpenAI API key not found - skipping AI content generation")
-                Output.info("Set OPENAI_API_KEY environment variable to enable AI features")
+                Output.warning("AI content generation failed")
 
         except Exception as e:
             Output.error(f"AI content generation failed: {e}")
@@ -701,38 +669,20 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
 def _generate_single_product_content(product_data: dict, config: dict) -> Optional[dict]:
     """Generate AI content for a single product"""
     try:
-        from openai import OpenAI
+        from lib.ai import AIHelper
+        ai_helper = AIHelper(config)
 
-        ai_config = config.get('ai', {})
-        templates = config.get('products.ai_templates', {})
+        generated_content = ai_helper.generate_product_content(product_data)
 
-        # Select appropriate template based on tags
-        template_key = _select_template_for_product(product_data, templates)
-        template = templates.get(template_key, templates.get('_default', {}))
+        if generated_content:
+            # Select appropriate template based on tags for tracking
+            templates = config.get('products.ai_templates', {})
+            template_key = _select_template_for_product(product_data, templates)
 
-        if not template:
-            return None
-
-        # Build prompt
-        prompt = template['prompt'].format(
-            title=product_data['title'],
-            excerpt=product_data.get('excerpt', '')
-        )
-
-        # Call AI
-        response = ai_client.chat.completions.create(
-            model=ai_config.get('default_model', 'gpt-4o-mini'),
-            messages=[{"role": "user", "content": prompt}],
-            temperature=template.get('temperature', 0.7),
-            max_tokens=150
-        )
-
-        generated_text = response.choices[0].message.content.strip()
-
-        return {
-            "excerpt": generated_text,
-            "template_used": template_key
-        }
+            return {
+                "excerpt": generated_content,
+                "template_used": template_key
+            }
 
     except Exception as e:
         Output.warning(f"AI content generation error: {e}")

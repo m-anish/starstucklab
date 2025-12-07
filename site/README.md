@@ -86,10 +86,10 @@ cli.py projects generate
 
 #### 🛒 Products Management
 ```bash
-# List all products
+# List all products with slugs
 cli.py products list
 
-# Create new product interactively
+# Create new product with AI content & images (interactive)
 cli.py products create
 
 # Generate AI product descriptions
@@ -97,6 +97,15 @@ cli.py products generate --product telescope
 
 # Generate AI product images for carousel
 cli.py products images --product m42
+```
+
+**Interactive Product Creation Flow:**
+```bash
+cli.py products create
+# 1. Enter product details (title, price, tags, description)
+# 2. "Generate AI content for this product?" → AI generates marketing copy
+# 3. "Generate AI images for this product?" → Creates carousel images
+# 4. Product is ready for e-commerce with content & visuals!
 ```
 
 #### 🎨 Content Generation
@@ -172,15 +181,23 @@ products:
 
 ## 🤖 AI Integration
 
+### Centralized AI Module
+All AI functionality is handled through the unified `lib/ai.py` module:
+- **Automatic .env Loading**: API keys loaded from `site/.env`
+- **Provider Agnostic**: Supports OpenAI and Together.ai
+- **Error Handling**: Graceful fallbacks and clear error messages
+
 ### Content Generation
 - **About/Hero Pages**: AI-generated dynamic content with variants
 - **Product Descriptions**: Contextual product blurbs based on categories
 - **Project Documentation**: AI-assisted project write-ups
+- **Interactive Creation**: AI content generation built into product creation flow
 
 ### Image Generation
-- **Product Photos**: Professional product photography for e-commerce
+- **Product Photos**: Professional product photography for e-commerce carousels
 - **Emblems**: Custom illustrations for About page variants
 - **Hero Images**: Cinematic landscape illustrations for projects
+- **Batch Processing**: Generate multiple images per product
 
 ### Supported Providers
 - **OpenAI**: GPT models for text, DALL-E 3 for images
@@ -195,6 +212,8 @@ products:
 - **AI Content**: Automated product descriptions and marketing copy
 - **Image Carousels**: Multiple AI-generated images per product
 - **Category Intelligence**: Smart content generation based on product tags
+- **Interactive Creation**: One-command product creation with AI content & images
+- **Per-Product Images**: Individual image configurations for each product
 
 ### 🎨 Content Management
 - **Dynamic Variants**: Multiple versions of content for A/B testing
@@ -206,6 +225,7 @@ products:
 - **Interactive Mode**: Guided workflows for content creation
 - **Configuration**: Centralized settings with validation
 - **Error Handling**: Graceful fallbacks and clear error messages
+- **AI Module**: Centralized AI functionality with automatic environment loading
 
 ---
 
@@ -220,6 +240,7 @@ products:
 - **Static Assets**: Hero, workshop, shop scenes (always exist)
 - **Dynamic Content**: Products, projects (variable catalog)
 - **Processing Logic**: Shared pipelines in config (reusable)
+- **AI Services**: Centralized in `lib/ai.py` (consistent across commands)
 
 ### Future-Proof Design
 - **Extensible Commands**: Easy to add new CLI modules
