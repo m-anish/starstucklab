@@ -28,6 +28,15 @@
   },
   "mood_default": 55,
   "enable_audit": false,
+  "images": {
+    "master": "public/assets/product-m42/product-m42-master.png",
+    "variants": "shared_variants",
+    "processing": {
+      "priority": "high",
+      "hero_image": true,
+      "gallery_sizes": ["thumb", "mobile", "tablet", "desktop"]
+    }
+  },
   "generated": [
     {
       "id": "g-2025-12-02T18-27-14",

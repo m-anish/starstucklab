@@ -22,6 +22,15 @@
   },
   "mood_default": 40,
   "enable_audit": true,
+  "images": {
+    "master": "public/assets/product-weather-station/weather-station-master.png",
+    "variants": "shared_variants",
+    "processing": {
+      "priority": "medium",
+      "hero_image": true,
+      "gallery_sizes": ["thumb", "mobile", "tablet"]
+    }
+  },
   "generated": [
     {
       "id": "g-2025-11-28T13-58-20",

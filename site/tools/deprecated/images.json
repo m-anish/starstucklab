@@ -65,23 +65,5 @@
       "filename": "thumb.webp",
       "quality": 75
     }
-  ],
-  "scenes": {
-    "hero": {
-      "master": "public/assets/hero/hero-master.png",
-      "variants": "shared_variants"
-    },
-    "workshop": {
-      "master": "public/assets/workshop/workshop-master.png",
-      "variants": "shared_variants"
-    },
-    "shop": {
-      "master": "public/assets/shop/shop-master.png",
-      "variants": "shared_variants"
-    },
-    "product-m42": {
-      "master": "public/assets/product-m42/product-m42-master.png",
-      "variants": "shared_variants"
-    }
-  }
+  ]
 }

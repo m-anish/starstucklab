@@ -23,6 +23,41 @@ content:
   max_variants: 20
   persona_file: src/data/persona_preamble.txt
 
+  # AI generation prompts (moved from about.json/hero.json)
+  prompts:
+    about:
+      - id: "about.title"
+        block: "title"
+        prompt: "Write a short atmospheric title (4–7 words) for the small in-workshop About panel of Starstuck Lab. Tone: poetic, quiet, slightly weary. No punctuation beyond normal letters."
+        public_json_key: "title"
+        temperature: 0.35
+      - id: "about.lead"
+        block: "lead"
+        prompt: "Write a single compact paragraph (40–70 words) describing Starstuck Lab as a quiet hillside workshop where ideas drift between solder smoke, old wood, soft starlight, and dry cosmic humor. Keep the tone gentle, introspective, and slightly melancholic. Do not break into multiple paragraphs. Do not write in the first person."
+        public_json_key: "lead"
+        temperature: 0.55
+      - id: "about.motto"
+        block: "motto"
+        prompt: "Write a one-line motto (max 10 words) expressing quiet persistence and cosmic resignation. Tone: subtle, poetic, understated."
+        public_json_key: "motto"
+        temperature: 0.35
+    hero:
+      - id: "hero-main"
+        block: "hero_heading"
+        prompt: "Write a short, poetic hero H1 for the Starstuck Lab homepage. Tone: melancholic, witty, slightly robotic. Keep it to one short sentence (max 10 words). No markup."
+        public_json_key: "title"
+        temperature: 0.7
+      - id: "hero-sub"
+        block: "hero_subtitle"
+        prompt: "Write a single-line hero subtitle (lead paragraph) for the H1 above. Keep < 14 words. Describe workshop/feeling briefly. Tone consistent with the H1."
+        public_json_key: "subtitle"
+        temperature: 0.6
+      - id: "hero-cta"
+        block: "hero_cta"
+        prompt: "Write a short call-to-action (one phrase) for the hero button (e.g. 'Enter the Workshop')."
+        public_json_key: "cta"
+        temperature: 0.4
+
 projects:
   # Project management settings
   allowed_categories:
@@ -59,19 +94,108 @@ products:
   default_currency: INR
   default_status: available
 
+  # Product images follow convention: public/assets/product-{slug}/product-{slug}-master.png
+  # Image processing variants can be defined per-product or use images.shared_variants
+
+  # AI generation templates (moved from templates.json)
+  ai_templates:
+    product-blurb:
+      prompt: "Write a short (40–80 words) product blurb for '{{title}}'. Tone: Starstuck Lab persona — dry, slightly nihilistic, witty. Include a single 'What's included' sentence. Output plain text only."
+      temperature: 0.7
+    telescope-blurb:
+      prompt: "Describe '{{title}}' in 40–80 words as slightly mythic but technical; include a short 'What's included' clause."
+      temperature: 0.6
+    weather-quick:
+      prompt: "Short (25–50 words) blurb for '{{title}}' with a skeptical, witty tone."
+      temperature: 0.6
+    _default:
+      prompt: "Write a short product blurb for '{{title}}'."
+      temperature: 0.6
+
 images:
   # Image processing settings
   default_quality: 75
   default_format: webp
-  
+
   generation:
     size: "1024x1024"
     model: gpt-image-1
-    
+
   processing:
     auto_optimize: true
     max_width: 1920
     max_height: 1080
+
+  # Image processing pipeline (moved from images.json)
+  shared_variants:
+    - id: "generated"
+      type: "generate"
+      width: 1433
+      height: 896
+      filename: "generated.webp"
+      prompt_file: "prompt.txt"
+      quality: 75
+    - id: "master"
+      type: "master"
+      width: 1433
+      height: 896
+      filename: "master.webp"
+      quality: 75
+    - id: "desktop"
+      type: "crop"
+      width: 2688
+      height: 1680
+      aspect: "16:10"
+      centered: true
+      filename: "desktop.webp"
+      quality: 75
+    - id: "laptop"
+      type: "crop"
+      width: 1280
+      height: 720
+      aspect: "16:9"
+      centered: true
+      filename: "laptop.webp"
+      quality: 75
+    - id: "tablet"
+      type: "crop"
+      width: 840
+      height: 1120
+      aspect: "3:4"
+      centered: true
+      filename: "tablet.webp"
+      quality: 75
+    - id: "mobile"
+      type: "crop"
+      width: 756
+      height: 1344
+      aspect: "9:16"
+      centered: true
+      filename: "mobile.webp"
+      quality: 75
+    - id: "thumb"
+      type: "resize"
+      width: 420
+      height: 236
+      filename: "thumb.webp"
+      quality: 75
+
+  # Static site asset scenes (fixed scenes that always exist)
+  static_scenes:
+    hero:
+      master: "public/assets/hero/hero-master.png"
+      variants: "shared_variants"
+    workshop:
+      master: "public/assets/workshop/workshop-master.png"
+      variants: "shared_variants"
+    shop:
+      master: "public/assets/shop/shop-master.png"
+      variants: "shared_variants"
+
+  # Product images are configured per-product in src/data/products/{slug}.json
+  # Each product defines its own image processing needs under the "images" key
+  # Convention: master images at public/assets/product-{slug}/product-{slug}-master.png
+  # Products can use "shared_variants" or define custom processing variants
 
 cli:
   # CLI behavior settings
