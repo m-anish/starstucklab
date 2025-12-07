@@ -551,9 +551,28 @@ def cmd_create(args):
             generated_content = ai_helper.generate_product_content(product_data)
 
             if generated_content:
+                title = product_data['title']
+                current_excerpt = product_data.get("excerpt", "")
+
+                # Apply the same title duplication logic
+                if generated_content.startswith(f"{title} —") or generated_content.startswith(f"{title} -"):
+                    # AI already included title, use as-is
+                    final_excerpt = generated_content
+                elif current_excerpt.startswith(f"{title} —") or current_excerpt.startswith(f"{title} -"):
+                    # Current excerpt already has title, replace the descriptive part
+                    title_prefix = f"{title} — "
+                    if current_excerpt.startswith(title_prefix):
+                        # Replace the descriptive part with AI-generated content
+                        final_excerpt = f"{title} — {generated_content}"
+                    else:
+                        final_excerpt = generated_content
+                else:
+                    # Neither has title, prepend it
+                    final_excerpt = f"{title} — {generated_content}"
+
                 # Update excerpt if it's different
-                if generated_content != product_data.get("excerpt"):
-                    product_data["excerpt"] = generated_content
+                if final_excerpt != current_excerpt:
+                    product_data["excerpt"] = final_excerpt
 
                     # Add to generated audit
                     audit_entry = {
@@ -626,9 +645,32 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
         if use_ai and ai_client:
             ai_content = _generate_single_product_content(product_data, config)
             if ai_content:
+                generated_excerpt = ai_content["excerpt"]
+                current_excerpt = product_data.get("excerpt", "")
+                title = product_data['title']
+
+                # Check if the generated content already includes the title
+                if generated_excerpt.startswith(f"{title} —") or generated_excerpt.startswith(f"{title} -"):
+                    # AI already included title, use as-is
+                    final_excerpt = generated_excerpt
+                elif current_excerpt.startswith(f"{title} —") or current_excerpt.startswith(f"{title} -"):
+                    # Current excerpt already has title, replace everything after the title
+                    title_prefix = f"{title} — "
+                    alt_prefix = f"{title} - "
+                    if current_excerpt.startswith(title_prefix):
+                        # Replace everything after the title prefix
+                        final_excerpt = f"{title} — {generated_excerpt}"
+                    elif current_excerpt.startswith(alt_prefix):
+                        final_excerpt = f"{title} - {generated_excerpt}"
+                    else:
+                        final_excerpt = generated_excerpt
+                else:
+                    # Neither has title, prepend it
+                    final_excerpt = f"{title} — {generated_excerpt}"
+
                 # Update excerpt if it's different
-                if ai_content.get("excerpt") != product_data.get("excerpt"):
-                    product_data["excerpt"] = ai_content["excerpt"]
+                if final_excerpt != current_excerpt:
+                    product_data["excerpt"] = final_excerpt
 
                     # Add to generated audit
                     audit_entry = {
@@ -659,7 +701,24 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
             # Mock generation for development
             included = product_data.get("included", [])
             included_txt = ", ".join(included) if included else "unit and instructions"
-            mock_excerpt = f"{product_data['title']} — {product_data.get('excerpt', 'A product.')} What's included: {included_txt}."
+            base_excerpt = product_data.get('excerpt', 'A product.')
+
+            # Check if excerpt already has title and included info
+            title = product_data['title']
+            title_prefix = f"{title} —"
+            included_suffix = f"What's included: {included_txt}."
+
+            if base_excerpt.startswith(title_prefix):
+                # Excerpt already has title
+                if included_suffix in base_excerpt:
+                    # Already has included info, use as-is
+                    mock_excerpt = base_excerpt
+                else:
+                    # Add included info
+                    mock_excerpt = f"{base_excerpt} {included_suffix}"
+            else:
+                # Prepend title and add included info
+                mock_excerpt = f"{title} — {base_excerpt} {included_suffix}"
 
             if mock_excerpt != product_data.get("excerpt"):
                 product_data["excerpt"] = mock_excerpt

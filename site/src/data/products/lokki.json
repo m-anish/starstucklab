@@ -9,7 +9,7 @@
     "raspberry-pi",
     "electronics"
   ],
-  "excerpt": "Lokki — Lokki — Lokki is a small, overqualified manager of illumination—wrangling up to eight LED channels, four relays, and a handful of motion sensors, gossiping with its fellow Lokki units over LoRa to coordinate the lighting of entire regions, and politely exposing an internet endpoint so you can boss it around from anywhere in the universe. What's included: Lokki controller main unit, (Optional) Some LED strings, (Optional) Some Motion Sensing modules (Passive Infra Red or Radar), (Optional) Cabling to connect various parts. What's included: Lokki controller main unit, (Optional) Some LED strings, (Optional) Some Motion Sensing modules (Passive Infra Red or Radar), (Optional) Cabling to connect various parts.",
+  "excerpt": "Lokki — Lokki is a small, overqualified manager of illumination—wrangling up to eight LED channels, four relays, and a handful of motion sensors, gossiping with its fellow Lokki units over LoRa to coordinate the lighting of entire regions, and politely exposing an internet endpoint so you can boss it around from anywhere in the universe. What's included: Lokki controller main unit, (Optional) Some LED strings, (Optional) Some Motion Sensing modules (Passive Infra Red or Radar), (Optional) Cabling to connect various parts.",
   "included": [
     "Lokki controller main unit",
     "(Optional) Some LED strings",
