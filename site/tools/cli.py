@@ -109,11 +109,15 @@ Examples:
     
     products_sub.add_parser('list', help='List all products')
     
-    gen_products = products_sub.add_parser('generate', 
+    gen_products = products_sub.add_parser('generate',
                                            help='Generate product content')
     gen_products.add_argument('--product', help='Single product slug')
     gen_products.add_argument('--use-ai', action='store_true',
                              help='Use AI for generation')
+
+    gen_images = products_sub.add_parser('images',
+                                        help='Generate AI images for products')
+    gen_images.add_argument('--product', required=True, help='Product slug')
     
     # ===== IMAGES =====
     images_parser = subparsers.add_parser('images', help='Process images')
@@ -379,14 +383,19 @@ def handle_products(args):
             products.cmd_list(args)
         elif args.subcommand == 'generate':
             products.cmd_generate(args)
+        elif args.subcommand == 'images':
+            products.cmd_generate_images(args)
         elif args.subcommand == 'create':
             products.cmd_create(args)
         else:
             Output.error(f"Unknown products subcommand: {args.subcommand}")
-    except ImportError:
-        Output.error("Products module not yet implemented")
-        Output.info("This will be available soon - generates AI content for products")
-        Output.info("Currently available as: python tools/deprecated/generate_products_json.py")
+    except ImportError as e:
+        Output.error(f"Products module import failed: {e}")
+        Output.info("Make sure commands/products.py exists")
+    except Exception as e:
+        Output.error(f"Products command failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def handle_images(args):
