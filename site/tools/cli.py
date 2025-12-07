@@ -11,6 +11,8 @@ Usage:
     python cli.py projects create           # Interactive create
     python cli.py projects create "Title"   # Direct create
     python cli.py content regenerate --page about
+    python cli.py assets logos              # Generate logo variants
+    python cli.py site nav list             # List navigation
     python cli.py check                     # Health check
 """
 
@@ -37,6 +39,8 @@ Examples:
   %(prog)s projects create              # Create project (interactive)
   %(prog)s projects create "My Project" # Create project (direct)
   %(prog)s content regenerate --page about
+  %(prog)s assets logos                 # Generate logo variants
+  %(prog)s site nav list                # List navigation items
   %(prog)s check                        # Run health check
         """
     )
@@ -114,7 +118,7 @@ Examples:
     # ===== IMAGES =====
     images_parser = subparsers.add_parser('images', help='Process images')
     images_sub = images_parser.add_subparsers(dest='subcommand')
-    
+
     process_images = images_sub.add_parser('process', help='Process all images')
     process_images.add_argument('--force', action='store_true',
                                help='Regenerate existing images')
@@ -122,7 +126,14 @@ Examples:
                                help='Run generation step')
     process_images.add_argument('--upscale', action='store_true',
                                help='Run upscale step')
-    
+
+    # ===== ASSETS =====
+    assets_parser = subparsers.add_parser('assets', help='Manage site assets')
+    assets_sub = assets_parser.add_subparsers(dest='subcommand')
+
+    assets_sub.add_parser('logos', help='Generate logo variants')
+    assets_sub.add_parser('optimize', help='Optimize images and assets')
+
     # ===== SITE =====
     site_parser = subparsers.add_parser('site', help='Site configuration')
     site_sub = site_parser.add_subparsers(dest='subcommand')
@@ -131,19 +142,34 @@ Examples:
     nav_parser = site_sub.add_parser('nav', help='Navigation management')
     nav_sub = nav_parser.add_subparsers(dest='nav_action')
     nav_sub.add_parser('list', help='List navigation items')
-    
+
     nav_add = nav_sub.add_parser('add', help='Add navigation item')
     nav_add.add_argument('label', help='Link label')
     nav_add.add_argument('href', help='Link URL')
     nav_add.add_argument('--priority', type=int, help='Sort priority')
-    
+
     nav_remove = nav_sub.add_parser('remove', help='Remove navigation item')
     nav_remove.add_argument('label', help='Link label')
+
+    nav_sub.add_parser('reorder', help='Interactively reorder navigation')
     
     # Footer
     footer_parser = site_sub.add_parser('footer', help='Footer management')
     footer_sub = footer_parser.add_subparsers(dest='footer_action')
     footer_sub.add_parser('sections', help='List footer sections')
+
+    footer_list = footer_sub.add_parser('list', help='List footer links')
+    footer_list.add_argument('section', nargs='?', help='Section to list (optional)')
+
+    footer_add = footer_sub.add_parser('add', help='Add footer link')
+    footer_add.add_argument('section', help='Footer section')
+    footer_add.add_argument('label', help='Link label')
+    footer_add.add_argument('href', help='Link URL')
+    footer_add.add_argument('--order', type=int, help='Link order')
+
+    footer_remove = footer_sub.add_parser('remove', help='Remove footer link')
+    footer_remove.add_argument('section', help='Footer section')
+    footer_remove.add_argument('label', help='Link label')
     
     # Pages
     pages_parser = site_sub.add_parser('pages', help='Page management')
@@ -185,6 +211,8 @@ Examples:
         handle_products(args)
     elif args.command == 'images':
         handle_images(args)
+    elif args.command == 'assets':
+        handle_assets(args)
     elif args.command == 'site':
         handle_site(args)
     elif args.command == 'check':
@@ -204,7 +232,7 @@ def interactive_mode():
     print("  3. Manage site structure")
     print("     → Navigation, footer, layouts\n")
     print("  4. Process media")
-    print("     → Images, assets, optimization\n")
+    print("     → Images, logos, assets, optimization\n")
     print("  5. View site status")
     print("     → Content inventory, health check\n")
     print("  q. Quit\n")
@@ -261,7 +289,19 @@ def interactive_mode():
     elif choice == '4':
         # Media processing
         Output.header("Process Media")
-        Output.info("Image processing - coming soon!")
+
+        media_type = Prompt.choice(
+            "What would you like to process?",
+            options=["Images", "Assets/Logos", "All media"],
+            default="Images"
+        )
+
+        if media_type == "Images":
+            Output.info("Image processing - coming soon!")
+        elif media_type == "Assets/Logos":
+            Output.info("Asset processing - coming soon!")
+        else:
+            Output.info("Media processing - coming soon!")
     
     elif choice == '5':
         # Site status
@@ -331,8 +371,22 @@ def handle_products(args):
         Output.error("Missing subcommand for 'products'")
         Output.info("Try: cli.py products --help")
         return
-    
-    Output.info("Products management - coming soon!")
+
+    try:
+        from commands import products
+
+        if args.subcommand == 'list':
+            products.cmd_list(args)
+        elif args.subcommand == 'generate':
+            products.cmd_generate(args)
+        elif args.subcommand == 'create':
+            products.cmd_create(args)
+        else:
+            Output.error(f"Unknown products subcommand: {args.subcommand}")
+    except ImportError:
+        Output.error("Products module not yet implemented")
+        Output.info("This will be available soon - generates AI content for products")
+        Output.info("Currently available as: python tools/deprecated/generate_products_json.py")
 
 
 def handle_images(args):
@@ -357,16 +411,41 @@ def handle_images(args):
         traceback.print_exc()
 
 
+def handle_assets(args):
+    """Handle assets subcommand"""
+    if not args.subcommand:
+        Output.error("Missing subcommand for 'assets'")
+        Output.info("Try: cli.py assets --help")
+        return
+
+    try:
+        from commands import assets
+
+        if args.subcommand == 'logos':
+            assets.cmd_logos(args)
+        elif args.subcommand == 'optimize':
+            assets.cmd_optimize(args)
+        else:
+            Output.error(f"Unknown assets subcommand: {args.subcommand}")
+    except ImportError:
+        Output.error("Assets module not yet implemented")
+        if args.subcommand == 'logos':
+            Output.info("Logo variant generation - coming soon!")
+            Output.info("Currently available as: python tools/deprecated/generate_logo_variants.py")
+        else:
+            Output.info("Asset optimization - coming soon!")
+
+
 def handle_site(args):
     """Handle site subcommand"""
     if not args.subcommand:
         Output.error("Missing subcommand for 'site'")
         Output.info("Try: cli.py site --help")
         return
-    
+
     try:
         from commands import site
-        
+
         if args.subcommand == 'nav':
             if args.nav_action == 'list':
                 site.cmd_nav_list(args)
@@ -374,9 +453,17 @@ def handle_site(args):
                 site.cmd_nav_add(args)
             elif args.nav_action == 'remove':
                 site.cmd_nav_remove(args)
+            elif args.nav_action == 'reorder':
+                site.cmd_nav_reorder(args)
         elif args.subcommand == 'footer':
             if args.footer_action == 'sections':
                 site.cmd_footer_sections(args)
+            elif args.footer_action == 'list':
+                site.cmd_footer_list(args)
+            elif args.footer_action == 'add':
+                site.cmd_footer_add(args)
+            elif args.footer_action == 'remove':
+                site.cmd_footer_remove(args)
         elif args.subcommand == 'pages':
             if args.pages_action == 'list':
                 site.cmd_pages_list(args)
@@ -384,7 +471,8 @@ def handle_site(args):
                 site.cmd_pages_create(args)
     except ImportError:
         Output.error("Site module not yet implemented")
-        Output.info("This command will be available soon")
+        Output.info("Full site management - coming soon!")
+        Output.info("Basic functionality available as: python tools/deprecated/site_cli.py")
 
 
 def handle_check(args):
