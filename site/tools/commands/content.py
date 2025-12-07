@@ -32,7 +32,7 @@ def cmd_regenerate(args):
     
     page = args.page.lower()
     num_variants = args.num_variants
-    model_override = args.model
+    model = args.model if hasattr(args, 'model') and args.model else 'gpt-5.1'
     max_variants = config.get('content.max_variants', 20)
     
     # Validate page argument
@@ -89,6 +89,7 @@ def cmd_regenerate(args):
     Output.info(f"Pages: {', '.join(target_pages)}")
     Output.info(f"Variants per page: {num_variants}")
     Output.info(f"Max variants: {max_variants}")
+    Output.info(f"Model: {model}")
     
     # Process each page
     for page_name in target_pages:
@@ -98,7 +99,7 @@ def cmd_regenerate(args):
             max_variants=max_variants,
             persona=persona,
             client=client,
-            model_override=model_override,
+            model=model,
             paths=paths,
             config=config
         )
@@ -117,7 +118,7 @@ def _regenerate_page(
     max_variants: int,
     persona: str,
     client,
-    model_override: Optional[str],
+    model: str,
     paths: Paths,
     config: dict
 ) -> bool:
@@ -165,6 +166,7 @@ def _regenerate_page(
     for idx in indices:
         key = str(idx)
         page_data = {}
+        has_error = False
         
         Output.progress(f"Generating variant {key}...")
         
@@ -175,7 +177,7 @@ def _regenerate_page(
             
             Output.dim(f"  → {prompt_id} ({block})")
             
-            model = model_override or prompt_def.get('model', config.get('ai.default_model', 'gpt-4o-mini'))
+            # Use model from command line (ignore JSON model field)
             temperature = prompt_def.get('temperature', 0.7)
             seed = uuid.uuid4().hex[:8]
             
@@ -214,11 +216,15 @@ Avoid repetition.
                 page_data[public_key] = text
             except Exception as e:
                 Output.error(f"    Generation error: {e}")
-                page_data[public_key] = f"(generation error for {prompt_id})"
+                has_error = True
+                break  # Stop processing this variant
         
-        # Save variant
-        existing[key] = page_data
-        Output.success(f"  Variant {key} complete")
+        # Only save variant if no errors occurred
+        if not has_error:
+            existing[key] = page_data
+            Output.success(f"  Variant {key} complete")
+        else:
+            Output.error(f"  Variant {key} failed - not saving to file")
     
     # Write output file
     output_file.parent.mkdir(parents=True, exist_ok=True)
