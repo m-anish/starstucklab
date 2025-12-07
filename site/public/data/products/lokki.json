@@ -21,8 +21,6 @@
     "Max Operating Current": "8 A",
     "LED current (per channel)": "700mA or 350mA"
   },
-  "mood_default": 50,
-  "enable_audit": true,
   "images": {
     "master": "public/assets/product-lokki/product-lokki-master.png",
     "variants": "shared_variants",
@@ -46,5 +44,7 @@
         "order": 1
       }
     ]
-  }
+  },
+  "date": "2025-12-07T21:47:18.350042",
+  "html": "<p>Lokki — Lokki — Lokki is a small, overqualified manager of illumination—wrangling up to eight LED channels, four relays, and a handful of motion sensors, gossiping with its fellow Lokki units over LoRa to coordinate the lighting of entire regions, and politely exposing an internet endpoint so you can boss it around from anywhere in the universe. What's included: Lokki controller main unit, (Optional) Some LED strings, (Optional) Some Motion Sensing modules (Passive Infra Red or Radar), (Optional) Cabling to connect various parts. What's included: Lokki controller main unit, (Optional) Some LED strings, (Optional) Some Motion Sensing modules (Passive Infra Red or Radar), (Optional) Cabling to connect various parts.</p>"
 }

@@ -8,7 +8,7 @@
     "weather",
     "sensor"
   ],
-  "excerpt": "A pocket weather station that is polite about humidity and extremely suspicious of umbrellas.",
+  "excerpt": "Handheld Weather Station — Gust & Gloom — A pocket weather station that is polite about humidity and extremely suspicious of umbrellas. What's included: Sensor board, 3D-printed enclosure, USB charging cable, Quick start guide.",
   "included": [
     "Sensor board",
     "3D-printed enclosure",
@@ -28,7 +28,11 @@
     "processing": {
       "priority": "medium",
       "hero_image": true,
-      "gallery_sizes": ["thumb", "mobile", "tablet"]
+      "gallery_sizes": [
+        "thumb",
+        "mobile",
+        "tablet"
+      ]
     }
   },
   "generated": [

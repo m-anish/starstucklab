@@ -108,6 +108,11 @@ cli.py products create
 # 4. Product is ready for e-commerce with content & visuals!
 ```
 
+**Product Data Pipeline:**
+- **Source Control**: Products stored in `src/data/products/` (version controlled)
+- **Website Serving**: Automatically published to `public/data/products/` (served to frontend)
+- **Clean Public API**: Internal fields removed, HTML formatting added for website consumption
+
 #### 🎨 Content Generation
 ```bash
 # Regenerate AI content for pages

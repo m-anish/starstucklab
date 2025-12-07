@@ -525,16 +525,20 @@ def cmd_create(args):
         except Exception as e:
             Output.warning(f"AI content generation failed: {e}")
 
-    # Write product file
-    products_dir = paths.src / "data" / "products"
-    products_dir.mkdir(parents=True, exist_ok=True)
+    # Write product file to src/data/products (source)
+    src_products_dir = paths.src / "data" / "products"
+    src_products_dir.mkdir(parents=True, exist_ok=True)
 
     product_file.write_text(
         json.dumps(product_data, indent=2, ensure_ascii=False),
         encoding='utf-8'
     )
 
+    # Also write to public/data/products (for website consumption)
+    _publish_product_to_public(product_data, paths)
+
     Output.success(f"Created product: {product_file.relative_to(paths.root)}")
+    Output.info("Product also published to public/data/products for website")
 
     # Interactive next steps
     Output.header("Let's enhance your product!")
@@ -567,6 +571,9 @@ def cmd_create(args):
                         json.dumps(product_data, indent=2, ensure_ascii=False),
                         encoding='utf-8'
                     )
+
+                    # Also publish to public directory
+                    _publish_product_to_public(product_data, paths)
 
                 Output.success("✅ AI content generated!")
             else:
@@ -640,6 +647,9 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
                         encoding='utf-8'
                     )
 
+                    # Publish to public
+                    _publish_product_to_public(product_data, Paths())
+
                 Output.success(f"  ✓ Generated content for {slug}")
                 return True
             else:
@@ -657,6 +667,8 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
                     json.dumps(product_data, indent=2, ensure_ascii=False),
                     encoding='utf-8'
                 )
+                # Publish to public
+                _publish_product_to_public(product_data, Paths())
 
             Output.success(f"  ✓ Mock content generated for {slug}")
             return True
@@ -723,3 +735,61 @@ def _is_valid_price(price_str: str) -> bool:
         return True
     except ValueError:
         return False
+
+
+def _publish_product_to_public(product_data: dict, paths: Paths) -> None:
+    """Publish product data to public directory for website consumption"""
+    try:
+        public_products_dir = paths.public / "data" / "products"
+        public_products_dir.mkdir(parents=True, exist_ok=True)
+
+        slug = product_data.get('slug', '')
+        if not slug:
+            Output.warning("Cannot publish product without slug")
+            return
+
+        public_file = public_products_dir / f"{slug}.json"
+
+        # Create a clean version for the website (remove internal fields)
+        public_product = _prepare_product_for_public(product_data)
+
+        public_file.write_text(
+            json.dumps(public_product, indent=2, ensure_ascii=False),
+            encoding='utf-8'
+        )
+
+        Output.info(f"Published to: {public_file.relative_to(paths.root)}")
+
+    except Exception as e:
+        Output.warning(f"Failed to publish product to public: {e}")
+
+
+def _prepare_product_for_public(product_data: dict) -> dict:
+    """Prepare product data for public consumption by the website"""
+    # Start with a copy
+    public_product = product_data.copy()
+
+    # Remove internal fields that shouldn't be exposed
+    internal_fields = [
+        'enable_audit',  # Internal tracking
+        'generated',     # Internal generation metadata
+        'mood_default',  # Internal mood setting
+    ]
+
+    for field in internal_fields:
+        public_product.pop(field, None)
+
+    # Ensure required fields are present
+    if 'date' not in public_product:
+        # Add current date if not present
+        from datetime import datetime
+        public_product['date'] = datetime.utcnow().isoformat()
+
+    # Ensure html field exists (for website rendering)
+    if 'html' not in public_product and 'excerpt' in public_product:
+        # Basic HTML conversion of excerpt if no html field
+        excerpt = public_product['excerpt']
+        if excerpt:
+            public_product['html'] = f'<p>{excerpt}</p>'
+
+    return public_product
