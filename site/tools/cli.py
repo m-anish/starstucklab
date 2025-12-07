@@ -265,30 +265,114 @@ def interactive_mode():
             except ImportError:
                 Output.error("Projects module not yet implemented")
                 Output.info("Run: python cli.py projects create")
+
+        elif content_type == "Product":
+            # Import and run product creation
+            try:
+                from commands.products import cmd_create
+                # Create a dummy args object for interactive mode
+                import argparse
+                args = argparse.Namespace()
+                cmd_create(args)
+            except ImportError:
+                Output.error("Products module not yet implemented")
+                Output.info("Run: python cli.py products create")
+
+        elif content_type == "Page":
+            # Page creation - not yet implemented
+            Output.info("Page creation - coming soon!")
+            Output.info("Run: python cli.py site pages create")
     
     elif choice == '2':
         # Regenerate submenu
         Output.header("Regenerate Content")
-        
+
         page = Prompt.choice(
             "Which page?",
             options=["About", "Hero", "All pages"],
             default="All pages"
         )
-        
-        Output.info(f"Content regeneration for '{page}' - coming soon!")
+
+        # Actually run content regeneration
+        try:
+            from commands import content
+            import argparse
+
+            # Map user-friendly names to CLI args
+            page_map = {
+                "About": "about",
+                "Hero": "hero",
+                "All pages": "all"
+            }
+
+            args = argparse.Namespace()
+            args.page = page_map[page]
+            args.num_variants = 3  # Default for interactive mode
+            args.model = None
+            args.provider = None
+            args.no_emblems = False
+
+            content.cmd_regenerate(args)
+
+        except ImportError:
+            Output.error("Content module not yet implemented")
+            Output.info(f"Run: python cli.py content regenerate --page {page_map[page]}")
     
     elif choice == '3':
         # Site structure submenu
         Output.header("Site Structure")
-        
+
         section = Prompt.choice(
             "What would you like to manage?",
             options=["Navigation", "Footer", "Pages"],
             default="Navigation"
         )
-        
-        Output.info(f"{section} management - coming soon!")
+
+        # Actually run site management commands
+        try:
+            from commands import site
+            import argparse
+
+            args = argparse.Namespace()
+
+            if section == "Navigation":
+                args.subcommand = "nav"
+                args.nav_action = "list"
+                site.cmd_nav_list(args)
+
+                # Offer to add navigation item
+                if Prompt.confirm("Would you like to add a navigation item?", default=False):
+                    args.nav_action = "add"
+                    args.label = Prompt.text("Link label")
+                    args.href = Prompt.text("Link URL")
+                    args.priority = int(Prompt.text("Priority (number)", default="1"))
+                    site.cmd_nav_add(args)
+
+            elif section == "Footer":
+                args.subcommand = "footer"
+                args.footer_action = "sections"
+                site.cmd_footer_sections(args)
+
+                # Offer to add footer link
+                if Prompt.confirm("Would you like to add a footer link?", default=False):
+                    args.footer_action = "add"
+                    args.section = Prompt.choice("Footer section", options=["workbench", "about", "legal"])
+                    args.label = Prompt.text("Link label")
+                    args.href = Prompt.text("Link URL")
+                    args.order = int(Prompt.text("Order (number)", default="1"))
+                    site.cmd_footer_add(args)
+
+            elif section == "Pages":
+                args.subcommand = "pages"
+                args.pages_action = "list"
+                site.cmd_pages_list(args)
+
+                Output.info("Page creation - coming soon!")
+                Output.info("Run: python cli.py site pages create")
+
+        except ImportError:
+            Output.error("Site module not yet implemented")
+            Output.info(f"Run: python cli.py site --help")
     
     elif choice == '4':
         # Media processing
@@ -300,17 +384,55 @@ def interactive_mode():
             default="Images"
         )
 
-        if media_type == "Images":
-            Output.info("Image processing - coming soon!")
-        elif media_type == "Assets/Logos":
-            Output.info("Asset processing - coming soon!")
-        else:
-            Output.info("Media processing - coming soon!")
+        # Actually run media processing commands
+        try:
+            import argparse
+            args = argparse.Namespace()
+
+            if media_type == "Images":
+                from commands import images
+                args.subcommand = "process"
+                args.force = Prompt.confirm("Regenerate existing images?", default=False)
+                args.generate = Prompt.confirm("Run generation step?", default=True)
+                args.upscale = False
+                images.cmd_process(args)
+
+            elif media_type == "Assets/Logos":
+                from commands import assets
+                args.subcommand = "logos"
+                assets.cmd_logos(args)
+
+            else:
+                # All media - run both
+                Output.info("Running all media processing...")
+
+                # Images
+                from commands import images
+                args.subcommand = "process"
+                args.force = False
+                args.generate = True
+                args.upscale = False
+                images.cmd_process(args)
+
+                # Assets
+                from commands import assets
+                args.subcommand = "logos"
+                assets.cmd_logos(args)
+
+        except ImportError as e:
+            Output.error(f"Media processing module not available: {e}")
+            Output.info("Run: python cli.py images process  # for images")
+            Output.info("Run: python cli.py assets logos    # for logos")
     
     elif choice == '5':
         # Site status
         Output.header("Site Status")
-        Output.info("Health check - coming soon!")
+
+        # Actually run health check
+        import argparse
+        args = argparse.Namespace()
+        args.fix = Prompt.confirm("Auto-fix issues where possible?", default=False)
+        handle_check(args)
     
     else:
         Output.warning(f"Unknown choice: {choice}")
