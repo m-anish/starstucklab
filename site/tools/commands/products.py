@@ -35,7 +35,7 @@ def cmd_list(args):
     Output.header(f"📦 Found {len(product_files)} product(s)")
 
     # Table header
-    Output.table_row("Status", "Title", "Price", "Tags", widths=[10, 25, 12, 20])
+    Output.table_row("Status", "Slug", "Title", "Price", "Tags", widths=[10, 12, 20, 12, 15])
     Output.divider()
 
     for product_file in product_files:
@@ -68,10 +68,11 @@ def cmd_list(args):
 
             Output.table_row(
                 f"{status_emoji} {status}",
+                slug,
                 title,
                 price_display,
                 tags_display,
-                widths=[10, 25, 12, 20]
+                widths=[10, 12, 20, 12, 15]
             )
 
         except Exception as e:
@@ -173,6 +174,9 @@ def cmd_generate_images(args):
         Output.error(f"Failed to load product data: {e}")
         return
 
+    # Validate and fix product data if needed
+    product_data = _validate_and_fix_product_data(product_data)
+
     Output.header(f"🎨 AI Image Generation for: {product_data['title']}")
 
     # Setup AI client
@@ -255,8 +259,10 @@ def cmd_generate_images(args):
     if generated_images:
         # Ensure images structure exists
         if 'images' not in product_data:
+            # Always use the slug from product_data, not the parameter
+            correct_slug = product_data.get('slug', product_slug)
             product_data['images'] = {
-                "master": f"public/assets/product-{product_slug}/product-{product_slug}-master.png",
+                "master": f"public/assets/product-{correct_slug}/product-{correct_slug}-master.png",
                 "variants": "shared_variants",
                 "processing": {
                     "priority": "medium",
@@ -358,6 +364,27 @@ def _generate_product_image(client, prompt: str, image_type: str, product_data: 
         return None, None
 
 
+def _validate_and_fix_product_data(product_data: dict) -> dict:
+    """Validate and fix product data inconsistencies"""
+    slug = product_data.get('slug', '')
+
+    # Ensure slug is valid
+    if not slug or len(slug) > 50:
+        # Try to generate from title
+        title = product_data.get('title', 'product')
+        slug = _slugify(title)
+        product_data['slug'] = slug
+
+    # Fix master image path if corrupted
+    if 'images' in product_data:
+        master_path = product_data['images'].get('master', '')
+        if master_path and f"product-{slug}" not in master_path:
+            # Master path is corrupted, fix it
+            product_data['images']['master'] = f"public/assets/product-{slug}/product-{slug}-master.png"
+
+    return product_data
+
+
 def _download_and_save_image(image_url: str, output_path: Path) -> bool:
     """Download image from URL and save as WebP"""
     try:
@@ -408,8 +435,11 @@ def cmd_create(args):
     slug = Prompt.text(
         "Product slug",
         default=_slugify(title),
-        validator=lambda x: len(x.strip()) > 0
+        validator=lambda x: len(x.strip()) > 0 and len(x.strip()) <= 50
     )
+
+    # Ensure slug is properly formatted
+    slug = _slugify(slug)
 
     # Check if product already exists
     product_file = paths.src / "data" / "products" / f"{slug}.json"
@@ -537,11 +567,75 @@ def cmd_create(args):
 
     Output.success(f"Created product: {product_file.relative_to(paths.root)}")
 
-    # Suggest next steps
-    Output.header("Next steps:")
-    Output.info("• Add product images to: public/assets/product-{slug}/")
-    Output.info("• Test with: cli.py products list")
-    Output.info("• Generate content with: cli.py products generate --product {slug}")
+    # Interactive next steps
+    Output.header("Let's enhance your product!")
+
+    # 1. Generate AI content
+    if Prompt.confirm("Generate AI content for this product?", default=True):
+        Output.info("Generating AI content...")
+        try:
+            # Setup AI client
+            ai_client = None
+            try:
+                from openai import OpenAI
+                import os
+
+                ai_config = config.get('ai', {})
+                provider = ai_config.get('provider', 'openai')
+
+                if provider == 'openai':
+                    api_key = os.getenv('OPENAI_API_KEY')
+                    if api_key:
+                        ai_client = OpenAI(api_key=api_key)
+
+            except ImportError:
+                pass
+
+            if ai_client:
+                # Generate content for this specific product
+                success = _generate_product_content(product_file, ai_client, config, use_ai=True)
+                if success:
+                    Output.success("✅ AI content generated!")
+                    # Reload product data to get the updated content for image generation
+                    product_data = json.loads(product_file.read_text(encoding='utf-8'))
+                else:
+                    Output.warning("AI content generation completed with warnings")
+            else:
+                Output.warning("OpenAI API key not found - skipping AI content generation")
+                Output.info("Set OPENAI_API_KEY environment variable to enable AI features")
+
+        except Exception as e:
+            Output.error(f"AI content generation failed: {e}")
+
+    # 2. Generate AI images
+    if Prompt.confirm("Generate AI images for this product?", default=True):
+        Output.info("Let's create some product images...")
+        try:
+            # Create args object for image generation
+            import argparse
+            args = argparse.Namespace()
+            args.product = slug
+
+            # Call the image generation function
+            cmd_generate_images(args)
+            Output.success("✅ AI images generated!")
+
+        except Exception as e:
+            Output.error(f"AI image generation failed: {e}")
+
+    # 3. Show remaining next steps
+    Output.header("Product ready!")
+    Output.info(f"• View your product: cli.py products list")
+    Output.info(f"• Edit manually: {product_file}")
+    Output.info(f"• Add more images: cli.py products images --product {slug}")
+
+    # Final encouragement
+    Output.success("🎉 Your product is ready for the shop!")
+    if product_data.get('images', {}).get('gallery'):
+        gallery_count = len(product_data['images']['gallery'])
+        Output.info(f"   Includes {gallery_count} AI-generated product image{'s' if gallery_count != 1 else ''}")
+    if any('generated' in str(entry) for entry in product_data.get('generated', [])):
+        Output.info("   Includes AI-generated marketing content")
 
 
 # ===== Helper Functions =====
