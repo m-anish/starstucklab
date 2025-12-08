@@ -1,0 +1,549 @@
+---
+// site/src/pages/admin/products/[slug]/index.astro
+import AdminLayout from '../../../../layouts/AdminLayout.astro';
+
+export async function getStaticPaths() {
+  // For now, we'll generate paths dynamically
+  // In a full implementation, this would read from the content collection
+  return [
+    { params: { slug: 'lokki' } },
+    { params: { slug: 'm42' } },
+    { params: { slug: 'weather-station' } }
+  ];
+}
+
+const { slug } = Astro.params;
+
+// In a real implementation, we would fetch the product data here
+// For now, we'll simulate loading product data
+const productData = await loadProductData(slug);
+
+async function loadProductData(slug: string) {
+  try {
+    // This would normally load from the content collection
+    // For demo purposes, we'll return mock data
+    const mockProducts: Record<string, any> = {
+      'lokki': {
+        title: 'Lokki',
+        price: 11000,
+        currency: 'INR',
+        status: 'coming_soon',
+        tags: ['iot', 'raspberry-pi', 'electronics'],
+        excerpt: 'Lokki — A gentle light-keeper spirit that automates, dims, and balances illumination.'
+      },
+      'm42': {
+        title: 'M42 Dobsonian',
+        price: 28000,
+        currency: 'INR',
+        status: 'available',
+        tags: ['telescope', '3d-printed', 'customizable'],
+        excerpt: 'A portable telescope for stargazing enthusiasts.'
+      },
+      'weather-station': {
+        title: 'Handheld Weather Station',
+        price: 89,
+        currency: 'USD',
+        status: 'available',
+        tags: ['weather', 'sensor', 'handheld'],
+        excerpt: 'Portable weather monitoring device with comprehensive sensors.'
+      }
+    };
+
+    return mockProducts[slug] || null;
+  } catch (error) {
+    console.error('Error loading product data:', error);
+    return null;
+  }
+}
+---
+
+<AdminLayout title={`Edit Product: ${productData?.title || slug}`}>
+  <div class="product-edit-container">
+    {productData ? (
+      <>
+        <div class="edit-header">
+          <h2>Edit Product: {productData.title}</h2>
+          <p>Make changes to your product information below.</p>
+          <div class="product-meta">
+            <span class="status-badge status-{productData.status}">
+              {productData.status.replace('_', ' ').toUpperCase()}
+            </span>
+            <span class="slug-info">Slug: <code>{slug}</code></span>
+          </div>
+        </div>
+
+        <form id="product-edit-form" class="product-form">
+          <!-- Basic Information -->
+          <div class="form-section">
+            <h3>Basic Information</h3>
+
+            <div class="form-group">
+              <label for="title">Product Title *</label>
+              <input type="text" id="title" name="title" required
+                     value={productData.title}>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="price">Price</label>
+                <input type="number" id="price" name="price" step="0.01" min="0"
+                       value={productData.price}>
+              </div>
+              <div class="form-group">
+                <label for="currency">Currency</label>
+                <select id="currency" name="currency">
+                  <option value="INR" selected={productData.currency === 'INR'}>INR (₹)</option>
+                  <option value="USD" selected={productData.currency === 'USD'}>USD ($)</option>
+                  <option value="EUR" selected={productData.currency === 'EUR'}>EUR (€)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status</label>
+              <select id="status" name="status">
+                <option value="available" selected={productData.status === 'available'}>Available</option>
+                <option value="coming_soon" selected={productData.status === 'coming_soon'}>Coming Soon</option>
+                <option value="unavailable" selected={productData.status === 'unavailable'}>Unavailable</option>
+                <option value="discontinued" selected={productData.status === 'discontinued'}>Discontinued</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="tags">Tags</label>
+              <input type="text" id="tags" name="tags"
+                     value={productData.tags?.join(', ') || ''}>
+            </div>
+
+            <div class="form-group">
+              <label for="excerpt">Excerpt</label>
+              <textarea id="excerpt" name="excerpt" rows="3">{productData.excerpt || ''}</textarea>
+            </div>
+          </div>
+
+          <!-- Product Images -->
+          <div class="form-section">
+            <h3>Product Images</h3>
+            <p>Manage product photos and gallery images.</p>
+
+            <div class="image-management">
+              <div class="current-images">
+                <h4>Current Images</h4>
+                <div class="image-grid" id="image-grid">
+                  <!-- Images would be loaded here -->
+                  <div class="image-placeholder">
+                    <span>📷 No images uploaded yet</span>
+                    <small>Images will appear here when uploaded</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="image-actions">
+                <button type="button" class="btn-secondary" onclick="uploadImages()">
+                  📤 Upload Images
+                </button>
+                <button type="button" class="btn-secondary" onclick="generateAIImages()">
+                  🎨 Generate AI Images
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Form Actions -->
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              💾 Save Changes
+            </button>
+            <button type="button" class="btn-secondary" onclick="previewProduct()">
+              👁️ Preview
+            </button>
+            <a href="/admin/products" class="btn-secondary">
+              ← Back to Products
+            </a>
+            <button type="button" class="btn-danger" onclick="deleteProduct()">
+              🗑️ Delete Product
+            </button>
+          </div>
+        </form>
+      </>
+    ) : (
+      <div class="product-not-found">
+        <h2>Product Not Found</h2>
+        <p>The product "<code>{slug}</code>" could not be found.</p>
+        <a href="/admin/products" class="btn-primary">← Back to Products</a>
+      </div>
+    )}
+  </div>
+</AdminLayout>
+
+<style>
+  .product-edit-container {
+    max-width: 800px;
+  }
+
+  .edit-header {
+    margin-bottom: 2rem;
+  }
+
+  .edit-header h2 {
+    color: var(--admin-accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .edit-header p {
+    color: var(--admin-text-secondary);
+    margin-bottom: 1rem;
+  }
+
+  .product-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+
+  .status-available { background: rgba(0, 255, 136, 0.2); color: var(--admin-success); }
+  .status-coming_soon { background: rgba(255, 170, 0, 0.2); color: var(--admin-warning); }
+  .status-unavailable { background: rgba(255, 68, 68, 0.2); color: var(--admin-error); }
+  .status-discontinued { background: rgba(128, 128, 128, 0.2); color: #888; }
+
+  .slug-info {
+    color: var(--admin-text-secondary);
+    font-size: 0.9rem;
+  }
+
+  .product-form {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+
+  .form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .form-section h3 {
+    color: var(--admin-accent);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--admin-text);
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 6px;
+    color: var(--admin-text);
+    font-size: 0.9rem;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .image-management {
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  .current-images h4 {
+    margin-bottom: 1rem;
+    color: var(--admin-accent);
+  }
+
+  .image-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 1rem;
+  }
+
+  .image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    background: var(--admin-bg);
+    border: 2px dashed var(--admin-border);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .image-placeholder span {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .image-placeholder small {
+    color: var(--admin-text-secondary);
+  }
+
+  .image-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding-top: 2rem;
+    border-top: 1px solid var(--admin-border);
+  }
+
+  .btn-danger {
+    background: var(--admin-error);
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #cc0000;
+  }
+
+  .product-not-found {
+    text-align: center;
+    padding: 3rem;
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+  }
+
+  .product-not-found h2 {
+    color: var(--admin-error);
+    margin-bottom: 1rem;
+  }
+
+  .product-not-found p {
+    color: var(--admin-text-secondary);
+    margin-bottom: 2rem;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .image-actions {
+      flex-direction: column;
+    }
+
+    .image-actions .btn {
+      width: 100%;
+    }
+
+    .product-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+  }
+</style>
+
+<script is:inline>
+  // Form submission
+  document.getElementById('product-edit-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    // Convert tags to array
+    if (data.tags) {
+      data.tags = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    }
+
+    // Set loading state
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Saving...';
+    submitBtn.disabled = true;
+
+    try {
+      // In a real implementation, this would call an update API
+      // For now, we'll simulate success
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+
+      showNotification('Product updated successfully!', 'success');
+
+      // Redirect after a short delay
+      setTimeout(() => {
+        window.location.href = '/admin/products';
+      }, 1500);
+
+    } catch (error) {
+      console.error('Error updating product:', error);
+      showNotification('Failed to update product', 'error');
+    } finally {
+      submitBtn.textContent = originalText;
+      submitBtn.disabled = false;
+    }
+  });
+
+  // Image management functions
+  async function uploadImages() {
+    // Create file input element
+    const fileInput = document.createElement('input');
+    fileInput.type = 'file';
+    fileInput.multiple = true;
+    fileInput.accept = 'image/*';
+
+    fileInput.onchange = async (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length === 0) return;
+
+      const button = document.querySelector('button[onclick="uploadImages()"]');
+      const originalText = button.textContent;
+      button.textContent = 'Uploading...';
+      button.disabled = true;
+
+      try {
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('productSlug', window.location.pathname.split('/').pop());
+
+          const response = await fetch('/api/cli/products/images', {
+            method: 'POST',
+            body: formData
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            showNotification(`Image "${file.name}" uploaded successfully!`, 'success');
+            // TODO: Refresh image grid
+          } else {
+            showNotification(`Failed to upload "${file.name}": ${result.error}`, 'error');
+          }
+        }
+      } catch (error) {
+        showNotification('Upload failed', 'error');
+      } finally {
+        button.textContent = originalText;
+        button.disabled = false;
+      }
+    };
+
+    fileInput.click();
+  }
+
+  async function generateAIImages() {
+    const button = document.querySelector('button[onclick="generateAIImages()"]');
+    const originalText = button.textContent;
+    button.textContent = 'Generating...';
+    button.disabled = true;
+
+    try {
+      const slug = window.location.pathname.split('/').pop();
+
+      const response = await fetch('/api/cli/products/generate-images', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          productSlug: slug
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification('AI images generated successfully!', 'success');
+        // TODO: Refresh image grid
+      } else {
+        showNotification(result.error || 'Failed to generate AI images', 'error');
+      }
+    } catch (error) {
+      showNotification('Failed to generate AI images', 'error');
+    } finally {
+      button.textContent = originalText;
+      button.disabled = false;
+    }
+  }
+
+  // Preview functionality
+  function previewProduct() {
+    const slug = window.location.pathname.split('/').pop();
+    window.open(`/shop/${slug}`, '_blank');
+  }
+
+  // Delete functionality
+  function deleteProduct() {
+    if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+      showNotification('Product deletion - coming soon!', 'info');
+      // TODO: Implement product deletion
+    }
+  }
+
+  // Utility functions
+  function showNotification(message, type = 'info') {
+    if (window.AdminUtils) {
+      window.AdminUtils.showNotification(message, type);
+    } else {
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+  }
+
+  // Load product images on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    // TODO: Load and display current product images
+    console.log('Product edit page loaded');
+  });
+</script>

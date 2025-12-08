@@ -1,0 +1,385 @@
+---
+// site/src/pages/admin/products/new.astro
+import AdminLayout from '../../../layouts/AdminLayout.astro';
+---
+
+<AdminLayout title="Create New Product">
+  <div class="product-form-container">
+    <div class="form-header">
+      <h2>Create New Product</h2>
+      <p>Fill in the details below to create a new product. AI-powered content generation is available.</p>
+    </div>
+
+    <form id="product-form" class="product-form">
+      <!-- Basic Information -->
+      <div class="form-section">
+        <h3>Basic Information</h3>
+
+        <div class="form-group">
+          <label for="title">Product Title *</label>
+          <input type="text" id="title" name="title" required
+                 placeholder="Enter product title">
+          <small>The main name of your product</small>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="price">Price</label>
+            <input type="number" id="price" name="price" step="0.01" min="0"
+                   placeholder="0.00">
+          </div>
+          <div class="form-group">
+            <label for="currency">Currency</label>
+            <select id="currency" name="currency">
+              <option value="INR">INR (₹)</option>
+              <option value="USD">USD ($)</option>
+              <option value="EUR">EUR (€)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="status">Status</label>
+          <select id="status" name="status">
+            <option value="available">Available</option>
+            <option value="coming_soon">Coming Soon</option>
+            <option value="unavailable">Unavailable</option>
+            <option value="discontinued">Discontinued</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="tags">Tags</label>
+          <input type="text" id="tags" name="tags"
+                 placeholder="electronics, iot, raspberry-pi">
+          <small>Comma-separated tags for categorization</small>
+        </div>
+
+        <div class="form-group">
+          <label for="excerpt">Excerpt</label>
+          <textarea id="excerpt" name="excerpt" rows="3"
+                    placeholder="Brief description of the product..."></textarea>
+          <small>A short summary that appears in listings</small>
+        </div>
+      </div>
+
+      <!-- AI Content Generation -->
+      <div class="form-section">
+        <h3>AI Content Generation</h3>
+        <p>Generate marketing copy and product descriptions using AI.</p>
+
+        <div class="ai-controls">
+          <button type="button" class="btn-secondary" onclick="generateExcerpt()">
+            🤖 Generate Excerpt
+          </button>
+          <button type="button" class="btn-secondary" onclick="generateFullContent()">
+            📝 Generate Full Description
+          </button>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">
+          ➕ Create Product
+        </button>
+        <button type="button" class="btn-secondary" onclick="previewProduct()">
+          👁️ Preview
+        </button>
+        <a href="/admin/products" class="btn-secondary">
+          ← Back to Products
+        </a>
+      </div>
+    </form>
+  </div>
+</AdminLayout>
+
+<style>
+  .product-form-container {
+    max-width: 800px;
+  }
+
+  .form-header {
+    margin-bottom: 2rem;
+  }
+
+  .form-header h2 {
+    color: var(--admin-accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .form-header p {
+    color: var(--admin-text-secondary);
+  }
+
+  .product-form {
+    background: var(--admin-surface);
+    border: 1px solid var(--admin-border);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+
+  .form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--admin-border);
+  }
+
+  .form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .form-section h3 {
+    color: var(--admin-accent);
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--admin-text);
+    font-weight: 500;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--admin-bg);
+    border: 1px solid var(--admin-border);
+    border-radius: 6px;
+    color: var(--admin-text);
+    font-size: 0.9rem;
+  }
+
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    outline: none;
+    border-color: var(--admin-accent);
+    box-shadow: 0 0 0 2px rgba(0, 212, 255, 0.2);
+  }
+
+  .form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+  }
+
+  .form-group small {
+    display: block;
+    margin-top: 0.25rem;
+    color: var(--admin-text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .ai-controls {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    padding-top: 2rem;
+    border-top: 1px solid var(--admin-border);
+  }
+
+  .loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+  }
+
+  .loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid var(--admin-border);
+    border-top: 2px solid var(--admin-accent);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+
+    .form-actions {
+      flex-direction: column;
+    }
+
+    .form-actions .btn {
+      width: 100%;
+      text-align: center;
+    }
+
+    .ai-controls {
+      flex-direction: column;
+    }
+
+    .ai-controls .btn {
+      width: 100%;
+    }
+  }
+</style>
+
+<script is:inline>
+  let isGenerating = false;
+
+  // Form submission
+  document.getElementById('product-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const form = e.target;
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData);
+
+    // Validate required fields
+    if (!data.title?.trim()) {
+      showNotification('Product title is required', 'error');
+      return;
+    }
+
+    // Convert tags to array
+    if (data.tags) {
+      data.tags = data.tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+    }
+
+    // Set loading state
+    form.classList.add('loading');
+    const submitBtn = form.querySelector('button[type="submit"]');
+    const originalText = submitBtn.textContent;
+    submitBtn.textContent = 'Creating...';
+
+    try {
+      const response = await fetch('/api/cli/products/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        showNotification('Product created successfully!', 'success');
+
+        // Redirect to products list or edit page
+        setTimeout(() => {
+          if (result.productSlug) {
+            window.location.href = `/admin/products/${result.productSlug}`;
+          } else {
+            window.location.href = '/admin/products';
+          }
+        }, 1500);
+      } else {
+        showNotification(result.error || 'Failed to create product', 'error');
+      }
+    } catch (error) {
+      console.error('Error creating product:', error);
+      showNotification('Failed to create product', 'error');
+    } finally {
+      form.classList.remove('loading');
+      submitBtn.textContent = originalText;
+    }
+  });
+
+  // AI content generation
+  async function generateExcerpt() {
+    const title = document.getElementById('title').value;
+    if (!title.trim()) {
+      showNotification('Please enter a product title first', 'warning');
+      return;
+    }
+
+    setButtonLoading('generateExcerpt', true);
+
+    try {
+      // For now, just generate a simple excerpt
+      // In a full implementation, this would call an AI API
+      const excerpt = `Experience the innovative ${title} - a cutting-edge solution designed for modern makers and creators.`;
+
+      document.getElementById('excerpt').value = excerpt;
+      showNotification('Excerpt generated successfully!', 'success');
+    } catch (error) {
+      showNotification('Failed to generate excerpt', 'error');
+    } finally {
+      setButtonLoading('generateExcerpt', false);
+    }
+  }
+
+  async function generateFullContent() {
+    showNotification('Full content generation - coming soon!', 'info');
+    // TODO: Implement full content generation
+  }
+
+  // Preview functionality
+  function previewProduct() {
+    showNotification('Product preview - coming soon!', 'info');
+    // TODO: Implement preview modal
+  }
+
+  // Utility functions
+  function setButtonLoading(buttonId, loading) {
+    const button = document.querySelector(`button[onclick*="${buttonId}"]`);
+    if (button) {
+      if (loading) {
+        button.disabled = true;
+        button.textContent = button.textContent.replace('🤖', '⏳').replace('📝', '⏳');
+      } else {
+        button.disabled = false;
+        button.textContent = button.textContent.replace('⏳', '🤖').replace('⏳', '📝');
+      }
+    }
+  }
+
+  function showNotification(message, type = 'info') {
+    if (window.AdminUtils) {
+      window.AdminUtils.showNotification(message, type);
+    } else {
+      console.log(`[${type.toUpperCase()}] ${message}`);
+    }
+  }
+
+  // Form validation
+  document.addEventListener('DOMContentLoaded', () => {
+    // Add real-time validation
+    const titleInput = document.getElementById('title');
+    const priceInput = document.getElementById('price');
+
+    titleInput.addEventListener('input', (e) => {
+      const value = e.target.value.trim();
+      e.target.setCustomValidity(value ? '' : 'Product title is required');
+    });
+
+    priceInput.addEventListener('input', (e) => {
+      const value = parseFloat(e.target.value);
+      if (value < 0) {
+        e.target.setCustomValidity('Price cannot be negative');
+      } else {
+        e.target.setCustomValidity('');
+      }
+    });
+  });
+</script>
