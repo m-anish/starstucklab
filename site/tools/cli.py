@@ -139,6 +139,7 @@ Examples:
 
     assets_sub.add_parser('logos', help='Generate logo variants')
     assets_sub.add_parser('optimize', help='Optimize images and assets')
+    assets_sub.add_parser('info', help='Show asset information')
 
     # ===== SITE =====
     site_parser = subparsers.add_parser('site', help='Site configuration')
@@ -558,6 +559,8 @@ def handle_assets(args):
             assets.cmd_logos(args)
         elif args.subcommand == 'optimize':
             assets.cmd_optimize(args)
+        elif args.subcommand == 'info':
+            assets.cmd_info(args)
         else:
             Output.error(f"Unknown assets subcommand: {args.subcommand}")
     except ImportError:
