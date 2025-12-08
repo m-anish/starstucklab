@@ -145,11 +145,14 @@ cli.py site footer add workbench "Contact" /contact --order 4
 
 #### ⚙️ Asset Management
 ```bash
-# Generate logo variants
+# Generate responsive logo variants from master logo
 cli.py assets logos
 
-# Optimize images and assets
+# Optimize images and assets for web delivery
 cli.py assets optimize
+
+# Show asset information and statistics
+cli.py assets info
 ```
 
 ### Configuration
