@@ -4,9 +4,7 @@
 import { getCollection } from 'astro:content';
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
 import AddToCartButton from "../../components/AddToCartButton.astro";
-import "../../styles/tokens.css";
 import "../../styles/components/parchment.css";
-import "../../styles/components/standard-page.css";
 import "../../styles/components/product-detail.css";
 
 // Build-time: tell Astro which slugs to pre-render
@@ -34,17 +32,18 @@ const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
 ---
 <StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
   <article class="product-detail-container">
-    <!-- Product image with vintage frame -->
-    <div class="product-media">
+    <!-- Hero Image -->
+    <div class="product-hero-wrap">
       <img
         src={heroImagePath}
         alt={product.title}
+        class="product-hero-image"
         onerror={`this.onerror=null;this.src='${masterFallback}'`}
       />
     </div>
 
-    <!-- Main product info card - uses base parchment -->
-    <div class="parchment product-info-card">
+    <!-- Product Content Card -->
+    <div class="parchment product-content-card">
       <!-- Header -->
       <header class="product-header">
         <div class="product-meta-row">

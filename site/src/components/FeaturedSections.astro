@@ -1,27 +1,25 @@
 ---
 // site/src/components/FeaturedSections.astro
-// Updated to use Astro Content Collections for projects (markdown)
-// Uses shared product loader for products
+// Updated to use Astro Content Collections for projects and products (markdown)
 import { getCollection } from 'astro:content';
 import ProjectCard from './ProjectCard.astro';
 import ProductCard from './ProductCard.astro';
-import { getFeaturedProducts } from '../lib/products';
 import '../styles/components/featured-sections.css';
 
 const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
 
 // Load featured projects from content collection (newest 3)
-let featuredProjects = [];
+let featuredProjects: any[] = [];
 try {
   const allProjects = await getCollection('projects');
-  
+
   // Sort by date descending
   const sorted = allProjects.sort((a, b) => {
     const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
     const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
     return dateB - dateA;
   });
-  
+
   // Take 3 most recent, transform to ProjectCard format
   featuredProjects = sorted.slice(0, 3).map(entry => ({
     id: entry.id,
@@ -40,8 +38,35 @@ try {
   console.warn('Could not load projects collection:', e);
 }
 
-// Load featured products (newest 3) using shared loader
-const featuredProducts = getFeaturedProducts(3);
+// Load featured products from content collection (newest 3)
+let featuredProducts: any[] = [];
+try {
+  const allProducts = await getCollection('products');
+
+  // Sort by date descending
+  const sorted = allProducts.sort((a, b) => {
+    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  // Take 3 most recent, transform to ProductCard format
+  featuredProducts = sorted.slice(0, 3).map(entry => ({
+    id: entry.id,
+    slug: entry.slug,
+    title: entry.data.title,
+    excerpt: entry.data.excerpt,
+    price: entry.data.price,
+    currency: entry.data.currency || 'INR',
+    status: entry.data.status,
+    tags: entry.data.tags || [],
+    date: entry.data.date,
+    images: entry.data.images,
+    url: `${base}shop/${entry.slug}`
+  }));
+} catch (e) {
+  console.warn('Could not load products collection:', e);
+}
 ---
 
 <div class="featured-sections-wrap">
