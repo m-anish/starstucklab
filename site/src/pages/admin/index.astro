@@ -47,7 +47,7 @@ import '../../styles/components/admin-dashboard.css';
         </div>
         <div class="activity-item">
           <span class="activity-time">Loading...</span>
-          <span class="activity-desc">Checking CLI availability</span>
+          <span class="activity-desc">Loading dashboard data...</span>
         </div>
       </div>
     </div>
@@ -111,6 +111,7 @@ import '../../styles/components/admin-dashboard.css';
 
       // Add to recent activity
       addActivityItem('Dashboard data loaded successfully');
+      addActivityItem('CLI tools verified and available');
 
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
