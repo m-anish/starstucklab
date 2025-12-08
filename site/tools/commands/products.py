@@ -623,24 +623,11 @@ def cmd_create(args):
 
                 # Update excerpt if it's different
                 if final_excerpt != current_excerpt:
-                    product_data["excerpt"] = final_excerpt
+                    frontmatter["excerpt"] = final_excerpt
 
-                    # Add to generated audit
-                    audit_entry = {
-                        "id": f"g-{datetime.datetime.utcnow().isoformat().replace(':', '-')}",
-                        "date": datetime.datetime.utcnow().isoformat(),
-                        "mood": product_data.get("mood_default", 50),
-                        "prompt_selection_reason": "interactive_create",
-                        "model": "gpt-4o-mini",
-                        "excerpt": product_data["excerpt"]
-                    }
-                    product_data.setdefault("generated", []).append(audit_entry)
-
-                    # Save updated product
-                    product_file.write_text(
-                        json.dumps(product_data, indent=2, ensure_ascii=False),
-                        encoding='utf-8'
-                    )
+                    # Save updated markdown file
+                    markdown_content = write_frontmatter(frontmatter, markdown_body)
+                    product_file.write_text(markdown_content, encoding='utf-8')
 
 
                 Output.success("✅ AI content generated!")
@@ -707,104 +694,6 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
 
         Output.success(f"  ✓ Processed {slug}")
         return True
-
-    except Exception as e:
-        Output.error(f"Failed to process {product_file.name}: {e}")
-        return False
-    """Generate content for a single product"""
-    try:
-        product_data = json.loads(product_file.read_text(encoding='utf-8'))
-        slug = product_data.get('slug', product_file.stem)
-
-        Output.progress(f"Processing {slug}...")
-
-        if use_ai and ai_client:
-            ai_content = _generate_single_product_content(product_data, config)
-            if ai_content:
-                generated_excerpt = ai_content["excerpt"]
-                current_excerpt = product_data.get("excerpt", "")
-                title = product_data['title']
-
-                # Check if the generated content already includes the title
-                if generated_excerpt.startswith(f"{title} —") or generated_excerpt.startswith(f"{title} -"):
-                    # AI already included title, use as-is
-                    final_excerpt = generated_excerpt
-                elif current_excerpt.startswith(f"{title} —") or current_excerpt.startswith(f"{title} -"):
-                    # Current excerpt already has title, replace everything after the title
-                    title_prefix = f"{title} — "
-                    alt_prefix = f"{title} - "
-                    if current_excerpt.startswith(title_prefix):
-                        # Replace everything after the title prefix
-                        final_excerpt = f"{title} — {generated_excerpt}"
-                    elif current_excerpt.startswith(alt_prefix):
-                        final_excerpt = f"{title} - {generated_excerpt}"
-                    else:
-                        final_excerpt = generated_excerpt
-                else:
-                    # Neither has title, prepend it
-                    final_excerpt = f"{title} — {generated_excerpt}"
-
-                # Update excerpt if it's different
-                if final_excerpt != current_excerpt:
-                    product_data["excerpt"] = final_excerpt
-
-                    # Add to generated audit
-                    audit_entry = {
-                        "id": f"g-{datetime.utcnow().isoformat().replace(':', '-')}",
-                        "date": datetime.utcnow().isoformat(),
-                        "mood": product_data.get("mood_default", 50),
-                        "prompt_selection_reason": "batch_generate",
-                        "model": "gpt-5.1",
-                        "excerpt": product_data["excerpt"]
-                    }
-                    product_data.setdefault("generated", []).append(audit_entry)
-
-                    # Save updated product
-                    product_file.write_text(
-                        json.dumps(product_data, indent=2, ensure_ascii=False),
-                        encoding='utf-8'
-                    )
-
-                    # Publish to public
-                    # Note: Publishing is handled by the calling function
-
-                Output.success(f"  ✓ Generated content for {slug}")
-                return True
-            else:
-                Output.warning(f"  ⚠ AI generation failed for {slug}")
-                return False
-        else:
-            # Mock generation for development
-            included = product_data.get("included", [])
-            included_txt = ", ".join(included) if included else "unit and instructions"
-            base_excerpt = product_data.get('excerpt', 'A product.')
-
-            # Check if excerpt already has title and included info
-            title = product_data['title']
-            title_prefix = f"{title} —"
-            included_suffix = f"What's included: {included_txt}."
-
-            if base_excerpt.startswith(title_prefix):
-                # Excerpt already has title
-                if included_suffix in base_excerpt:
-                    # Already has included info, use as-is
-                    mock_excerpt = base_excerpt
-                else:
-                    # Add included info
-                    mock_excerpt = f"{base_excerpt} {included_suffix}"
-            else:
-                # Prepend title and add included info
-                mock_excerpt = f"{title} — {base_excerpt} {included_suffix}"
-
-            if mock_excerpt != product_data.get("excerpt"):
-                product_data["excerpt"] = mock_excerpt
-                product_file.write_text(
-                    json.dumps(product_data, indent=2, ensure_ascii=False),
-                    encoding='utf-8'
-                )
-
-            Output.success(f"  ✓ Mock content generated for {slug}")
-            return True
 
     except Exception as e:
         Output.error(f"Failed to process {product_file.name}: {e}")
