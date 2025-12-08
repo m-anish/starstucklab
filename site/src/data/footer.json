@@ -1,50 +1,55 @@
 {
-    "sections": [
-      {
-        "id": "about",
-        "title": "Starstuck Lab",
-        "description": "Building small machines for an indifferent universe",
-        "links": []
-      },
-      {
-        "id": "workbench",
-        "title": "Quick Links",
-        "links": [
-          {
-            "label": "Projects",
-            "href": "/projects",
-            "order": 1
-          },
-          {
-            "label": "Shop",
-            "href": "/shop",
-            "order": 2
-          },
-          {
-            "label": "Contact",
-            "href": "/contact",
-            "order": 3
-          }
-        ]
-      },
-      {
-        "id": "legal",
-        "title": "Legal",
-        "links": [
-          {
-            "label": "Privacy Policy",
-            "href": "/privacy",
-            "order": 1
-          },
-          {
-            "label": "Terms of Service",
-            "href": "/terms",
-            "order": 2
-          }
-        ]
-      }
-    ],
-    "settings": {
-      "copyrightText": "Starstuck Lab. All rights reserved."
+  "sections": [
+    {
+      "id": "about",
+      "title": "Starstuck Lab",
+      "description": "Building small machines for an indifferent universe",
+      "links": []
+    },
+    {
+      "id": "workbench",
+      "title": "Quick Links",
+      "links": [
+        {
+          "label": "Projects",
+          "href": "/projects",
+          "order": 1
+        },
+        {
+          "label": "About",
+          "href": "/about",
+          "order": 2
+        },
+        {
+          "label": "Shop",
+          "href": "/shop",
+          "order": 3
+        },
+        {
+          "label": "Contact",
+          "href": "/contact",
+          "order": 4
+        }
+      ]
+    },
+    {
+      "id": "legal",
+      "title": "Legal",
+      "links": [
+        {
+          "label": "Privacy Policy",
+          "href": "/privacy",
+          "order": 1
+        },
+        {
+          "label": "Terms of Service",
+          "href": "/terms",
+          "order": 2
+        }
+      ]
     }
+  ],
+  "settings": {
+    "copyrightText": "Starstuck Lab. All rights reserved."
   }
+}

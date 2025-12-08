@@ -187,6 +187,17 @@ Examples:
     pages_create.add_argument('name', help='Page name')
     pages_create.add_argument('--layout', default='standard', help='Layout template')
     
+    # ===== CONFIG =====
+    config_parser = subparsers.add_parser('config', help='Configuration management')
+    config_sub = config_parser.add_subparsers(dest='config_action')
+
+    config_sub.add_parser('validate', help='Validate configuration file')
+    config_sub.add_parser('migrate', help='Migrate configuration to latest format')
+
+    health_parser = config_sub.add_parser('health', help='Check configuration health')
+    health_parser.add_argument('--fix', action='store_true',
+                              help='Auto-fix issues where possible')
+
     # ===== CHECK =====
     check_parser = subparsers.add_parser('check', help='Run site health check')
     check_parser.add_argument('--fix', action='store_true',
@@ -222,6 +233,8 @@ Examples:
         handle_assets(args)
     elif args.command == 'site':
         handle_site(args)
+    elif args.command == 'config':
+        handle_config(args)
     elif args.command == 'check':
         handle_check(args)
 
@@ -611,12 +624,39 @@ def handle_site(args):
         Output.info("Basic functionality available as: python tools/deprecated/site_cli.py")
 
 
+def handle_config(args):
+    """Handle config subcommand"""
+    if not hasattr(args, 'config_action') or not args.config_action:
+        Output.error("Missing subcommand for 'config'")
+        Output.info("Try: cli.py config --help")
+        return
+
+    try:
+        from lib.config_validator import (
+            cmd_validate_config,
+            cmd_migrate_config,
+            cmd_config_health
+        )
+
+        if args.config_action == 'validate':
+            cmd_validate_config(args)
+        elif args.config_action == 'migrate':
+            cmd_migrate_config(args)
+        elif args.config_action == 'health':
+            cmd_config_health(args)
+        else:
+            Output.error(f"Unknown config subcommand: {args.config_action}")
+    except ImportError:
+        Output.error("Config validation module not available")
+        Output.info("Make sure lib/config_validator.py exists")
+
+
 def handle_check(args):
     """Handle health check"""
     Output.section("Site Health Check")
-    
+
     Output.info("Running validation checks...")
-    
+
     # Placeholder for actual checks
     checks = [
         ("Content validation", True, None),
@@ -624,7 +664,7 @@ def handle_check(args):
         ("Link validation", True, None),
         ("Configuration", True, None),
     ]
-    
+
     for name, passed, warning in checks:
         if passed and not warning:
             Output.success(name)
@@ -632,7 +672,7 @@ def handle_check(args):
             Output.warning(f"{name}: {warning}")
         else:
             Output.error(name)
-    
+
     Output.info("\nFull health check implementation - coming soon!")
 
 

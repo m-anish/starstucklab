@@ -130,17 +130,21 @@ cli.py images process --force
 
 #### 🎯 Site Management
 ```bash
-# List navigation items
-cli.py site nav list
-
-# Add navigation item
+# Navigation management
+cli.py site nav list                    # List all navigation items
 cli.py site nav add "Blog" /blog --priority 3
+cli.py site nav remove "Contact"
+cli.py site nav reorder                 # Interactive reordering
 
-# List footer sections
-cli.py site footer sections
+# Footer management
+cli.py site footer sections             # List all footer sections
+cli.py site footer list [section]       # List footer links
+cli.py site footer add workbench "Blog" /blog --order 4
+cli.py site footer remove workbench "Blog"
 
-# Add footer link
-cli.py site footer add workbench "Contact" /contact --order 4
+# Page management
+cli.py site pages list                  # List all pages
+cli.py site pages create "About Us"     # Create new page with template
 ```
 
 #### ⚙️ Asset Management
@@ -153,6 +157,18 @@ cli.py assets optimize
 
 # Show asset information and statistics
 cli.py assets info
+```
+
+#### 🔧 Configuration Management
+```bash
+# Validate configuration file structure and values
+cli.py config validate
+
+# Migrate configuration to latest format
+cli.py config migrate
+
+# Check configuration health with detailed report
+cli.py config health [--fix]
 ```
 
 ### Configuration
