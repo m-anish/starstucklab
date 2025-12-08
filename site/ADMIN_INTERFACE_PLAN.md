@@ -685,11 +685,19 @@ curl http://localhost:4321/api/cli/products/list
 - [ ] Test API endpoints functionality
 
 ### Phase 2 ✅
-- [ ] Create AdminLayout and navigation components
-- [ ] Build admin dashboard with overview stats
-- [ ] Implement ProductForm with full CRUD operations
-- [ ] Create AssetManager with upload capabilities
-- [ ] Add CLITerminal for live command output
+- [x] Create AdminLayout and navigation components
+- [x] Build admin dashboard with overview stats
+- [x] Implement ProductForm with full CRUD operations
+- [x] Create AssetManager with upload capabilities
+- [x] Add CLITerminal for live command output
+
+### Phase 2.5: Missing Admin Pages (2-3 days)
+- [ ] Create `/admin/assets` - Asset management page
+- [ ] Create `/admin/site` - Site management (navigation/footer) page
+- [ ] Create `/admin/config` - Configuration management page
+- [ ] Create `/admin/products/new` - New product creation form
+- [ ] Create `/admin/products/[slug]` - Individual product edit pages
+- [ ] Update admin navigation links to work properly
 
 ### Phase 3 ✅
 - [ ] Add development-only authentication
