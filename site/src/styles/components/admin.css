@@ -1,0 +1,192 @@
+/**
+ * Admin Interface Global Styles
+ * Dark theme with cyan accents for the Starstuck Lab admin interface
+ */
+
+:root {
+  --admin-bg: #0f0f23;
+  --admin-surface: #1a1a2e;
+  --admin-accent: #00d4ff;
+  --admin-text: #ffffff;
+  --admin-text-secondary: #b0b0b0;
+  --admin-border: #333355;
+  --admin-success: #00ff88;
+  --admin-error: #ff4444;
+  --admin-warning: #ffaa00;
+}
+
+.admin-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--admin-bg);
+  color: var(--admin-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.6;
+}
+
+.admin-sidebar {
+  width: 250px;
+  background: var(--admin-surface);
+  border-right: 1px solid var(--admin-border);
+  padding: 1rem;
+  box-sizing: border-box;
+}
+
+.admin-sidebar h2 {
+  color: var(--admin-accent);
+  margin-bottom: 2rem;
+  font-size: 1.2rem;
+  text-align: center;
+}
+
+.admin-nav {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-nav-item {
+  margin-bottom: 0.5rem;
+}
+
+.admin-nav-link {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: var(--admin-text-secondary);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.admin-nav-link:hover,
+.admin-nav-link.active {
+  background: var(--admin-accent);
+  color: var(--admin-bg);
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--admin-border);
+}
+
+.admin-title {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--admin-accent);
+  margin: 0;
+}
+
+.admin-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.admin-content {
+  background: var(--admin-surface);
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-block;
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  background: var(--admin-accent);
+  color: var(--admin-bg);
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--admin-surface);
+  color: var(--admin-text);
+  border: 1px solid var(--admin-border);
+}
+
+.btn-secondary:hover {
+  background: var(--admin-border);
+}
+
+/* Status Colors */
+.status-success { color: var(--admin-success); }
+.status-error { color: var(--admin-error); }
+.status-warning { color: var(--admin-warning); }
+
+/* Loading States */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--admin-border);
+  border-radius: 50%;
+  border-top-color: var(--admin-accent);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    order: 2;
+  }
+
+  .admin-main {
+    order: 1;
+    padding: 1rem;
+  }
+
+  .admin-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .admin-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .admin-actions .btn {
+    flex: 1;
+    text-align: center;
+  }
+}

@@ -41,34 +41,44 @@ function parseProductList(output: string): any[] {
   const lines = output.split('\n').filter(line => line.trim());
   const products: any[] = [];
 
-  // Skip header lines and find the table data
-  let inTable = false;
-  let headers: string[] = [];
+  // Find the table data (skip headers and separator)
+  let foundTable = false;
 
   for (const line of lines) {
-    if (line.includes('Status') && line.includes('Slug') && line.includes('Title')) {
-      // Found header row
-      headers = line.split(/\s{2,}/).map(h => h.trim());
-      inTable = true;
+    // Skip until we find the separator line
+    if (line.includes('---') || line.includes('═══')) {
+      foundTable = true;
       continue;
     }
 
-    if (inTable && line.includes('---')) {
-      // Found separator, skip it
+    // Skip header lines
+    if (!foundTable || line.includes('Status') || line.includes('Slug') || line.includes('Found') || line.includes('product')) {
       continue;
     }
 
-    if (inTable && line.trim() && !line.includes('Found') && !line.includes('product')) {
-      // This is a data row
-      const values = line.split(/\s{2,}/).map(v => v.trim());
-      if (values.length >= headers.length) {
-        const product: any = {};
-        headers.forEach((header, index) => {
-          if (values[index]) {
-            product[header.toLowerCase()] = values[index];
-          }
+    // Parse data rows
+    if (foundTable && line.trim()) {
+      // Split by multiple spaces, but handle the status emoji specially
+      const parts = line.split(/\s{2,}/);
+
+      if (parts.length >= 5) {
+        // Extract status (remove emoji and clean up)
+        const statusWithEmoji = parts[0];
+        const status = statusWithEmoji.replace(/^[🟡🟢🔴]\s*/, '').replace(/\s+/g, '_').toLowerCase();
+
+        // Extract other fields
+        const slug = parts[1];
+        const title = parts[2];
+        const price = parts[3];
+        const tags = parts[4];
+
+        products.push({
+          status: status || 'unknown',
+          slug: slug || '',
+          title: title || '',
+          price: price || '',
+          tags: tags ? tags.split(', ') : []
         });
-        products.push(product);
       }
     }
   }
