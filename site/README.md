@@ -109,9 +109,9 @@ cli.py products create
 ```
 
 **Product Data Pipeline:**
-- **Source Control**: Products stored in `src/data/products/` (version controlled)
-- **Website Serving**: Automatically published to `public/data/products/` (served to frontend)
-- **Clean Public API**: Internal fields removed, HTML formatting added for website consumption
+- **Source Control**: Products stored in `src/content/products/` (Markdown with frontmatter)
+- **Website Serving**: Processed by Astro content collections (served to frontend)
+- **AI Generation**: Automated content creation with contextual templates
 
 #### 🎨 Content Generation
 ```bash
@@ -238,7 +238,7 @@ All AI functionality is handled through the unified `lib/ai.py` module:
 
 ### Configuration Hierarchy
 1. **Application Behavior** → `config.yaml` (how the system works)
-2. **Content & Data** → JSON files (what content is displayed)
+2. **Content & Data** → Markdown files (what content is displayed)
 3. **Assets** → Organized directories (media files)
 
 ### Separation of Concerns
@@ -339,7 +339,7 @@ python cli.py check  # Health check
 See `config.yaml` for complete configuration options and defaults.
 
 ### File Conventions
-- Products: `src/data/products/{slug}.json`
+- Products: `src/content/products/{slug}.md` (Markdown with frontmatter)
 - Projects: `src/content/projects/{slug}.md`
 - Assets: `public/assets/{type}-{slug}/`
 - Images: `{prefix}-{slug}-img-{num:02d}.webp`
