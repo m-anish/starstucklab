@@ -108,7 +108,9 @@ Examples:
     products_sub = products_parser.add_subparsers(dest='subcommand')
     
     products_sub.add_parser('list', help='List all products')
-    
+
+    products_sub.add_parser('create', help='Create new product interactively')
+
     gen_products = products_sub.add_parser('generate',
                                            help='Generate product content')
     gen_products.add_argument('--product', help='Single product slug')

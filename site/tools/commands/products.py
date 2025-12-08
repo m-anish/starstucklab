@@ -598,12 +598,17 @@ def cmd_create(args):
     if Prompt.confirm("Generate AI content for this product?", default=True):
         Output.info("Generating AI content...")
         try:
+            # Create a temporary product data dict for AI generation
+            temp_product_data = {
+                "title": title,
+                "tags": tags,
+                # Add other fields that AI generation might need
+            }
             ai_helper = AIHelper(config)
-            generated_content = ai_helper.generate_product_content(product_data)
+            generated_content = ai_helper.generate_product_content(temp_product_data)
 
             if generated_content:
-                title = product_data['title']
-                current_excerpt = product_data.get("excerpt", "")
+                current_excerpt = frontmatter.get("excerpt", "")
 
                 # Apply the same title duplication logic
                 if generated_content.startswith(f"{title} —") or generated_content.startswith(f"{title} -"):
@@ -628,7 +633,6 @@ def cmd_create(args):
                     # Save updated markdown file
                     markdown_content = write_frontmatter(frontmatter, markdown_body)
                     product_file.write_text(markdown_content, encoding='utf-8')
-
 
                 Output.success("✅ AI content generated!")
             else:
