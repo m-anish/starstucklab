@@ -9,9 +9,6 @@ import "../../styles/components/parchment.css";
 import "../../styles/components/standard-page.css";
 import "../../styles/components/product-detail.css";
 
-// Get all products from content collection
-const allProducts = await getCollection('products');
-
 // Build-time: tell Astro which slugs to pre-render
 export async function getStaticPaths() {
   const products = await getCollection('products');
@@ -22,82 +19,98 @@ export async function getStaticPaths() {
 
   return products.map(entry => ({
     params: { slug: entry.slug },
-    props: { product: entry }
+    props: { entry }
   }));
 }
 
-const { product } = Astro.props;
-const slug = product.slug;
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+const product = entry.data;
+const slug = entry.slug;
 
 // Image paths
-const heroImagePath = product.data.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
+const heroImagePath = product.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
 const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
-
-// Extract what's included from markdown body (simplified approach)
-// For now, we'll use a placeholder - in a real implementation,
-// you'd parse the markdown body for sections
-const whatsIncluded = ["Product details available in description"];
 ---
-<StandardPageLayout title={product.data.title} backgroundScene="shop">
-  <article class="product-container">
-      <!-- Product image with vintage frame -->
-      <div class="product-media">
-        <img
-          src={heroImagePath}
-          alt={product.data.title}
-          onerror={`this.onerror=null;this.src='${masterFallback}'`}
-        />
+<StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
+  <article class="product-detail-container">
+    <!-- Product image with vintage frame -->
+    <div class="product-media">
+      <img
+        src={heroImagePath}
+        alt={product.title}
+        onerror={`this.onerror=null;this.src='${masterFallback}'`}
+      />
+    </div>
+
+    <!-- Main product info card - uses base parchment -->
+    <div class="parchment product-info-card">
+      <!-- Header -->
+      <header class="product-header">
+        <div class="product-meta-row">
+          {product.price && (
+            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
+          )}
+          {product.status && (
+            <span class={`status status-${product.status}`}>
+              {product.status}
+            </span>
+          )}
+        </div>
+
+        <h1>{product.title}</h1>
+
+        {product.excerpt && (
+          <p class="product-excerpt">{product.excerpt}</p>
+        )}
+
+        <!-- Meta Info -->
+        <div class="product-metadata">
+          {product.date && (
+            <span class="meta-item">
+              📅 {new Date(product.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          )}
+        </div>
+
+        <!-- Tags -->
+        {product.tags && product.tags.length > 0 && (
+          <div class="product-tags">
+            {product.tags.map((tag: string) => (
+              <span class="tag">#{tag}</span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <!-- Markdown Content -->
+      <div class="product-body markdown-content">
+        <Content />
       </div>
 
-      <!-- Main product info card - uses base parchment -->
-      <div class="parchment product-info-card">
-        <h1>{product.data.title}</h1>
-
-        <div class="product-meta-row">
-          {product.data.price && (
-            <span class="product-price">{product.data.currency || 'USD'} {product.data.price}</span>
-          )}
-          {product.data.status && (
-            <span class="status">{product.data.status}</span>
-          )}
-        </div>
-
-        {product.data.tags && product.data.tags.length > 0 && (
-          <div class="tags-row">
-            {product.data.tags.map((tag: string) => <span class="tag">#{tag}</span>)}
-          </div>
-        )}
-
-        <div class="product-description">
-          <p>{product.data.excerpt}</p>
-        </div>
-
-        <!-- Placeholder for "What's Included" - would be parsed from markdown body -->
-        <div class="parchment parchment--nested product-included">
-          <h4>What's Included</h4>
-          <ul class="included-list">
-            {whatsIncluded.map((item: string) => (
-              <li>{item}</li>
-            ))}
-          </ul>
-        </div>
-
-        <!-- Add to Cart Button -->
+      <!-- Add to Cart Button - Only show if available -->
+      {product.status === 'available' && (
         <div class="product-actions">
           <AddToCartButton product={{
-            slug: product.slug,
-            title: product.data.title,
-            price: product.data.price,
-            currency: product.data.currency,
-            status: product.data.status
+            slug: slug,
+            title: product.title,
+            price: product.price,
+            currency: product.currency,
+            status: product.status
           }} />
         </div>
+      )}
 
-        <!-- Generation metadata -->
-        {product.data.date && (
-          <div class="metadata">
-            <span class="sparkle">✦</span> Added {new Date(product.data.date).toLocaleDateString()}
-          </div>
-        )}
-    </article>
+      <!-- Back Link -->
+      <footer class="product-footer">
+        <a href="/shop" class="back-link">
+          ← Back to Shop
+        </a>
+      </footer>
+    </div>
+  </article>
 </StandardPageLayout>
