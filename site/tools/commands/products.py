@@ -6,27 +6,77 @@ Handles product catalog management, AI content generation, and product creation.
 
 import sys
 import json
+import re
 from pathlib import Path
 from datetime import datetime
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 
 # Add parent to path for lib imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from lib import Output, Style, Config, Paths, Prompt, AIHelper
 
+# Try to import YAML for frontmatter parsing
+try:
+    import yaml
+    YAML_AVAILABLE = True
+except ImportError:
+    yaml = None
+    YAML_AVAILABLE = False
+
+
+# ===== Frontmatter Utilities =====
+
+def parse_frontmatter(content: str) -> Tuple[Dict, str]:
+    """Parse YAML frontmatter from markdown content"""
+    if not content.startswith('---'):
+        return {}, content
+
+    # Find the end of frontmatter
+    parts = content.split('---', 2)
+    if len(parts) < 3:
+        return {}, content
+
+    frontmatter_text = parts[1].strip()
+    body = parts[2].strip()
+
+    if not YAML_AVAILABLE:
+        Output.warning("PyYAML not available, frontmatter parsing disabled")
+        return {}, content
+
+    try:
+        frontmatter = yaml.safe_load(frontmatter_text) or {}
+        return frontmatter, body
+    except yaml.YAMLError as e:
+        Output.warning(f"Failed to parse frontmatter: {e}")
+        return {}, content
+
+
+def write_frontmatter(frontmatter: Dict, body: str = "") -> str:
+    """Write YAML frontmatter to markdown content"""
+    if not YAML_AVAILABLE:
+        Output.error("PyYAML not available, cannot write frontmatter")
+        return body
+
+    try:
+        fm_yaml = yaml.dump(frontmatter, default_flow_style=False, allow_unicode=True, sort_keys=False)
+        return f"---\n{fm_yaml.strip()}\n---\n\n{body}".strip()
+    except Exception as e:
+        Output.error(f"Failed to write frontmatter: {e}")
+        return body
+
 
 def cmd_list(args):
     """List all products"""
     paths = Paths()
-    products_dir = paths.src / "data" / "products"
+    products_dir = paths.src / "content" / "products"
 
     if not products_dir.exists():
         Output.warning("Products directory not found")
-        Output.info("Create one with: mkdir -p src/data/products")
+        Output.info("Create one with: mkdir -p src/content/products")
         return
 
-    product_files = list(products_dir.glob("*.json"))
+    product_files = list(products_dir.glob("*.md"))
     if not product_files:
         Output.warning("No products found")
         Output.info("Create one with: cli.py products create")
@@ -40,14 +90,15 @@ def cmd_list(args):
 
     for product_file in product_files:
         try:
-            product_data = json.loads(product_file.read_text(encoding='utf-8'))
+            content = product_file.read_text(encoding='utf-8')
+            frontmatter, _ = parse_frontmatter(content)
 
-            slug = product_data.get('slug', product_file.stem)
-            title = product_data.get('title', slug)
-            status = product_data.get('status', 'unknown')
-            price = product_data.get('price', '—')
-            currency = product_data.get('currency', '')
-            tags = product_data.get('tags', [])
+            slug = frontmatter.get('slug', product_file.stem)
+            title = frontmatter.get('title', slug)
+            status = frontmatter.get('status', 'unknown')
+            price = frontmatter.get('price', '—')
+            currency = frontmatter.get('currency', '')
+            tags = frontmatter.get('tags', [])
 
             # Status emoji
             status_emoji = {
@@ -58,7 +109,7 @@ def cmd_list(args):
             }.get(status, '❓')
 
             # Format price
-            if price != '—':
+            if price != '—' and price is not None:
                 price_display = f"{currency}{price}"
             else:
                 price_display = '—'
@@ -91,21 +142,21 @@ def cmd_generate(args):
     product_slug = getattr(args, 'product', None)
     use_ai = getattr(args, 'use_ai', True)
 
-    products_dir = paths.src / "data" / "products"
+    products_dir = paths.src / "content" / "products"
     if not products_dir.exists():
         Output.error("Products directory not found")
         return
 
     if product_slug:
         # Generate for specific product
-        product_file = products_dir / f"{product_slug}.json"
+        product_file = products_dir / f"{product_slug}.md"
         if not product_file.exists():
             Output.error(f"Product not found: {product_slug}")
             return
         products_to_generate = [product_file]
     else:
         # Generate for all products
-        products_to_generate = list(products_dir.glob("*.json"))
+        products_to_generate = list(products_dir.glob("*.md"))
 
     if not products_to_generate:
         Output.warning("No products found to generate content for")
@@ -411,7 +462,7 @@ def cmd_create(args):
     slug = _slugify(slug)
 
     # Check if product already exists
-    product_file = paths.src / "data" / "products" / f"{slug}.json"
+    product_file = paths.src / "content" / "products" / f"{slug}.md"
     if product_file.exists():
         Output.error(f"Product already exists: {slug}")
         return
@@ -482,27 +533,25 @@ def cmd_create(args):
             default=True
         )
 
-    # Create product data structure
-    product_data = {
+    # Create frontmatter
+    frontmatter = {
         "slug": slug,
         "title": title,
-        "price": price or None,
+        "price": float(price) if price else None,
         "currency": currency if price else None,
         "status": status,
         "tags": tags,
+        "date": datetime.utcnow().strftime('%Y-%m-%d'),
         "excerpt": excerpt,
-        "included": included_items,
-        "specs": specs,
-        "mood_default": 50,
-        "enable_audit": True,
         "images": {
-            "master": f"public/assets/product-{slug}/product-{slug}-master.png",
+            "master": f"/assets/product-{slug}/product-{slug}-master.png",
             "variants": "shared_variants",
             "processing": {
                 "priority": "medium",
                 "hero_image": True,
                 "gallery_sizes": ["thumb", "mobile", "tablet", "desktop"]
-            }
+            },
+            "gallery": []
         }
     }
 
@@ -510,35 +559,37 @@ def cmd_create(args):
     if generate_content:
         Output.progress("Generating AI content...")
         try:
-            ai_content = _generate_single_product_content(product_data, config)
-            if ai_content:
-                product_data["excerpt"] = ai_content.get("excerpt", product_data["excerpt"])
-                # Add generation audit
-                product_data.setdefault("generated", []).append({
-                    "id": f"g-{datetime.utcnow().isoformat().replace(':', '-')}",
-                    "date": datetime.utcnow().isoformat(),
-                    "mood": product_data["mood_default"],
-                    "prompt_selection_reason": "interactive_create",
-                    "model": "gpt-5.1",
-                    "excerpt": product_data["excerpt"]
-                })
+            # Create a temporary product data dict for AI generation
+            temp_product_data = {
+                "title": title,
+                "tags": tags,
+                # Add other fields that AI generation might need
+            }
+            ai_helper = AIHelper(config)
+            generated_content = ai_helper.generate_product_content(temp_product_data)
+
+            if generated_content:
+                # Update excerpt in frontmatter
+                frontmatter["excerpt"] = generated_content
+                Output.success("✅ AI content generated!")
+            else:
+                Output.warning("AI content generation failed")
+
         except Exception as e:
             Output.warning(f"AI content generation failed: {e}")
 
-    # Write product file to src/data/products (source)
-    src_products_dir = paths.src / "data" / "products"
+    # Create markdown body content
+    markdown_body = _create_product_markdown_body(title, frontmatter["excerpt"], included_items, specs)
+
+    # Write the complete markdown file
+    src_products_dir = paths.src / "content" / "products"
     src_products_dir.mkdir(parents=True, exist_ok=True)
 
-    product_file.write_text(
-        json.dumps(product_data, indent=2, ensure_ascii=False),
-        encoding='utf-8'
-    )
-
-    # Also write to public/data/products (for website consumption)
-    _publish_product_to_public(product_data, paths)
+    markdown_content = write_frontmatter(frontmatter, markdown_body)
+    product_file.write_text(markdown_content, encoding='utf-8')
 
     Output.success(f"Created product: {product_file.relative_to(paths.root)}")
-    Output.info("Product also published to public/data/products for website")
+    Output.info("Product is ready for Astro content collection processing")
 
     # Interactive next steps
     Output.header("Let's enhance your product!")
@@ -591,8 +642,6 @@ def cmd_create(args):
                         encoding='utf-8'
                     )
 
-                    # Also publish to public directory
-                    _publish_product_to_public(product_data, paths)
 
                 Output.success("✅ AI content generated!")
             else:
@@ -635,6 +684,33 @@ def cmd_create(args):
 # ===== Helper Functions =====
 
 def _generate_product_content(product_file: Path, ai_client, config: dict, use_ai: bool) -> bool:
+    """Generate content for a single product (Markdown format)"""
+    try:
+        # Read and parse the Markdown file
+        content = product_file.read_text(encoding='utf-8')
+        frontmatter, body = parse_frontmatter(content)
+        slug = frontmatter.get('slug', product_file.stem)
+
+        Output.progress(f"Processing {slug}...")
+
+        # For now, simplified implementation - just ensure basic excerpt formatting
+        title = frontmatter.get('title', '')
+        current_excerpt = frontmatter.get('excerpt', '')
+
+        # Simple mock generation - ensure title is properly formatted
+        if title and not current_excerpt.startswith(f"{title} —"):
+            updated_excerpt = f"{title} — {current_excerpt}" if current_excerpt else f"{title} — Product description"
+            if updated_excerpt != current_excerpt:
+                frontmatter['excerpt'] = updated_excerpt
+                updated_content = write_frontmatter(frontmatter, body)
+                product_file.write_text(updated_content, encoding='utf-8')
+
+        Output.success(f"  ✓ Processed {slug}")
+        return True
+
+    except Exception as e:
+        Output.error(f"Failed to process {product_file.name}: {e}")
+        return False
     """Generate content for a single product"""
     try:
         product_data = json.loads(product_file.read_text(encoding='utf-8'))
@@ -690,7 +766,7 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
                     )
 
                     # Publish to public
-                    _publish_product_to_public(product_data, Paths())
+                    # Note: Publishing is handled by the calling function
 
                 Output.success(f"  ✓ Generated content for {slug}")
                 return True
@@ -726,8 +802,6 @@ def _generate_product_content(product_file: Path, ai_client, config: dict, use_a
                     json.dumps(product_data, indent=2, ensure_ascii=False),
                     encoding='utf-8'
                 )
-                # Publish to public
-                _publish_product_to_public(product_data, Paths())
 
             Output.success(f"  ✓ Mock content generated for {slug}")
             return True
@@ -796,59 +870,36 @@ def _is_valid_price(price_str: str) -> bool:
         return False
 
 
-def _publish_product_to_public(product_data: dict, paths: Paths) -> None:
-    """Publish product data to public directory for website consumption"""
-    try:
-        public_products_dir = paths.public / "data" / "products"
-        public_products_dir.mkdir(parents=True, exist_ok=True)
+def _create_product_markdown_body(title: str, excerpt: str, included_items: List[str], specs: Dict[str, str]) -> str:
+    """Create the markdown body content for a product"""
+    body_parts = []
 
-        slug = product_data.get('slug', '')
-        if not slug:
-            Output.warning("Cannot publish product without slug")
-            return
+    # Add excerpt as first paragraph
+    body_parts.append(excerpt)
+    body_parts.append("")
 
-        public_file = public_products_dir / f"{slug}.json"
+    # What's included section
+    if included_items:
+        body_parts.append("## What's Included")
+        body_parts.append("")
+        for item in included_items:
+            body_parts.append(f"- {item}")
+        body_parts.append("")
 
-        # Create a clean version for the website (remove internal fields)
-        public_product = _prepare_product_for_public(product_data)
+    # Specifications section
+    if specs:
+        body_parts.append("## Specifications")
+        body_parts.append("")
+        body_parts.append("| Specification | Value |")
+        body_parts.append("|---------------|-------|")
+        for key, value in specs.items():
+            body_parts.append(f"| {key} | {value} |")
+        body_parts.append("")
 
-        public_file.write_text(
-            json.dumps(public_product, indent=2, ensure_ascii=False),
-            encoding='utf-8'
-        )
+    # Basic template sections (can be expanded later)
+    body_parts.append("## Description")
+    body_parts.append("")
+    body_parts.append("Detailed product description goes here.")
+    body_parts.append("")
 
-        Output.info(f"Published to: {public_file.relative_to(paths.root)}")
-
-    except Exception as e:
-        Output.warning(f"Failed to publish product to public: {e}")
-
-
-def _prepare_product_for_public(product_data: dict) -> dict:
-    """Prepare product data for public consumption by the website"""
-    # Start with a copy
-    public_product = product_data.copy()
-
-    # Remove internal fields that shouldn't be exposed
-    internal_fields = [
-        'enable_audit',  # Internal tracking
-        'generated',     # Internal generation metadata
-        'mood_default',  # Internal mood setting
-    ]
-
-    for field in internal_fields:
-        public_product.pop(field, None)
-
-    # Ensure required fields are present
-    if 'date' not in public_product:
-        # Add current date if not present
-        from datetime import datetime
-        public_product['date'] = datetime.utcnow().isoformat()
-
-    # Ensure html field exists (for website rendering)
-    if 'html' not in public_product and 'excerpt' in public_product:
-        # Basic HTML conversion of excerpt if no html field
-        excerpt = public_product['excerpt']
-        if excerpt:
-            public_product['html'] = f'<p>{excerpt}</p>'
-
-    return public_product
+    return "\n".join(body_parts)

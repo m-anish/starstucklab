@@ -3,13 +3,37 @@
 /* Licensed under the "Do What You Want But Don't Blame Me" License, Version 1.0. */
 /* See the COPYING file or visit https://starstucklab.com/license for details. */
 // site/src/pages/shop.astro
+import { getCollection } from 'astro:content';
 import StandardPageLayout from "../layouts/StandardPageLayout.astro";
 import ProductCard from "../components/ProductCard.astro";
-import { getAllProducts } from "../lib/products";
 import "../styles/components/parchment.css";
 import "../styles/components/shop.css";
 
-const products = getAllProducts();
+// Get all products from content collection
+const allProducts = await getCollection('products');
+
+// Sort by date descending (newest first)
+const sortedProducts = allProducts
+  .sort((a, b) => {
+    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return dateB - dateA;
+  });
+
+// Transform to ProductCard format
+const products = sortedProducts.map(entry => ({
+  id: entry.id,
+  slug: entry.slug,
+  title: entry.data.title,
+  excerpt: entry.data.excerpt,
+  price: entry.data.price,
+  currency: entry.data.currency || 'USD',
+  status: entry.data.status,
+  tags: entry.data.tags || [],
+  date: entry.data.date,
+  images: entry.data.images,
+  url: `/shop/${entry.slug}`
+}));
 ---
 <!-- Request the shared shop background by setting backgroundScene="shop" -->
 <StandardPageLayout title="Shop — Starstuck Lab" pageClass="shop-page" backgroundScene="shop">

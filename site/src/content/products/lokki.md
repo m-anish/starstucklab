@@ -5,11 +5,11 @@ price: 11000
 currency: INR
 status: coming_soon
 tags:
-  - iot
-  - raspberry-pi
-  - electronics
+- iot
+- raspberry-pi
+- electronics
 date: 2025-01-15
-excerpt: A gentle light-keeper spirit that automates, dims, and balances illumination.
+excerpt: Lokki — A gentle light-keeper spirit that automates, dims, and balances illumination.
 images:
   master: /assets/product-lokki/product-lokki-master.png
   variants: shared_variants
@@ -17,16 +17,18 @@ images:
     priority: medium
     hero_image: true
     gallery_sizes:
-      - thumb
-      - mobile
-      - tablet
+    - thumb
+    - mobile
+    - tablet
   gallery:
-    - filename: product-lokki-img-01.webp
-      alt: Lokki - Smart lighting controller
-      type: photo
-      prompt: Professional product photography of Lokki IoT lighting controller, compact electronic device with LED indicators, clean white background, well-lit, commercial product shot, high quality
-      generated_at: 2025-01-15T11:00:00Z
-      order: 1
+  - filename: product-lokki-img-01.webp
+    alt: Lokki - Smart lighting controller
+    type: photo
+    prompt: Professional product photography of Lokki IoT lighting controller, compact
+      electronic device with LED indicators, clean white background, well-lit, commercial
+      product shot, high quality
+    generated_at: 2025-01-15 11:00:00+00:00
+    order: 1
 ---
 
 # Lokki

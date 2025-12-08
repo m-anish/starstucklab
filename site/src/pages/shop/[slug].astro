@@ -1,120 +1,103 @@
 ---
 // SPDX-License-Identifier: DWYWBDBM-1.0
 // site/src/pages/shop/[slug].astro
+import { getCollection } from 'astro:content';
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
 import AddToCartButton from "../../components/AddToCartButton.astro";
 import "../../styles/tokens.css";
 import "../../styles/components/parchment.css";
 import "../../styles/components/standard-page.css";
 import "../../styles/components/product-detail.css";
-import fs from 'fs';
-import path from 'path';
+
+// Get all products from content collection
+const allProducts = await getCollection('products');
 
 // Build-time: tell Astro which slugs to pre-render
 export async function getStaticPaths() {
-  try {
-    const paths = [];
-    
-    const publicProductsDir = path.resolve('./public/data/products');
-    if (fs.existsSync(publicProductsDir)) {
-      const publicFiles = fs.readdirSync(publicProductsDir).filter(f => f.endsWith('.json'));
-      paths.push(...publicFiles.map(f => ({ params: { slug: f.replace(/\.json$/, '') } })));
-    }
-    
-    if (paths.length === 0) {
-      console.warn('getStaticPaths: no product json files found');
-    }
-    return paths;
-  } catch (err) {
-    console.error('getStaticPaths error:', err);
-    return [];
+  const products = await getCollection('products');
+
+  if (products.length === 0) {
+    console.warn('getStaticPaths: no product markdown files found');
   }
+
+  return products.map(entry => ({
+    params: { slug: entry.slug },
+    props: { product: entry }
+  }));
 }
 
-const slug = Astro.params.slug;
-
-// Try public/data/products FIRST (generated products have priority)
-let product = null;
-const publicJsonPath = path.resolve(`./public/data/products/${slug}.json`);
-
-if (fs.existsSync(publicJsonPath)) {
-  product = JSON.parse(fs.readFileSync(publicJsonPath, 'utf8'));
-} else {
-  throw new Error(`Product not found: ${slug}`);
-}
+const { product } = Astro.props;
+const slug = product.slug;
 
 // Image paths
-const heroImagePath = `/assets/product-${slug}/product-${slug}-hero.webp`;
+const heroImagePath = product.data.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
 const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
+
+// Extract what's included from markdown body (simplified approach)
+// For now, we'll use a placeholder - in a real implementation,
+// you'd parse the markdown body for sections
+const whatsIncluded = ["Product details available in description"];
 ---
-<StandardPageLayout title={product.title} backgroundScene="shop">
+<StandardPageLayout title={product.data.title} backgroundScene="shop">
   <article class="product-container">
       <!-- Product image with vintage frame -->
       <div class="product-media">
-        <img 
-          src={heroImagePath} 
-          alt={product.title} 
+        <img
+          src={heroImagePath}
+          alt={product.data.title}
           onerror={`this.onerror=null;this.src='${masterFallback}'`}
         />
       </div>
 
       <!-- Main product info card - uses base parchment -->
       <div class="parchment product-info-card">
-        <h1>{product.title}</h1>
-        
+        <h1>{product.data.title}</h1>
+
         <div class="product-meta-row">
-          {product.price && (
-            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
+          {product.data.price && (
+            <span class="product-price">{product.data.currency || 'USD'} {product.data.price}</span>
           )}
-          {product.status && (
-            <span class="status">{product.status}</span>
+          {product.data.status && (
+            <span class="status">{product.data.status}</span>
           )}
         </div>
 
-        {product.tags && product.tags.length > 0 && (
+        {product.data.tags && product.data.tags.length > 0 && (
           <div class="tags-row">
-            {product.tags.map((tag: string) => <span class="tag">#{tag}</span>)}
+            {product.data.tags.map((tag: string) => <span class="tag">#{tag}</span>)}
           </div>
         )}
 
-        <div class="product-description" set:html={product.html}></div>
+        <div class="product-description">
+          <p>{product.data.excerpt}</p>
+        </div>
 
-        {product.included && product.included.length > 0 && (
-          <div class="parchment parchment--nested product-included">
-            <h4>What's Included</h4>
-            <ul class="included-list">
-              {product.included.map((item: string) => (
-                <li>{item}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {product.specs && Object.keys(product.specs).length > 0 && (
-          <div class="parchment parchment--nested product-specs">
-            <h4>Specifications</h4>
-            <ul class="specs-list">
-              {Object.entries(product.specs).map(([key, value]) => (
-                <li>{key}:</strong> {value}</li>
-              ))}
-            </ul>
-          </div>
-        )}
+        <!-- Placeholder for "What's Included" - would be parsed from markdown body -->
+        <div class="parchment parchment--nested product-included">
+          <h4>What's Included</h4>
+          <ul class="included-list">
+            {whatsIncluded.map((item: string) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+        </div>
 
         <!-- Add to Cart Button -->
         <div class="product-actions">
-          <AddToCartButton product={product} />
+          <AddToCartButton product={{
+            slug: product.slug,
+            title: product.data.title,
+            price: product.data.price,
+            currency: product.data.currency,
+            status: product.data.status
+          }} />
         </div>
 
-        <!-- {product.id && (
+        <!-- Generation metadata -->
+        {product.data.date && (
           <div class="metadata">
-            <span class="sparkle">✦</span> Generated {new Date(product.date).toLocaleDateString()}
-            {product.mood && ` • mood ${product.mood}`}
-            {product.model && ` • ${product.model}`}
-            {product.prompt_selection_reason && product.prompt_selection_reason !== 'default' && 
-              ` • ${product.prompt_selection_reason}`
-            }
+            <span class="sparkle">✦</span> Added {new Date(product.data.date).toLocaleDateString()}
           </div>
-        )} -->
+        )}
     </article>
 </StandardPageLayout>

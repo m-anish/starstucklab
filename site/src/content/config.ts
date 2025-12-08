@@ -75,6 +75,10 @@ try {
 const categories = siteConfig.allowed_categories || ['Other'];
 const statuses = siteConfig.allowed_status || ['ongoing', 'completed'];
 
+// Product statuses (different from projects)
+const productStatuses = ['available', 'unavailable', 'coming_soon', 'discontinued'];
+const productStatusEnum = [productStatuses[0], ...productStatuses.slice(1)] as [string, ...string[]];
+
 // Type-safe tuples for zod enum (requires at least 1 value)
 const categoryEnum = categories.length > 0 
   ? [categories[0], ...categories.slice(1)] as [string, ...string[]]
@@ -94,7 +98,7 @@ const projectsCollection = defineCollection({
     status: z.enum(statusEnum),
     date: z.coerce.date(),
     excerpt: z.string(),
-    
+
     // Optional fields
     tags: z.array(z.string()).optional().default([]),
     updated: z.coerce.date().optional(),
@@ -104,8 +108,27 @@ const projectsCollection = defineCollection({
   }),
 });
 
+// Define products collection
+const productsCollection = defineCollection({
+  type: 'content', // markdown files
+  schema: z.object({
+    // Required fields
+    title: z.string(),
+    status: z.enum(productStatusEnum),
+    date: z.coerce.date(),
+    excerpt: z.string(),
+
+    // Optional fields
+    price: z.number().optional(),
+    currency: z.string().optional(),
+    tags: z.array(z.string()).optional().default([]),
+    images: z.any().optional()  // Flexible for now - can be refined later
+  }),
+});
+
 export const collections = {
   'projects': projectsCollection,
+  'products': productsCollection,
 };
 
 // Export site config for use in other Astro components if needed
