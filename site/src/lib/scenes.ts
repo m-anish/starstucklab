@@ -1,7 +1,6 @@
 // site/src/lib/scenes.ts
-// Shared utilities for loading and resolving image scene manifests
-import fs from 'fs';
-import path from 'path';
+// Fixed version - correct import path for Vite/Rollup
+import imagesManifest from '../../public/data/images.json';
 
 export interface SceneSources {
   generated: string | null;
@@ -24,26 +23,13 @@ interface ImageManifest {
   }>;
 }
 
-let cachedManifest: ImageManifest | null = null;
-
-function loadManifest(): ImageManifest {
-  if (cachedManifest) return cachedManifest;
-  
-  const manifestPath = new URL('../data/images.json', import.meta.url);
-  try {
-    cachedManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  } catch (err) {
-    console.warn(`Could not read images manifest: ${err}`);
-    cachedManifest = { scenes: {} };
-  }
-  return cachedManifest;
-}
+// Load manifest at import time (build-time)
+const manifest: ImageManifest = imagesManifest;
 
 function findVariantFilename(
   sceneKey: string,
   opts: { id?: string; type?: string; aspect?: string } = {}
 ): string | null {
-  const manifest = loadManifest();
   const scene = manifest.scenes?.[sceneKey];
   if (!scene || !Array.isArray(scene.variants)) return null;
   
@@ -68,11 +54,12 @@ function staticUrlFromManifest(
   baseUrl: string
 ): string | null {
   if (!manifestFilename) return null;
-  return path.posix.join(baseUrl, sceneKey, manifestFilename);
+  // Use path joining that works in browser
+  return `${baseUrl}${sceneKey}/${manifestFilename}`;
 }
 
 export function getSceneSources(sceneKey: string, baseUrl?: string): SceneSources {
-  const base = baseUrl || String(import.meta.env.BASE_URL || '/');
+  const base = baseUrl || '/';
   const assetsBase = base.replace(/\/?$/, '/') + 'assets/';
   
   const byId = (id: string) => findVariantFilename(sceneKey, { id });
@@ -96,8 +83,6 @@ export function getSceneSources(sceneKey: string, baseUrl?: string): SceneSource
 }
 
 export function getDefaultFallback(sceneKey: string, baseUrl?: string): string {
-  const base = baseUrl || String(import.meta.env.BASE_URL || '/');
+  const base = baseUrl || '/';
   return `${base.replace(/\/?$/, '/')}assets/${sceneKey}/${sceneKey}-master.webp`;
 }
-
-

@@ -1,15 +1,15 @@
 {
+  "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
     "strict": true,
     "types": ["node"],
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "~/*": ["src/*"]
     }
   }
 }
-

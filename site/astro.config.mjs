@@ -1,21 +1,14 @@
+// astro.config.mjs
 import { defineConfig } from 'astro/config';
 
-import cloudflare from '@astrojs/cloudflare';
-
 export default defineConfig({
-  // ✅ your real domain
   site: 'https://starstucklab.com',
-
-  output: 'server',
-
-  // ✅ remove the GitHub subpath
+  output: 'static', // Build static HTML
   base: '/',
-
-  integrations: [],
-
+  
   vite: {
-    server: { fs: { allow: ['..'] } }
+    server: { 
+      fs: { allow: ['..'] } 
+    },
   },
-
-  adapter: cloudflare()
 });
