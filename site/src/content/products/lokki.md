@@ -50,6 +50,18 @@ images:
       and utility.
     generated_at: '2025-12-08T18:00:53.625885'
     order: 3
+  - filename: product-lokki-img-01.webp
+    alt: Lokki - Image 1
+    type: photo
+    prompt: Generate a professional, clean and well-lit product shot of Lokki, a product
+      in the category of IoT, raspberry-pi, and electronics. The image should feature
+      a clean white background, highlighting the product's details, functionality,
+      and design. The image should look like a commercial product shot with high-quality
+      details. The lighting should be optimal for a professional high-resolution product
+      photography. The focus should be on the product's high-tech features and aesthetics,
+      distinctively standing out against a white background.
+    generated_at: '2025-12-09T01:47:38.822121'
+    order: 4
 ---
 
 # Lokki
