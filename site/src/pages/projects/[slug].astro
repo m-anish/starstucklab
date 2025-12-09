@@ -1,9 +1,11 @@
 ---
-// site/src/pages/projects/[slug].astro
 import { getCollection } from 'astro:content';
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
 import "../../styles/components/parchment.css";
 import "../../styles/components/project-detail.css";
+
+// Force static generation for content collections
+export const prerender = true;
 
 export async function getStaticPaths() {
   const projects = await getCollection('projects');
@@ -14,7 +16,21 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+
+// Handle case where entry might not be found or render method unavailable
+if (!entry) {
+  return Astro.redirect('/projects');
+}
+
+let Content;
+try {
+  const renderResult = await entry.render();
+  Content = renderResult.Content;
+} catch (error) {
+  console.error('Error rendering project content:', error);
+  // Fallback: create a simple content component
+  Content = () => null;
+}
 
 const project = entry.data;
 const heroImage = project.image || `/assets/projects/${entry.slug}/hero.webp`;

@@ -29,6 +29,27 @@ images:
       product shot, high quality
     generated_at: 2025-01-15 11:00:00+00:00
     order: 1
+  - filename: product-lokki-img-01.webp
+    alt: Lokki - Image 1
+    type: illustration
+    prompt: Generate a professional, clean, and well-lit product shot of an electronics
+      item called 'Lokki'. The product is categorized under IoT and raspberry-pi.
+      The image should be a digital illustration focusing on product visualization,
+      clean design, and a modern aesthetic.
+    generated_at: '2025-12-08T17:53:05.820172'
+    order: 2
+  - filename: product-lokki-img-01.webp
+    alt: Lokki - Image 1
+    type: photo
+    prompt: Create a high quality, professional-grade product photograph of an item
+      named 'Lokki'. This product belongs to the categories IoT, Raspberry-Pi, and
+      electronics. The scene should be immaculately clean, with the product being
+      well-lit. The background should be a crisp, clean white, making the product
+      the star of the image. The focus should be strongly on creating an attractive,
+      commercially-oriented product shot that highlights Lokki's innovation, elegance,
+      and utility.
+    generated_at: '2025-12-08T18:00:53.625885'
+    order: 3
 ---
 
 # Lokki

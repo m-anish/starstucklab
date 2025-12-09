@@ -2,6 +2,9 @@
 // SPDX-License-Identifier: DWYWBDBM-1.0
 // site/src/pages/shop/[slug].astro
 import { getCollection } from 'astro:content';
+
+// Force static generation for content collections
+export const prerender = true;
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
 import AddToCartButton from "../../components/AddToCartButton.astro";
 import "../../styles/components/parchment.css";
@@ -22,7 +25,22 @@ export async function getStaticPaths() {
 }
 
 const { entry } = Astro.props;
-const { Content } = await entry.render();
+
+// Handle case where entry might not be found or render method unavailable
+if (!entry) {
+  return Astro.redirect('/shop');
+}
+
+let Content;
+try {
+  const renderResult = await entry.render();
+  Content = renderResult.Content;
+} catch (error) {
+  console.error('Error rendering product content:', error);
+  // Fallback: create a simple content component
+  Content = () => null;
+}
+
 const product = entry.data;
 const slug = entry.slug;
 

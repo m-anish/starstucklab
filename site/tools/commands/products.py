@@ -210,17 +210,22 @@ def cmd_generate_images(args):
     product_slug = getattr(args, 'product', None)
     if not product_slug:
         Output.error("Product slug required")
-        Output.info("Usage: cli.py products images --product <slug>")
+        Output.info("Usage: cli.py products images --product <slug> [--non-interactive]")
         return
 
-    # Load product
-    product_file = paths.src / "data" / "products" / f"{product_slug}.json"
+    # Check if non-interactive mode (for API calls)
+    non_interactive = getattr(args, 'non_interactive', False) or getattr(args, 'api', False)
+
+    # Load product from Markdown file
+    product_file = paths.src / "content" / "products" / f"{product_slug}.md"
     if not product_file.exists():
         Output.error(f"Product not found: {product_slug}")
         return
 
     try:
-        product_data = json.loads(product_file.read_text(encoding='utf-8'))
+        content = product_file.read_text(encoding='utf-8')
+        frontmatter, body = parse_frontmatter(content)
+        product_data = frontmatter
     except Exception as e:
         Output.error(f"Failed to load product data: {e}")
         return
@@ -244,31 +249,48 @@ def cmd_generate_images(args):
 
     Output.info(f"Found {len(existing_images)} existing images")
 
-    # Interactive image generation
+    # Interactive or non-interactive image generation
     generated_images = []
     image_count = 0
 
-    while True:
-        if image_count > 0:
+    # In non-interactive mode, generate exactly 1 image with defaults
+    if non_interactive:
+        max_images = 1
+        default_prompt = f"Product photography of {product_data['title']} - professional, clean, well-lit, product shot"
+        default_image_type = "photo"
+    else:
+        max_images = float('inf')  # Unlimited in interactive mode
+        default_prompt = f"Product photography of {product_data['title']} - professional, clean, well-lit, product shot"
+        default_image_type = "photo"
+
+    while image_count < max_images:
+        if image_count > 0 and not non_interactive:
             if not Prompt.confirm(f"Generate another image? ({image_count} already generated)", default=False):
                 break
 
         image_count += 1
 
         # Get image description
-        default_prompt = f"Product photography of {product_data['title']} - professional, clean, well-lit, product shot"
-        prompt = Prompt.text(
-            f"Image {image_count} description",
-            default=default_prompt,
-            required=True
-        )
+        if non_interactive:
+            prompt = default_prompt
+            Output.info(f"Using default prompt: {prompt}")
+        else:
+            prompt = Prompt.text(
+                f"Image {image_count} description",
+                default=default_prompt,
+                required=True
+            )
 
         # Image type
-        image_type = Prompt.choice(
-            "Image type",
-            options=["photo", "illustration", "diagram", "lifestyle"],
-            default="photo"
-        )
+        if non_interactive:
+            image_type = default_image_type
+            Output.info(f"Using default image type: {image_type}")
+        else:
+            image_type = Prompt.choice(
+                "Image type",
+                options=["photo", "illustration", "diagram", "lifestyle"],
+                default="photo"
+            )
 
         # Generate image
         Output.progress(f"Generating image {image_count}...")
@@ -315,7 +337,7 @@ def cmd_generate_images(args):
             # Always use the slug from product_data, not the parameter
             correct_slug = product_data.get('slug', product_slug)
             product_data['images'] = {
-                "master": f"public/assets/product-{correct_slug}/product-{correct_slug}-master.png",
+                "master": f"/assets/product-{correct_slug}/product-{correct_slug}-master.png",
                 "variants": "shared_variants",
                 "processing": {
                     "priority": "medium",
@@ -331,13 +353,11 @@ def cmd_generate_images(args):
         # Add new images to gallery
         product_data['images']['gallery'].extend(generated_images)
 
-        # Save updated product data
-        product_file.write_text(
-            json.dumps(product_data, indent=2, ensure_ascii=False),
-            encoding='utf-8'
-        )
+        # Save updated product data back to Markdown file
+        updated_content = write_frontmatter(product_data, body)
+        product_file.write_text(updated_content, encoding='utf-8')
 
-        Output.success(f"✅ Updated product JSON with {len(generated_images)} new images")
+        Output.success(f"✅ Updated product Markdown with {len(generated_images)} new images")
         Output.info(f"Images stored in: {assets_dir}")
     else:
         Output.info("No images were generated")

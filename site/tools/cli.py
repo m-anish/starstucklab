@@ -120,6 +120,10 @@ Examples:
     gen_images = products_sub.add_parser('images',
                                         help='Generate AI images for products')
     gen_images.add_argument('--product', required=True, help='Product slug')
+    gen_images.add_argument('--non-interactive', action='store_true',
+                           help='Run in non-interactive mode for API calls')
+    gen_images.add_argument('--api', action='store_true',
+                           help='API mode (same as --non-interactive)')
     
     # ===== IMAGES =====
     images_parser = subparsers.add_parser('images', help='Process images')

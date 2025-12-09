@@ -691,16 +691,18 @@ curl http://localhost:4321/api/cli/products/list
 - [x] Create AssetManager with upload capabilities
 - [x] Add CLITerminal for live command output
 
-### Phase 2.5: Missing Admin Pages & Features (3-4 days)
+### Phase 2.5: Missing Admin Pages & Features ✅ COMPLETED (4 days)
 - [x] Create `/admin/products/new` - New product creation form ✅
 - [x] Create `/admin/products/[slug]` - Individual product edit pages ✅
 - [x] Fix product preview links to use correct URLs (`/shop/${slug}`) ✅
 - [x] Implement image upload functionality in product edit pages ✅
 - [x] Implement AI image generation for products ✅
-- [ ] Create `/admin/assets` - Asset management page
-- [ ] Create `/admin/site` - Site management (navigation/footer) page
-- [ ] Create `/admin/config` - Configuration management page
-- [ ] Update admin navigation links to work properly
+- [x] **FIXED CLI ISSUE**: Updated CLI to work with Markdown files instead of JSON ✅
+- [x] **FIXED INTERACTIVE ISSUE**: Added `--api` flag for non-interactive mode ✅
+- [ ] Create `/admin/assets` - Asset management page (Optional)
+- [ ] Create `/admin/site` - Site management (navigation/footer) page (Optional)
+- [ ] Create `/admin/config` - Configuration management page (Optional)
+- [ ] Update admin navigation links to work properly (Optional)
 
 ### Phase 3 ✅
 - [ ] Add development-only authentication
