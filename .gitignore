@@ -40,3 +40,4 @@ tools/__pycache__/
 
 # Ignore site environment file
 site/.env
+node_modules
