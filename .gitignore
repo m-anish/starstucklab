@@ -3,13 +3,12 @@
 
 # Node / Astro / JS build output
 node_modules/
-site/node_modules/
-site/.astro/
-site/.vercel/
-site/.netlify/
-site/.cache/
-site/dist/
-site/.output/
+.astro/
+.vercel/
+.netlify/
+.cache/
+/dist/
+/.output/
 
 # Logs and temporary files
 npm-debug.log*
@@ -39,5 +38,4 @@ __pycache__/
 tools/__pycache__/
 
 # Ignore site environment file
-site/.env
-node_modules
+.env
