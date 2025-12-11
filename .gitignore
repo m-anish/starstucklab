@@ -7,8 +7,8 @@ node_modules/
 .vercel/
 .netlify/
 .cache/
-/dist/
-/.output/
+dist/
+.output/
 
 # Logs and temporary files
 npm-debug.log*
