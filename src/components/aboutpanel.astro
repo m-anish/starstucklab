@@ -1,0 +1,122 @@
+---
+/**
+ * AboutPanel.astro – Parchment panel with emblem and random variant text
+ * Mobile-optimized with stacked emblem on small screens, float-wrap on desktop
+ * Uses parchment.css styling for consistency
+ */
+
+import "../styles/components/parchment.css";
+import "../styles/components/aboutpanel.css";
+
+// Sanitize text - fix mojibake and use non-breaking hyphens
+const hyphenSafe = (s = '') => {
+  return s
+    // Fix mojibake hyphens/dashes
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬"|ÃƒÂ¢Ã¢â€šÂ¬"|ÃƒÂ¢Ã¢â€šÂ¬'|ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â¢/g, '-')
+    // Fix curly quote mojibake
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å"|ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢/g, "'")
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã…"|ÃƒÂ¢Ã¢â€šÂ¬/g, '"')
+    // Replace ASCII hyphens between letters with non-breaking hyphen (U+2011)
+    .replace(/(?<=\p{L})-(?=\p{L})/gu, '\u2011');
+};
+
+const ariaLabel = 'About Starstuck Lab';
+---
+
+<section class="about-panel-wrap" id="aboutPanel" aria-label={ariaLabel}>
+  <article class="parchment parchment--centered" data-variant="default">
+    <div class="float-emblem" aria-hidden="true">
+      <img 
+        src="/data/about-emblem-default.png"
+        alt="About emblem"
+        loading="eager"
+        decoding="async"
+        fetchpriority="high"
+        onerror="this.onerror=null; this.style.opacity=1.0;" 
+      />
+    </div>
+
+    <div class="content">
+      <h4 class="title">Starstuck Lab</h4>
+      <p class="lead">A small, stubborn lab where half-finished machines quietly argue with the dark.</p>
+      <!-- motto may be absent -->
+      <div class="motto" style="display:none;"></div>
+    </div>
+  </article>
+</section>
+
+<script type="module">
+/** Hyphen / mojibake sanitizer (same intent as server-side version) */
+function hyphenSafe(s = '') {
+  return String(s)
+    // Fix common mojibake sequences (best-effort — mirrors server-side intent)
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬("|')/g, '-')
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å"|'|ÃƒÂ¢Ã¢â€šÂ¬Â¢/g, "'")
+    .replace(/ÃƒÂ¢Ã¢â€šÂ¬Ã…"|ÃƒÂ¢Ã¢â€šÂ¬/g, '"')
+    // ASCII letters only (100% safe everywhere)
+    .replace(/([A-Za-z])\-([A-Za-z])/g, '$1\u2011$2');
+}
+
+async function applyAboutVariant() {
+  try {
+    const res = await fetch('/data/about.json');
+    if (!res.ok) throw new Error('Network response not ok');
+    const about = await res.json();
+
+    const keys = Object.keys(about || {}).sort((a,b) => {
+      const an = Number(a), bn = Number(b);
+      if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
+      return a.localeCompare(b);
+    });
+    if (!keys.length) return;
+
+    // pick random variant per visitor (change to localStorage to persist)
+    const chosenKey = keys[Math.floor(Math.random() * keys.length)];
+    const rawContent = about[chosenKey] || {};
+    const content = {
+      title: hyphenSafe(rawContent.title || ''),
+      lead: hyphenSafe(rawContent.lead || ''),
+      motto: rawContent.motto ? hyphenSafe(rawContent.motto) : undefined
+    };
+
+    // DOM nodes
+    const panel = document.getElementById('aboutPanel');
+    if (!panel) return;
+    const article = panel.querySelector('article.parchment');
+    const titleEl = panel.querySelector('.title');
+    const leadEl = panel.querySelector('.lead');
+    const mottoEl = panel.querySelector('.motto');
+    const emblemImg = panel.querySelector('.float-emblem img');
+
+    if (article) article.setAttribute('data-variant', chosenKey);
+    if (titleEl) titleEl.textContent = content.title || 'Starstuck Lab';
+    if (leadEl) leadEl.textContent = content.lead || '';
+    if (mottoEl) {
+      if (content.motto) {
+        mottoEl.style.display = '';
+        mottoEl.textContent = content.motto;
+      } else {
+        mottoEl.style.display = 'none';
+        mottoEl.textContent = '';
+      }
+    }
+    if (emblemImg) {
+      // emblem file naming convention: /data/about-emblem-<key>.png
+      const candidate = `/data/about-emblem-${chosenKey}.png`;
+      // set src to candidate; onerror fallback is already on the element
+      emblemImg.src = candidate;
+      emblemImg.alt = `Emblem variant ${chosenKey}`;
+    }
+
+  } catch (err) {
+    // Fail silently but log for debugging
+    console.error('Failed to load about variants:', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', applyAboutVariant);
+} else {
+  applyAboutVariant();
+}
+</script>

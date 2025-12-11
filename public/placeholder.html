@@ -1,0 +1,249 @@
+<!-- SPDX-License-Identifier: DWYWBDBM-1.0 -->
+<!-- Licensed under the "Do What You Want But Don’t Blame Me" License, Version 1.0. -->
+<!-- See the COPYING file or visit https://starstucklab.com/license for details. -->
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Starstuck Lab — Crashing Soon</title>
+<meta name="description" content="Starstuck Lab — a hillside workshop beneath the pines. Landing soon (or crashing soon)."/>
+<style>
+  :root{
+    --bg:#0b0c10;
+    --ink:#f4f4f4;
+    --sapling:#4ec57a;
+    --warm:#d3a868;
+    --muted:rgba(244,244,244,0.06);
+    --card-bg: rgba(255,255,255,0.01);
+  }
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  /* stage */
+  .stage{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center;padding:28px;box-sizing:border-box;}
+  canvas#stars{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;}
+  /* forest */
+  .forest{position:absolute;bottom:0;left:0;right:0;height:34vh;z-index:1;pointer-events:none;opacity:0.98;display:flex;align-items:flex-end;justify-content:center;}
+  .forest svg{width:100%;height:100%;display:block;transform:translateY(6%);}
+  /* lamp cone */
+  .lamp-cone{position:absolute;z-index:1;left:50%;top:42%;transform:translateX(-50%);width:380px;height:340px;pointer-events:none;mix-blend-mode:screen;filter:blur(14px);opacity:0.95}
+  .lamp-cone::before{content:"";display:block;width:100%;height:100%;background: radial-gradient(ellipse at center, rgba(211,168,104,0.18) 0%, rgba(211,168,104,0.06) 25%, rgba(5,5,5,0) 70%);border-radius:50%;transform-origin:center;animation:lampSway 6.3s ease-in-out infinite;}
+  @keyframes lampSway{0%{ transform: rotate(-2deg) translateY(0);}50%{ transform: rotate(2deg) translateY(-6px);}100%{ transform: rotate(-2deg) translateY(0);}}
+  /* workbench card */
+  .workbench{position:relative;z-index:2;width:min(980px,94vw);max-width:1100px;margin:auto;display:grid;grid-template-columns:1fr;gap:20px;align-items:center;text-align:center;pointer-events:auto;}
+  .card{background:linear-gradient(180deg,var(--card-bg), rgba(255,255,255,0.006));border-radius:14px;padding:22px;box-shadow:0 10px 36px rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.03);}
+  .brand{display:flex;gap:18px;align-items:center;justify-content:center;}
+  /* logo image - use your SVG at /assets/icons/starstucklab_logo_black_white.svg */
+  .logo-img{
+    width:84px;height:84px;display:inline-grid;place-items:center;border-radius:10px;padding:8px;background:linear-gradient(180deg,#ffffff03,#ffffff02);border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 30px rgba(0,0,0,0.55);
+    transform-origin:center;
+    animation:logoFloat 6.5s ease-in-out infinite;
+  }
+  .logo-img img{width:64px;height:64px;display:block;filter:drop-shadow(0 8px 18px rgba(0,0,0,0.6));}
+  @keyframes logoFloat{0%{ transform: translateY(0) rotate(-0.6deg);}50%{ transform: translateY(-6px) rotate(0.6deg);}100%{ transform: translateY(0) rotate(-0.6deg);}}
+  /* title */
+  h1{margin:0;font-size:20px;letter-spacing:-0.02em;color:var(--ink);font-weight:700;text-shadow:0 1px 0 rgba(0,0,0,0.6);}
+  .tagline{font-size:16px;margin-top:6px;color:rgba(244,244,244,0.9);}
+  .sub{color:rgba(244,244,244,0.66);margin-top:8px;font-size:14px;}
+  /* cta area */
+  .cta{margin-top:16px;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;}
+  .statusRow{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;}
+  .pill{padding:10px 16px;border-radius:999px;background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.02));color:var(--ink);font-weight:700;font-size:13px;border:1px solid rgba(255,255,255,0.04);box-shadow:0 8px 26px rgba(0,0,0,0.45);min-width:240px;display:inline-flex;align-items:center;justify-content:center;}
+  .pill.status{color:var(--warm);min-width:260px;}
+  /* fixed-size status prevents layout shift when text changes */
+  .emailRow{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:6px;}
+  .emailIcon{width:20px;height:20px;display:inline-block;flex:0 0 20px;}
+  .emailText{font-size:13px;color:rgba(244,244,244,0.86);letter-spacing:0.01em;}
+  .muted{color:rgba(244,244,244,0.44);font-size:13px;}
+  .mini{margin-top:6px;font-size:12px;color:rgba(244,244,244,0.44);}
+  /* responsive */
+  @media(min-width:880px){h1{font-size:28px}.tagline{font-size:18px}}
+  /* reduce-motion */
+  @media (prefers-reduced-motion: reduce){
+    .lamp-cone::before{animation:none}
+    .logo-img{animation:none}
+  }
+</style>
+</head>
+<body>
+  <div class="stage" role="main" aria-label="Starstuck Lab landing">
+    <canvas id="stars" aria-hidden="true"></canvas>
+
+    <!-- forest silhouette (SVG) -->
+    <div class="forest" aria-hidden="true">
+      <svg viewBox="0 0 1600 360" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Pine silhouettes">
+        <defs><linearGradient id="g" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#090b0d" stop-opacity="0.88"/><stop offset="1" stop-color="#000000" stop-opacity="1"/></linearGradient></defs>
+        <rect width="100%" height="100%" fill="url(#g)"/>
+        <g fill="#04120a">
+          <!-- repeated simple tree shapes as silhouette -->
+          <path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" />
+          <g transform="translate(160,0)">
+            <path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" />
+          </g>
+          <g transform="translate(320,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+          <g transform="translate(480,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+          <g transform="translate(640,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+          <g transform="translate(800,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+          <g transform="translate(960,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+          <g transform="translate(1120,0)"><path d="M0 360 L40 280 L20 280 L60 220 L100 280 L80 280 L120 360 Z" /></g>
+        </g>
+      </svg>
+    </div>
+
+    <!-- soft lamp cone -->
+    <div class="lamp-cone" aria-hidden="true"></div>
+
+    <!-- content -->
+    <main class="workbench">
+      <section class="card" aria-labelledby="title">
+        <div class="brand" role="img" aria-label="Site brand and logo">
+          <div class="logo-img" title="Starstuck Lab logo">
+            <!-- Use your uploaded SVG here: place file at /assets/icons/starstucklab_logo_black_white.svg -->
+            <!-- If you prefer inline embedding, tell me and I'll embed it directly -->
+            <img alt="Starstuck Lab logo" src="/assets/icons/starstucklab_logo_black_white.svg" id="logoImg" />
+          </div>
+          <div style="text-align:left;">
+            <h1 id="title">I assemble dreams, and they dissolve.</h1>
+            <div class="tagline">a hillside workshop • under tall pines • sometimes bears</div>
+          </div>
+        </div>
+
+        <p class="sub muted">Starstuck Lab is preparing its workbench. We make telescopes, weather stations, and other mildly existential gadgets.</p>
+
+        <div class="cta" aria-live="polite">
+          <div class="statusRow" role="status" aria-atomic="true">
+            <div class="pill status" id="statusLabel">CRASHING SOON — Launch unclear</div>
+          </div>
+
+          <!-- email moved to its own line with icon to avoid layout shifts -->
+          <div class="emailRow" aria-label="contact email">
+            <svg class="emailIcon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M2 6.5A2.5 2.5 0 0 1 4.5 4h15A2.5 2.5 0 0 1 22 6.5v11A2.5 2.5 0 0 1 19.5 20h-15A2.5 2.5 0 0 1 2 17.5v-11z" fill="rgba(255,255,255,0.06)"/>
+              <path d="M4.5 6.5l7.5 6 7.5-6" stroke="rgba(244,244,244,0.85)" stroke-width="1.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div class="emailText">contact@starstucklab.com</div>
+          </div>
+        </div>
+
+        <p class="mini muted">(This is a small placeholder page. Full site & shop will appear on this workbench soon.)</p>
+      </section>
+    </main>
+  </div>
+
+<script>
+/* lightweight starfield + twinkle + occasional shooting star
+   improved color tint and twinkle but still tiny and fast
+*/
+(function(){
+  const canvas = document.getElementById('stars');
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  let W = innerWidth, H = innerHeight;
+  function resize(){
+    W = Math.max(600, innerWidth);
+    H = Math.max(400, innerHeight);
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  window.addEventListener('resize', resize, {passive:true});
+  resize();
+
+  const STAR_COUNT = Math.max(80, Math.floor((W*H)/15000));
+  const stars = new Array(STAR_COUNT).fill(0).map(()=>({
+    x: Math.random()*W,
+    y: Math.random()*H*0.6,
+    r: Math.random()*1.6 + 0.2,
+    baseA: Math.random()*0.8 + 0.15,
+    twinkleSpeed: Math.random()*0.015 + 0.006,
+    phase: Math.random()*Math.PI*2,
+    hue: Math.random()*50 + 200 // bluish to cold white
+  }));
+
+  let last = performance.now();
+  function loop(t){
+    const dt = (t - last)/1000; last = t;
+    ctx.clearRect(0,0,W,H);
+
+    // faint milky band for depth
+    const band = ctx.createLinearGradient(0,0,0,H*0.5);
+    band.addColorStop(0, 'rgba(255,255,255,0.02)');
+    band.addColorStop(1, 'rgba(255,255,255,0.002)');
+    ctx.fillStyle = band; ctx.fillRect(0,0,W,H*0.5);
+
+    for(let s of stars){
+      s.phase += s.twinkleSpeed*dt*60;
+      const a = s.baseA * (0.6 + 0.4*Math.sin(s.phase));
+      ctx.beginPath();
+      ctx.fillStyle = `hsla(${s.hue}, 20%, 94%, ${a.toFixed(3)})`;
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+
+    // occasional shooting star
+    if(Math.random() < 0.004) shoot(Math.random()*W*0.75, Math.random()*H*0.25);
+
+    requestAnimationFrame(loop);
+  }
+
+  function shoot(x,y){
+    const angle = Math.PI*1.05 + (Math.random()-0.5)*0.35;
+    const len = 200 + Math.random()*280;
+    const vx = Math.cos(angle)*len, vy = Math.sin(angle)*len;
+    const duration = 520 + Math.random()*500;
+    const start = performance.now();
+    (function anim(now){
+      const t = now - start;
+      if(t>duration) return;
+      const p = t/duration;
+      const sx = x + vx*p, sy = y + vy*p;
+      ctx.beginPath();
+      const g = ctx.createLinearGradient(sx,sy,sx-vx*0.08,sy-vy*0.08);
+      g.addColorStop(0,'rgba(255,255,255,0.95)');
+      g.addColorStop(1,'rgba(255,255,255,0)');
+      ctx.strokeStyle = g;
+      ctx.lineWidth = 1.5 + 1.5*(1-p);
+      ctx.moveTo(sx,sy); ctx.lineTo(sx - vx*0.06, sy - vy*0.06); ctx.stroke();
+      requestAnimationFrame(anim);
+    })(performance.now());
+  }
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduced) requestAnimationFrame(loop);
+
+  // status text rotation (keeps pill same size to avoid layout shift)
+  const statuses = [
+    "CRASHING SOON — Launch unclear",
+    "PREPPING PHOTONS",
+    "ALIGNING SOLDER JOINTS",
+    "TELLING A BEAR A STORY",
+    "BUILDING THINGS (ish)",
+    "BOOTING. PLEASE HOLD."
+  ];
+  let idx = 0;
+  const statusEl = document.getElementById('statusLabel');
+  setInterval(()=>{
+    idx = (idx+1) % statuses.length;
+    // fade out/in for smoothness
+    statusEl.animate([{opacity:1},{opacity:0.06},{opacity:1}],{duration:650,iterations:1,easing:'ease-in-out'});
+    setTimeout(()=> statusEl.textContent = statuses[idx], 220);
+  }, 4200);
+
+  // optional: small logo glow on hover (pure CSS). If you want the SVG animated more, I can inline it.
+})();
+</script>
+</body>
+</html>

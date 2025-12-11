@@ -1,0 +1,29 @@
+Using the following About-page content, generate a single emblem concept:
+
+Title:
+{title}
+
+Lead:
+{lead}
+
+Motto:
+{motto}
+
+—
+
+TASK:
+Describe a small watercolor emblem or vignette that visually expresses the themes, emotions, and imagery contained in the text above.
+
+STYLE REQUIREMENTS:
+- Restrained Studio Ghibli watercolor aesthetic.
+- Muted palette: ochre, moss green, washed teal, blue-gray, soft umber.
+- Hand-drawn linework with slight wobble; gentle wash textures.
+- One simple focal object or vignette only.
+- Composition centered, with minimal background detail.
+- Objects may include: simple tools, lamps, saplings, starlight motifs, windows, notebooks, workshop elements, forest hints.
+- Mood: quiet, melancholic, contemplative; no optimism, no drama.
+- Avoid characters, animals, faces, complex scenes, machines with sharp angles, or overly technical diagrams.
+- Emblem should look like a small illustration tucked into a worn notebook inside the workshop.
+
+OUTPUT:
+One sentence only. No introduction, no explanation. Just the emblem description in a single, clean, visually concrete line.

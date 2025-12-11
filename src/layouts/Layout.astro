@@ -1,0 +1,61 @@
+---
+import '../styles/global.css';
+import FaviconHead from "../components/FaviconHead.astro";
+import GoogleAnalytics from "../components/GoogleAnalytics.astro";
+
+const {
+  title = 'Starstuck Lab',
+  description = 'Where science met poetry and regretted nothing.',
+  showHeader = true,
+  showFooter = true,
+} = Astro.props;
+
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+---
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <FaviconHead />
+    <GoogleAnalytics />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+
+    <link rel="icon" type="image/svg+xml" href={`${base}assets/icons/starstucklab_logo_black_white.svg`} />
+    <slot name="head" />
+  </head>
+
+  <body>
+    {showHeader && (
+      <header>
+        <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab Logo" />
+        <nav>
+          <a href={`${base}`}>Home</a>
+          <a href={`${base}about`}>About</a>
+          <a href={`${base}projects`}>Projects</a>
+          <a href={`${base}order`}>Order</a>
+          <a href={`${base}contact`}>Contact</a>
+        </nav>
+      </header>
+    )}
+
+    <main>
+      <slot />
+    </main>
+
+    {showFooter && (
+      <footer>
+        <hr
+          style="
+            border: 0;
+            border-top: 1px solid var(--accent-purple);
+            width: 60%;
+            margin: 2rem auto;
+          "
+        />
+        <p>© {new Date().getFullYear()} Starstuck Lab — Where the void blooms.</p>
+      </footer>
+    )}
+  </body>
+</html>

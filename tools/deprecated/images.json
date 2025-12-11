@@ -1,0 +1,69 @@
+{
+  "shared_variants": [
+    {
+      "id": "generated",
+      "type": "generate",
+      "width": 1433,
+      "height": 896,
+      "filename": "generated.webp",
+      "prompt_file": "prompt.txt",
+      "quality": 75
+    },
+    {
+      "id": "master",
+      "type": "master",
+      "width": 1433,
+      "height": 896,
+      "filename": "master.webp",
+      "quality": 75
+    },
+    {
+      "id": "desktop",
+      "type": "crop",
+      "width": 2688,
+      "height": 1680,
+      "aspect": "16:10",
+      "centered": true,
+      "filename": "desktop.webp",
+      "quality": 75
+    },
+    {
+      "id": "laptop",
+      "type": "crop",
+      "width": 1280,
+      "height": 720,
+      "aspect": "16:9",
+      "centered": true,
+      "filename": "laptop.webp",
+      "quality": 75
+    },
+    {
+      "id": "tablet",
+      "type": "crop",
+      "width": 840,
+      "height": 1120,
+      "aspect": "3:4",
+      "centered": true,
+      "filename": "tablet.webp",
+      "quality": 75
+    },
+    {
+      "id": "mobile",
+      "type": "crop",
+      "width": 756,
+      "height": 1344,
+      "aspect": "9:16",
+      "centered": true,
+      "filename": "mobile.webp",
+      "quality": 75
+    },
+    {
+      "id": "thumb",
+      "type": "resize",
+      "width": 420,
+      "height": 236,
+      "filename": "thumb.webp",
+      "quality": 75
+    }
+  ]
+}

@@ -1,0 +1,121 @@
+---
+import { getCollection } from 'astro:content';
+import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
+import "../../styles/components/parchment.css";
+import "../../styles/components/project-detail.css";
+
+// Force static generation for content collections
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const projects = await getCollection('projects');
+  return projects.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+
+// Handle case where entry might not be found or render method unavailable
+if (!entry) {
+  return Astro.redirect('/projects');
+}
+
+let Content;
+try {
+  const renderResult = await entry.render();
+  Content = renderResult.Content;
+} catch (error) {
+  console.error('Error rendering project content:', error);
+  // Fallback: create a simple content component
+  Content = () => null;
+}
+
+const project = entry.data;
+const heroImage = project.image || `/assets/projects/${entry.slug}/hero.webp`;
+const fallbackImage = `/assets/projects/${entry.slug}/master.png`;
+---
+
+<StandardPageLayout 
+  title={`${project.title} — Starstuck Lab`}
+  backgroundScene="shop"
+>
+  <article class="project-detail-container">
+    <!-- Hero Image -->
+    <div class="project-hero-wrap">
+      <img 
+        src={heroImage}
+        alt={project.image_alt || project.title}
+        class="project-hero-image"
+        onerror={`this.onerror=null;this.src='${fallbackImage}'`}
+      />
+    </div>
+
+    <!-- Project Content Card -->
+    <div class="parchment project-content-card">
+      <!-- Header -->
+      <header class="project-header">
+        <div class="project-meta-row">
+          {project.category && (
+            <span class="project-category">{project.category}</span>
+          )}
+          {project.status && (
+            <span class={`status status-${project.status}`}>
+              {project.status}
+            </span>
+          )}
+        </div>
+
+        <h1>{project.title}</h1>
+
+        {project.excerpt && (
+          <p class="project-excerpt">{project.excerpt}</p>
+        )}
+
+        <!-- Meta Info -->
+        <div class="project-metadata">
+          {project.date && (
+            <span class="meta-item">
+              📅 {new Date(project.date).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+          )}
+          {project.updated && project.updated !== project.date && (
+            <span class="meta-item">
+              🔄 Updated {new Date(project.updated).toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </span>
+          )}
+        </div>
+
+        <!-- Tags -->
+        {project.tags && project.tags.length > 0 && (
+          <div class="project-tags">
+            {project.tags.map((tag: string) => (
+              <span class="tag">#{tag}</span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <!-- Markdown Content -->
+      <div class="project-body markdown-content">
+        <Content />
+      </div>
+
+      <!-- Back Link -->
+      <footer class="project-footer">
+        <a href="/projects" class="back-link">
+          ← Back to Projects
+        </a>
+      </footer>
+    </div>
+  </article>
+</StandardPageLayout>

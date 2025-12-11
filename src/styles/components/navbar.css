@@ -1,0 +1,301 @@
+/* navbar.css - Dynamic Navigation System
+   site/src/styles/components/navbar.css
+*/
+
+@import '../tokens.css';
+
+/* ===== BASE NAVBAR STYLES ===== */
+
+.site-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.nav-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ===== NAV LOGO ===== */
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.95rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+.nav-logo img {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+
+.nav-logo-text {
+  color: #fff;
+  display: inline-block;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+}
+
+/* ===== NAV RIGHT (LINKS + MORE + ACTIONS) ===== */
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  justify-content: flex-end;
+  max-width: 1280px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.nav-links li {
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links a {
+  display: block;
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 500;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  transition: background 0.14s ease, opacity 0.14s ease;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  opacity: 0.92;
+  white-space: nowrap;
+}
+
+.nav-links a:hover {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.nav-links a:active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* ===== MORE DROPDOWN ===== */
+
+.nav-more {
+  position: relative;
+  /* Display controlled by JavaScript based on available space */
+}
+
+.nav-more-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.14s ease;
+  white-space: nowrap;
+}
+
+.nav-more-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-more-toggle svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 0.2s ease;
+}
+
+.nav-more.open .nav-more-toggle svg {
+  transform: rotate(180deg);
+}
+
+.nav-more-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 160px;
+  background: rgba(0, 0, 0, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  padding: 6px;
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  z-index: 100;
+}
+
+.nav-more.open .nav-more-dropdown {
+  display: flex;
+}
+
+.nav-more-dropdown a {
+  display: block;
+  padding: 8px 12px;
+  color: rgba(255, 255, 255, 0.92);
+  text-decoration: none;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  transition: background 0.14s ease;
+}
+
+.nav-more-dropdown a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ===== NAV ACTIONS (CART) ===== */
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 40px; /* Reserve space even when cart is hidden */
+}
+
+.nav-cart {
+  position: relative;
+  padding: 6px 10px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.14s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-cart:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-cart svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ===== INDEX PAGE ANIMATED NAV ===== */
+
+#pageNav.nav-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-100%);
+}
+
+#pageNav.nav-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+/* ===== STATIC NAV (SHOP/PRODUCT PAGES) ===== */
+
+.nav-static {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: translateY(0) !important;
+}
+
+/* ===== RESPONSIVE BREAKPOINTS ===== */
+
+/* Stage 1: Hide logo text (820px) */
+@media (max-width: 820px) {
+  .nav-logo-text {
+    display: none;
+  }
+  
+  .nav-inner {
+    padding: 12px 20px;
+  }
+}
+
+/* Stage 2: Slightly reduce spacing (640px) */
+@media (max-width: 640px) {
+  .nav-links {
+    gap: 4px;
+  }
+  
+  .nav-links a {
+    padding: 6px 8px;
+    font-size: 0.82rem;
+  }
+}
+
+/* Stage 3: Minimal spacing on very small screens (480px) */
+@media (max-width: 480px) {
+  .nav-links {
+    gap: 2px;
+  }
+  
+  .nav-links a {
+    padding: 6px;
+    font-size: 0.8rem;
+  }
+  
+  .nav-inner {
+    padding: 10px 16px;
+  }
+}
+
+/* ===== ACCESSIBILITY ===== */
+
+.nav-links a:focus,
+.nav-more-toggle:focus,
+.nav-cart:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-nav {
+    transition: opacity 200ms ease !important;
+  }
+  
+  #pageNav {
+    transform: none !important;
+  }
+  
+  .nav-more-toggle svg {
+    transition: none !important;
+  }
+}

@@ -1,0 +1,177 @@
+---
+// site/src/components/CartDrawer.astro
+// Slide-out cart drawer
+import "../styles/components/cart.css";
+---
+
+<div class="cart-drawer" id="cartDrawer" aria-hidden="true">
+  <div class="cart-drawer-overlay" id="cartOverlay"></div>
+  <div class="cart-drawer-content">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button class="cart-drawer-close" id="cartClose" aria-label="Close cart">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+    
+    <div class="cart-drawer-body" id="cartBody">
+      <!-- Cart items will be inserted here -->
+    </div>
+    
+    <div class="cart-drawer-footer">
+      <div class="cart-total">
+        <strong>Total: <span id="cartTotal">₹0</span></strong>
+      </div>
+      <a href="/checkout" class="cart-checkout-btn">Proceed to Checkout</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  if (typeof window !== 'undefined') {
+    const drawer = document.getElementById('cartDrawer');
+    const overlay = document.getElementById('cartOverlay');
+    const closeBtn = document.getElementById('cartClose');
+    const cartBody = document.getElementById('cartBody');
+    const cartTotal = document.getElementById('cartTotal');
+    
+    function openCart() {
+      if (drawer) {
+        drawer.setAttribute('aria-hidden', 'false');
+        drawer.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        renderCart();
+      }
+    }
+    
+    function closeCart() {
+      if (drawer) {
+        drawer.setAttribute('aria-hidden', 'true');
+        drawer.classList.remove('open');
+        document.body.style.overflow = '';
+      }
+    }
+    
+    function renderCart() {
+      if (!cartBody || !cartTotal) return;
+      
+      try {
+        const stored = localStorage.getItem('starstucklab_cart');
+        if (!stored) {
+          cartBody.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+          cartTotal.textContent = '₹0';
+          return;
+        }
+        
+        const data = JSON.parse(stored);
+        const items = data.items || [];
+        
+        if (items.length === 0) {
+          cartBody.innerHTML = '<p class="cart-empty">Your cart is empty.</p>';
+          cartTotal.textContent = '₹0';
+          return;
+        }
+        
+        const currency = items[0]?.currency || 'INR';
+        const currencySymbol = currency === '₹' ? '₹' : currency;
+        const total = items.reduce((sum: number, item: any) => {
+          return sum + (parseFloat(item.price) || 0) * item.quantity;
+        }, 0);
+        
+        cartTotal.textContent = `${currencySymbol} ${total.toFixed(2)}`;
+        
+        cartBody.innerHTML = items.map((item: any) => `
+          <div class="cart-item" data-slug="${item.slug}">
+            <div class="cart-item-info">
+              <h4>${item.title}</h4>
+              <p class="cart-item-price">${item.currency} ${item.price}</p>
+            </div>
+            <div class="cart-item-controls">
+              <button class="cart-qty-btn" data-action="decrease" data-slug="${item.slug}">−</button>
+              <span class="cart-item-qty">${item.quantity}</span>
+              <button class="cart-qty-btn" data-action="increase" data-slug="${item.slug}">+</button>
+              <button class="cart-remove-btn" data-slug="${item.slug}" aria-label="Remove">×</button>
+            </div>
+          </div>
+        `).join('');
+        
+        // Attach event listeners
+        cartBody.querySelectorAll('.cart-qty-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            const target = e.target as HTMLElement;
+            const action = target.dataset.action;
+            const slug = target.dataset.slug;
+            if (slug) {
+              const item = items.find((i: any) => i.slug === slug);
+              if (item) {
+                const newQty = action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+                updateCartQuantity(slug, newQty);
+              }
+            }
+          });
+        });
+        
+        cartBody.querySelectorAll('.cart-remove-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const slug = (btn as HTMLElement).dataset.slug;
+            if (slug) {
+              removeFromCart(slug);
+            }
+          });
+        });
+        
+      } catch (e) {
+        console.error('Error rendering cart:', e);
+        cartBody.innerHTML = '<p class="cart-empty">Error loading cart.</p>';
+      }
+    }
+    
+    function updateCartQuantity(slug: string, quantity: number) {
+      try {
+        const stored = localStorage.getItem('starstucklab_cart');
+        if (!stored) return;
+        
+        const data = JSON.parse(stored);
+        const items = data.items || [];
+        
+        if (quantity <= 0) {
+          data.items = items.filter((i: any) => i.slug !== slug);
+        } else {
+          const item = items.find((i: any) => i.slug === slug);
+          if (item) item.quantity = quantity;
+        }
+        
+        localStorage.setItem('starstucklab_cart', JSON.stringify(data));
+        window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: data.items } }));
+        renderCart();
+      } catch (e) {
+        console.error('Error updating cart:', e);
+      }
+    }
+    
+    function removeFromCart(slug: string) {
+      updateCartQuantity(slug, 0);
+    }
+    
+    // Event listeners
+    overlay?.addEventListener('click', closeCart);
+    closeBtn?.addEventListener('click', closeCart);
+    
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && drawer?.classList.contains('open')) {
+        closeCart();
+      }
+    });
+    
+    // Expose openCart globally
+    (window as any).openCart = openCart;
+    
+    // Listen for cart updates
+    window.addEventListener('cart:updated', renderCart);
+  }
+</script>
+
+

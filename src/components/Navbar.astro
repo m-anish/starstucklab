@@ -1,0 +1,228 @@
+---
+// site/src/components/Navbar.astro
+// Dynamic navigation component that reads from navigation.json
+import { getNavigation } from '../lib/navigation';
+import CartBadge from './CartBadge.astro';
+
+const navData = getNavigation();
+const rawItems = navData.primary;
+const settings = navData.settings;
+
+// Compute base path for static hosting / GitHub Pages
+const base =
+  (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+
+function resolveHref(href: string): string {
+  if (!href) return base;
+  // External / absolute URLs and mailto: should pass through untouched
+  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:')) {
+    return href;
+  }
+  // Normalize relative paths against base; strip leading slash to avoid //
+  const trimmed = href.startsWith('/') ? href.slice(1) : href;
+  return base + trimmed;
+}
+
+const navItems = rawItems.map((item) => ({
+  ...item,
+  resolvedHref: resolveHref(item.href),
+}));
+---
+
+<div class="nav-inner">
+  <a href={base} class="nav-logo">
+    <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab logo">
+    <span class="nav-logo-text">{settings.logoText}</span>
+  </a>
+  
+  <nav class="nav-right">
+    <ul class="nav-links" id="navLinks">
+      {navItems.map((item) => (
+        <li data-priority={item.priority}>
+          <a href={item.resolvedHref}>{item.label}</a>
+        </li>
+      ))}
+    </ul>
+    
+    <!-- More dropdown for overflow items -->
+    <div class="nav-more" id="navMore" style="display: none;">
+      <button class="nav-more-toggle" aria-label="More menu" aria-expanded="false">
+        More
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      <div class="nav-more-dropdown"></div>
+    </div>
+  </nav>
+  
+  <div class="nav-actions">
+    <!-- Cart button (hidden by default, shown via settings) -->
+    <button 
+      class="nav-cart" 
+      aria-label="Shopping cart"
+      style={settings.showCart ? 'display: flex;' : 'display: none;'}
+      id="navCartBtn"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+      </svg>
+      <CartBadge />
+    </button>
+  </div>
+</div>
+
+<!-- Smart collapse script -->
+<script>
+  if (typeof window !== 'undefined') {
+    const navRoot = document.querySelector('.nav-inner');
+    if (!navRoot) {
+      // No navbar rendered
+    } else {
+      const moreMenu = navRoot.querySelector('#navMore');
+      const moreBtn = moreMenu?.querySelector('.nav-more-toggle');
+
+      // More menu toggle functionality
+      if (moreBtn && moreMenu) {
+        moreBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const isOpen = moreMenu.classList.toggle('open');
+          moreBtn.setAttribute('aria-expanded', isOpen.toString());
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          if (moreMenu && !moreMenu.contains(e.target)) {
+            moreMenu.classList.remove('open');
+            if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
+          }
+        });
+
+        // Close dropdown on Escape
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && moreMenu && moreMenu.classList.contains('open')) {
+            moreMenu.classList.remove('open');
+            if (moreBtn) {
+              moreBtn.setAttribute('aria-expanded', 'false');
+              moreBtn.focus();
+            }
+          }
+        });
+      }
+
+      // Smart collapse: measure actual space and adjust dynamically
+      function smartCollapse() {
+        const navRight = navRoot.querySelector('.nav-right');
+        const navLinks = navRoot.querySelector('#navLinks');
+        const navMore = navRoot.querySelector('#navMore');
+        const moreDropdown = navMore?.querySelector('.nav-more-dropdown');
+        const navCart = navRoot.querySelector('.nav-cart');
+
+        if (!navRight || !navLinks || !navMore || !moreDropdown) return;
+
+        // Get all nav items sorted by priority
+        // Lower numeric priority = more important = should stay visible longer
+        const allItems = Array.from(navLinks.querySelectorAll('li'));
+        if (!allItems.length) {
+          navMore.style.display = 'none';
+          moreDropdown.innerHTML = '';
+          return;
+        }
+
+        const sortedItems = allItems.slice().sort((a, b) => {
+          const aPriority = parseInt(a.dataset.priority || '999', 10);
+          const bPriority = parseInt(b.dataset.priority || '999', 10);
+          return aPriority - bPriority; // 1,2,3,...
+        });
+
+        // Calculate available space using real measurements
+        const navRightWidth = navRight.offsetWidth;
+        const moreButtonEl = navMore.querySelector('.nav-more-toggle');
+        const moreButtonWidth = moreButtonEl ? moreButtonEl.offsetWidth : 0;
+        const cartWidth = navCart && (navCart as HTMLElement).style.display !== 'none'
+          ? navCart.offsetWidth
+          : 0;
+        const padding = 24; // safety padding
+        const availableWidth = Math.max(
+          0,
+          navRightWidth - moreButtonWidth - cartWidth - padding
+        );
+
+        let currentWidth = 0;
+        const visibleItems = [];
+        const overflowItems = [];
+
+        // Walk from most important (lowest priority number) to least,
+        // keeping earlier items visible and overflowing the later ones.
+        for (const item of sortedItems) {
+          const itemWidth = item.offsetWidth;
+
+          if (currentWidth + itemWidth <= availableWidth || !visibleItems.length) {
+            visibleItems.push(item);
+            currentWidth += itemWidth;
+          } else {
+            overflowItems.push(item);
+          }
+        }
+
+        // Reset all items to visible, then hide overflowed ones
+        allItems.forEach((item) => {
+          item.style.display = '';
+        });
+        overflowItems.forEach((item) => {
+          item.style.display = 'none';
+        });
+
+        // Show/hide More button based on overflow
+        if (overflowItems.length > 0) {
+          navMore.style.display = 'block';
+
+          // Populate dropdown with overflow links
+          moreDropdown.innerHTML = '';
+          // Keep dropdown order consistent with original document order
+          overflowItems
+            .slice()
+            .sort((a, b) => allItems.indexOf(a) - allItems.indexOf(b))
+            .forEach((item) => {
+              const link = item.querySelector('a');
+              if (link) {
+                const clone = link.cloneNode(true);
+                moreDropdown.appendChild(clone);
+              }
+            });
+        } else {
+          navMore.style.display = 'none';
+          moreDropdown.innerHTML = '';
+        }
+      }
+
+      // Run on load (after layout) and on resize (debounced)
+      const runInitial = () => {
+        smartCollapse();
+      };
+
+      window.addEventListener('load', runInitial);
+
+      // Fallback if load fires before fonts/layout settle
+      setTimeout(runInitial, 150);
+
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        if (resizeTimeout) {
+          window.clearTimeout(resizeTimeout);
+        }
+        resizeTimeout = window.setTimeout(() => {
+          smartCollapse();
+        }, 150);
+      });
+      
+      // Cart button click handler
+      const navCartBtn = document.getElementById('navCartBtn');
+      navCartBtn?.addEventListener('click', () => {
+        if ((window as any).openCart) {
+          (window as any).openCart();
+        }
+      });
+    }
+  }
+</script>

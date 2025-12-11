@@ -1,0 +1,132 @@
+---
+// site/src/components/FeaturedSections.astro
+// Updated to use Astro Content Collections for projects and products (markdown)
+import { getCollection } from 'astro:content';
+import ProjectCard from './ProjectCard.astro';
+import ProductCard from './ProductCard.astro';
+import '../styles/components/featured-sections.css';
+
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+
+// Load featured projects from content collection (newest 3)
+let featuredProjects: any[] = [];
+try {
+  const allProjects = await getCollection('projects');
+
+  // Sort by date descending
+  const sorted = allProjects.sort((a, b) => {
+    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  // Take 3 most recent, transform to ProjectCard format
+  featuredProjects = sorted.slice(0, 3).map(entry => ({
+    id: entry.id,
+    slug: entry.data.slug || entry.slug,
+    title: entry.data.title,
+    excerpt: entry.data.excerpt,
+    category: entry.data.category,
+    status: entry.data.status,
+    tags: entry.data.tags || [],
+    date: entry.data.date,
+    image: entry.data.image || `${base}assets/projects/${entry.slug}/hero.webp`,
+    image_fallback: `${base}assets/projects/${entry.slug}/master.png`,
+    url: `${base}projects/${entry.data.slug || entry.slug}`
+  }));
+} catch (e) {
+  console.warn('Could not load projects collection:', e);
+}
+
+// Load featured products from content collection (newest 3)
+let featuredProducts: any[] = [];
+try {
+  const allProducts = await getCollection('products');
+
+  // Sort by date descending
+  const sorted = allProducts.sort((a, b) => {
+    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
+    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  // Take 3 most recent, transform to ProductCard format
+  featuredProducts = sorted.slice(0, 3).map(entry => ({
+    id: entry.id,
+    slug: entry.slug,
+    title: entry.data.title,
+    excerpt: entry.data.excerpt,
+    price: entry.data.price,
+    currency: entry.data.currency || 'INR',
+    status: entry.data.status,
+    tags: entry.data.tags || [],
+    date: entry.data.date,
+    images: entry.data.images,
+    url: `${base}shop/${entry.slug}`
+  }));
+} catch (e) {
+  console.warn('Could not load products collection:', e);
+}
+---
+
+<div class="featured-sections-wrap">
+  <!-- Projects Section -->
+  {featuredProjects.length > 0 && (
+    <section class="featured-section featured-card featured-card--projects" id="featured-projects">
+      <div class="section-header">
+        <h2>Recent Creations from the Bench</h2>
+        <p class="section-lead">
+          Things built between coffee and cosmic indifference.
+        </p>
+      </div>
+      
+      <div class="featured-grid">
+        {featuredProjects.map(project => (
+          <ProjectCard project={project} />
+        ))}
+      </div>
+      
+      <div class="section-footer">
+        <a href={`${base}projects`} class="section-cta">
+          See All Projects <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  )}
+  
+  <!-- Shop Preview Section -->
+  {featuredProducts.length > 0 && (
+    <section class="featured-section featured-card featured-card--shop" id="featured-shop">
+      <div class="section-header">
+        <h2>Available Now</h2>
+        <p class="section-lead">
+          Artifacts from the workshop, lightly cursed, ready to ship.
+        </p>
+      </div>
+      
+      <div class="featured-grid">
+        {featuredProducts.map(product => (
+          <ProductCard product={product} />
+        ))}
+      </div>
+      
+      <div class="section-footer">
+        <a href={`${base}shop`} class="section-cta">
+          Browse the Shop <span aria-hidden="true">→</span>
+        </a>
+      </div>
+    </section>
+  )}
+  
+  <!-- Empty State (if no content) -->
+  {featuredProjects.length === 0 && featuredProducts.length === 0 && (
+    <section class="featured-section">
+      <div class="parchment parchment--centered">
+        <p>The workshop is currently being organized. Check back soon for projects and products.</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
+          Add a project with: <code>python3 tools/projects_cli.py add "Project Title"</code>
+        </p>
+      </div>
+    </section>
+  )}
+</div>

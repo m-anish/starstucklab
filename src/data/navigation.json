@@ -1,0 +1,23 @@
+{
+  "primary": [
+    {
+      "label": "Projects",
+      "href": "/projects",
+      "priority": 1
+    },
+    {
+      "label": "Shop",
+      "href": "/shop",
+      "priority": 2
+    },
+    {
+      "label": "Contact",
+      "href": "/contact",
+      "priority": 3
+    }
+  ],
+  "settings": {
+    "showCart": true,
+    "logoText": "STARSTUCK LAB"
+  }
+}

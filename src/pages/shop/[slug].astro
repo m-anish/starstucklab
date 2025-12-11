@@ -1,0 +1,133 @@
+---
+// SPDX-License-Identifier: DWYWBDBM-1.0
+// site/src/pages/shop/[slug].astro
+import { getCollection } from 'astro:content';
+
+// Force static generation for content collections
+export const prerender = true;
+import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
+import AddToCartButton from "../../components/AddToCartButton.astro";
+import "../../styles/components/parchment.css";
+import "../../styles/components/product-detail.css";
+
+// Build-time: tell Astro which slugs to pre-render
+export async function getStaticPaths() {
+  const products = await getCollection('products');
+
+  if (products.length === 0) {
+    console.warn('getStaticPaths: no product markdown files found');
+  }
+
+  return products.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry }
+  }));
+}
+
+const { entry } = Astro.props;
+
+// Handle case where entry might not be found or render method unavailable
+if (!entry) {
+  return Astro.redirect('/shop');
+}
+
+let Content;
+try {
+  const renderResult = await entry.render();
+  Content = renderResult.Content;
+} catch (error) {
+  console.error('Error rendering product content:', error);
+  // Fallback: create a simple content component
+  Content = () => null;
+}
+
+const product = entry.data;
+const slug = entry.slug;
+
+// Image paths
+const heroImagePath = product.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
+const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
+---
+<StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
+  <article class="product-detail-container">
+    <!-- Hero Image -->
+    <div class="product-hero-wrap">
+      <img
+        src={heroImagePath}
+        alt={product.title}
+        class="product-hero-image"
+        onerror={`this.onerror=null;this.src='${masterFallback}'`}
+      />
+    </div>
+
+    <!-- Product Content Card -->
+    <div class="parchment product-content-card">
+      <!-- Header -->
+      <header class="product-header">
+        <div class="product-meta-row">
+          {product.price && (
+            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
+          )}
+          {product.status && (
+            <span class={`status status-${product.status}`}>
+              {product.status}
+            </span>
+          )}
+        </div>
+
+        <h1>{product.title}</h1>
+
+        {product.excerpt && (
+          <p class="product-excerpt">{product.excerpt}</p>
+        )}
+
+        <!-- Meta Info -->
+        <div class="product-metadata">
+          {product.date && (
+            <span class="meta-item">
+              📅 {new Date(product.date).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </span>
+          )}
+        </div>
+
+        <!-- Tags -->
+        {product.tags && product.tags.length > 0 && (
+          <div class="product-tags">
+            {product.tags.map((tag: string) => (
+              <span class="tag">#{tag}</span>
+            ))}
+          </div>
+        )}
+      </header>
+
+      <!-- Markdown Content -->
+      <div class="product-body markdown-content">
+        <Content />
+      </div>
+
+      <!-- Add to Cart Button - Only show if available -->
+      {product.status === 'available' && (
+        <div class="product-actions">
+          <AddToCartButton product={{
+            slug: slug,
+            title: product.title,
+            price: product.price,
+            currency: product.currency,
+            status: product.status
+          }} />
+        </div>
+      )}
+
+      <!-- Back Link -->
+      <footer class="product-footer">
+        <a href="/shop" class="back-link">
+          ← Back to Shop
+        </a>
+      </footer>
+    </div>
+  </article>
+</StandardPageLayout>

@@ -1,0 +1,4 @@
+---
+# generated 2025-11-06
+---
+"Welcome to Starstruck Lab, where the laws of physics are mere suggestions and the coffee machine is the only thing that still functions as intended. I'm your host, a cosmic engineer who's been stuck here for what feels like an eternity, trying to keep the fabric of space-time from unraveling while my team of genius-but-slightly-unhinged scientists attempt to reinvent the wheel... or in this case, the wormhole. We're a lab that's equal parts innovation and insanity, where the only constant is chaos and the only guarantee is that something will probably explode. So, buckle up (or not, we're still working on the whole 'safety protocols' thing) and join us on this wild ride through the cosmos, where the only limit is our collective imagination and the only rule is that there are no rules. Well, except for the rule that says we can't use the Large Hadron Collider to make toast. That's just a given."

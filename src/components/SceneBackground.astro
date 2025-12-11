@@ -1,0 +1,60 @@
+---
+// site/src/components/SceneBackground.astro
+// Reusable component for rendering background scenes from image manifest
+import { getSceneSources, getDefaultFallback } from '../lib/scenes';
+
+interface Props {
+  sceneKey: string;
+  alt?: string;
+  class?: string;
+}
+
+const { sceneKey, alt = 'Background scene', class: className = '' } = Astro.props;
+const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+const sceneSources = getSceneSources(sceneKey, base);
+const fallback = getDefaultFallback(sceneKey, base);
+
+const MEDIA_QUERIES = {
+  desktop: '(min-width:1000px)',
+  tablet: '(min-width:640px)',
+};
+---
+
+<div class={`scene-background ${className}`}>
+  <picture>
+    {sceneSources.desktop && (
+      <source media={MEDIA_QUERIES.desktop} srcset={sceneSources.desktop} />
+    )}
+    {sceneSources.tablet && (
+      <source media={MEDIA_QUERIES.tablet} srcset={sceneSources.tablet} />
+    )}
+    <img
+      src={sceneSources.mobile ?? sceneSources.generated ?? sceneSources.thumb ?? sceneSources.desktop ?? fallback}
+      alt={alt}
+      class="scene-bg-image"
+      loading="eager"
+    />
+  </picture>
+</div>
+
+<style>
+  .scene-background {
+    position: relative;
+    overflow: visible;
+  }
+  
+  .scene-bg-image {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+    object-position: center;
+    z-index: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+</style>
+
+

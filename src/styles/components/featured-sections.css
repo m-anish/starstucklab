@@ -1,0 +1,466 @@
+/* SPDX-License-Identifier: DWYWBDBM-1.0 */
+/* Licensed under the "Do What You Want But Don't Blame Me" License, Version 1.0. */
+/* See the COPYING file or visit https://starstucklab.com/license for details. */
+
+/* site/src/styles/components/featured-sections.css */
+/* Featured sections for index page (projects + shop preview) */
+
+@import '../tokens.css';
+
+.featured-sections-wrap {
+  position: relative;
+  z-index: var(--z-elevated);
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+  padding-top: var(--space-20);
+}
+
+.featured-section {
+  margin-bottom: var(--space-20);
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+/* Visible when parent has .in class (controlled by JS in index.astro) */
+.post-zoom.in .featured-section {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+  visibility: visible;
+}
+
+/* Stagger animation for sections */
+.post-zoom.in .featured-section:nth-child(1) {
+  transition-delay: 0.1s;
+}
+
+.post-zoom.in .featured-section:nth-child(2) {
+  transition-delay: 0.3s;
+}
+
+/* Section Header */
+.section-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
+
+.section-header h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+  font-weight: 700;
+  color: var(--starry-white);
+  margin: 0 0 var(--space-3) 0;
+  text-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.8),
+    0 4px 16px rgba(0, 0, 0, 0.6);
+}
+
+.section-lead {
+  font-family: var(--font-body);
+  font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+  color: rgba(248, 244, 232, 0.85);
+  margin: 0 auto;
+  max-width: 520px;
+  line-height: 1.5;
+  text-shadow: 
+    0 2px 6px rgba(0, 0, 0, 0.9);
+}
+
+/* Featured Grid */
+.featured-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-8);
+  margin-bottom: var(--space-10);
+  justify-items: center;
+  z-index: var(--z-elevated);
+  position: relative;
+}
+
+/* Section Footer with CTA */
+.section-footer {
+  text-align: center;
+  position: relative;
+}
+
+.section-cta {
+  display: inline-block;
+  padding: var(--space-3) var(--space-8);
+  background: rgba(78, 197, 122, 0.08);
+  border: 1.5px solid rgba(78, 197, 122, 0.25);
+  border-radius: 32px;
+  color: var(--starry-white);
+  text-decoration: none;
+  font-size: var(--text-base);
+  font-weight: 600;
+  font-family: var(--font-body);
+  transition: transform var(--transition-base),
+              background var(--transition-base),
+              box-shadow var(--transition-base);
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.section-cta:hover {
+  transform: translateY(-2px);
+  background: rgba(78, 197, 122, 0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.section-cta:active {
+  transform: translateY(0);
+}
+
+.section-cta span {
+  margin-left: var(--space-2);
+  transition: transform var(--transition-fast);
+  display: inline-block;
+}
+
+.section-cta:hover span {
+  transform: translateX(4px);
+}
+
+/* Responsive */
+@media (max-width: 820px) {
+  .featured-sections-wrap {
+    padding: 0 var(--space-5);
+  }
+  
+  .featured-section {
+    margin-bottom: var(--space-16);
+  }
+  
+  .section-header {
+    margin-bottom: var(--space-8);
+  }
+  
+  .section-header h2 {
+    font-size: clamp(1.5rem, 5vw, 1.8rem);
+  }
+  
+  .featured-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+@media (max-width: 640px) {
+  .featured-sections-wrap {
+    padding: 0 var(--space-4);
+  }
+  
+  .featured-section {
+    margin-bottom: var(--space-12);
+  }
+  
+  .section-header {
+    margin-bottom: var(--space-6);
+  }
+  
+  .featured-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .featured-section {
+    transition: opacity 0.3s ease-out !important;
+    transform: none !important;
+  }
+  
+  .post-zoom.in .featured-section {
+    transform: none !important;
+  }
+}
+
+/* ============================================================
+   INDIVIDUAL GLASS CARDS (Container) + ACCENT STRIPE
+   ============================================================ */
+
+/* Individual glass cards for featured sections */
+.featured-card {
+  backdrop-filter: blur(18px) saturate(130%);
+  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 20px;
+  padding: var(--space-8);
+  box-shadow: 0 6px 28px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.02);
+  width: 100%;
+  transition: opacity 0.5s ease;
+}
+
+/* Slight emphasis variant for Projects (bigger) */
+.featured-card--projects {
+  padding: var(--space-10);
+  border-radius: 24px;
+}
+
+/* Cracked glass overlay – Projects card only */
+.featured-card--projects {
+  position: relative;
+  overflow: hidden;
+}
+
+.featured-card--projects::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 320px;
+  height: 568px;
+  background-image: url("/assets/textures/cracked-glass.webp");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: bottom right;
+  opacity: 0.60;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Slightly distinct tint for shop so eyeballs know they're different */
+.featured-card--shop {
+  background: linear-gradient(180deg, rgba(78,197,122,0.03), rgba(255,255,255,0.015));
+  border: 1px solid rgba(78,197,122,0.12);
+}
+
+/* Accent stripe: subtle colored bar to the left (for shop / emphasis) */
+.featured-card--accent {
+  position: relative;
+  overflow: visible;
+}
+
+.featured-card--accent::before {
+  content: "";
+  position: absolute;
+  left: -10px;
+  top: 14px;
+  bottom: 14px;
+  width: 6px;
+  border-radius: 4px;
+  background: linear-gradient(180deg, rgba(78,197,122,0.95), rgba(125,95,255,0.95));
+  box-shadow: 0 6px 18px rgba(78,197,122,0.08);
+  pointer-events: none;
+}
+
+/* Ensure grid items stretch naturally inside the card */
+.featured-card .featured-grid {
+  margin-bottom: var(--space-6);
+  position: relative;
+}
+
+/* Card inner header spacing */
+.featured-card .section-header {
+  margin-bottom: var(--space-6);
+  position: relative;
+}
+
+/* ============================================================
+   PROJECT CARD & PRODUCT CARD SPECIFICS
+   ============================================================ */
+
+/* Project category labels (e.g., WEATHER, TELESCOPE) */
+.project-category {
+  display: inline-block;
+  font-family: var(--font-ui, 'Space Grotesk', system-ui, sans-serif);
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(90, 50, 20, 0.5);
+  margin-bottom: var(--space-2);
+  opacity: 0.7;
+}
+
+/* Project title - clearly larger and different from category */
+.project-title {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-black, #1a1412);
+  margin: 0 0 var(--space-3) 0;
+  line-height: 1.2;
+  transition: color var(--transition-fast);
+}
+
+.project-link:hover .project-title {
+  color: var(--accent-green, #2a7a4f);
+}
+
+/* Project status badges (ONGOING, EXPERIMENTAL, etc.) */
+.project-status {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-family: var(--font-ui, 'Space Grotesk', system-ui, sans-serif);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(0, 0, 0, 0.75);
+  color: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(4px);
+  z-index: 10;
+}
+
+.status-completed { border-left: 3px solid #4ec57a; }
+.status-ongoing { border-left: 3px solid #f0b429; }
+.status-experimental { border-left: 3px solid #8b9dc3; }
+.status-abandoned { border-left: 3px solid #a66; }
+.status-dormant { border-left: 3px solid #888; }
+
+/* Product card title */
+.product-title {
+  font-family: var(--font-display, 'Playfair Display', serif);
+  font-weight: var(--weight-bold, 700);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-2, 8px) 0;
+  color: var(--ink-dark, #28160b);
+  line-height: var(--leading-snug, 1.3);
+  transition: color var(--transition-fast);
+}
+
+.product-card:hover .product-title {
+  color: var(--accent-green, #2a7a4f);
+}
+
+/* Shop card specifics */
+.shop-card {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+  overflow: hidden;
+  background: transparent;
+  position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.shop-card:hover {
+  transform: translateY(-4px);
+}
+
+.shop-card-link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  text-decoration: none;
+  color: inherit;
+  gap: var(--space-3);
+  cursor: pointer;
+}
+
+/* media */
+.shop-card-media {
+  width: 100%;
+  height: 160px;
+  display: block;
+  background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.08));
+  overflow: hidden;
+  transition: transform var(--transition-base);
+}
+
+.shop-card:hover .shop-card-media {
+  transform: scale(1.05);
+}
+
+.shop-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* body */
+.shop-card-body {
+  padding: var(--space-3) var(--space-3) var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.shop-card-body h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--starry-white);
+  transition: color var(--transition-fast);
+}
+
+.shop-card:hover .shop-card-body h3 {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-decoration-color: rgba(78, 197, 122, 0.4);
+  text-underline-offset: 2px;
+}
+
+.shop-card-sub {
+  font-size: 0.9rem;
+  color: rgba(248,244,232,0.78);
+}
+
+.shop-card-price {
+  margin-top: auto;
+  font-weight: 700;
+  color: var(--sapling-green, #4ec57a);
+}
+
+/* ============================================================
+   INDIVIDUAL ITEM CARDS (Projects) - Hover States
+   ============================================================ */
+
+/* Project cards need their own hover states */
+.featured-grid > * {
+  position: relative;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
+
+.featured-grid > *:hover {
+  transform: translateY(-4px);
+}
+
+/* Ensure all links inside cards are visible and clickable */
+.featured-grid a {
+  color: var(--starry-white);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.featured-grid a:hover {
+  color: var(--color-accent);
+}
+
+/* Accent stripe responsiveness (reduce left offset for small screens) */
+@media (max-width: 820px) {
+  .featured-card--accent::before {
+    left: -8px;
+    top: 10px;
+    bottom: 10px;
+    width: 5px;
+  }
+}
+
+/* Staggered container animation: make the card animate slightly earlier */
+.post-zoom.in .featured-card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced-motion honor */
+@media (prefers-reduced-motion: reduce) {
+  .featured-card,
+  .featured-section,
+  .shop-card,
+  .featured-grid > * {
+    transition: none !important;
+    transform: none !important;
+  }
+}
