@@ -1,5 +1,4 @@
 // site/src/content/config.ts
-// Fixed version - no filesystem access at runtime
 import { defineCollection, z } from 'astro:content';
 import configYaml from '../../config.yaml?raw';
 import { parse as parseYaml } from 'yaml';
