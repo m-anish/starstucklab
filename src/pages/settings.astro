@@ -1,0 +1,243 @@
+---
+// src/pages/settings.astro
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { getAPIKeyStatus } from '../lib/api-keys';
+
+const keyStatus = getAPIKeyStatus();
+---
+
+<BaseLayout title="Settings - Starstuck Lab">
+  <div class="settings-container">
+    <h1>⚙️ Settings</h1>
+    
+    <section class="api-keys-section">
+      <h2>API Keys Status</h2>
+      <p class="description">
+        API keys are configured via environment variables. 
+        Check status below.
+      </p>
+      
+      <div class="key-status-grid">
+        <div class={`key-status ${keyStatus.openai}`}>
+          <div class="key-icon">
+            {keyStatus.openai === 'configured' ? '✅' : '❌'}
+          </div>
+          <div class="key-info">
+            <h3>OpenAI API Key</h3>
+            <p class="status">{keyStatus.openai === 'configured' ? 'Configured' : 'Missing'}</p>
+            <p class="usage">Used for AI text and image generation</p>
+          </div>
+        </div>
+        
+        <div class={`key-status ${keyStatus.github}`}>
+          <div class="key-icon">
+            {keyStatus.github === 'configured' ? '✅' : '❌'}
+          </div>
+          <div class="key-info">
+            <h3>GitHub Token</h3>
+            <p class="status">{keyStatus.github === 'configured' ? 'Configured' : 'Missing'}</p>
+            <p class="usage">Used for uploading generated images</p>
+          </div>
+        </div>
+      </div>
+      
+      {(keyStatus.openai === 'missing' || keyStatus.github === 'missing') && (
+        <div class="warning-box">
+          <strong>⚠️ Missing API Keys</strong>
+          <p>Some API keys are not configured. AI features may not work.</p>
+          <p>Please add them to your <code>.env</code> file (local) or Cloudflare environment variables (production).</p>
+        </div>
+      )}
+    </section>
+    
+    <section class="instructions-section">
+      <h2>📝 Configuration Instructions</h2>
+      
+      <div class="instruction-card">
+        <h3>Local Development</h3>
+        <p>Add keys to your <code>.env</code> file:</p>
+        <pre><code>PUBLIC_OPENAI_API_KEY=sk-...
+PUBLIC_GITHUB_TOKEN=ghp_...
+PUBLIC_GITHUB_REPO=username/starstucklab</code></pre>
+      </div>
+      
+      <div class="instruction-card">
+        <h3>Production (Cloudflare Pages)</h3>
+        <ol>
+          <li>Go to Cloudflare Pages dashboard</li>
+          <li>Select your project → Settings → Environment Variables</li>
+          <li>Add the same variables as above</li>
+          <li>Redeploy your site</li>
+        </ol>
+      </div>
+      
+      <div class="instruction-card">
+        <h3>Getting API Keys</h3>
+        <ul>
+          <li>
+            <strong>OpenAI:</strong> 
+            <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">
+              platform.openai.com/api-keys
+            </a>
+          </li>
+          <li>
+            <strong>GitHub:</strong> 
+            <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">
+              github.com/settings/tokens
+            </a>
+            (Need <code>repo</code> scope)
+          </li>
+        </ul>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<style>
+  .settings-container {
+    max-width: 900px;
+    margin: 40px auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    margin-bottom: 30px;
+    font-size: 2.5rem;
+  }
+  
+  .api-keys-section {
+    margin-bottom: 50px;
+  }
+  
+  h2 {
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+  }
+  
+  .description {
+    color: #666;
+    margin-bottom: 25px;
+  }
+  
+  .key-status-grid {
+    display: grid;
+    gap: 20px;
+    margin-bottom: 25px;
+  }
+  
+  .key-status {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+  }
+  
+  .key-status.configured {
+    border-color: #28a745;
+    background: #f0fff4;
+  }
+  
+  .key-status.missing {
+    border-color: #dc3545;
+    background: #fff5f5;
+  }
+  
+  .key-icon {
+    font-size: 2rem;
+  }
+  
+  .key-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.2rem;
+  }
+  
+  .key-info .status {
+    margin: 0 0 5px 0;
+    font-weight: 600;
+  }
+  
+  .key-status.configured .status {
+    color: #28a745;
+  }
+  
+  .key-status.missing .status {
+    color: #dc3545;
+  }
+  
+  .key-info .usage {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .warning-box {
+    padding: 15px;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+    color: #856404;
+  }
+  
+  .warning-box strong {
+    display: block;
+    margin-bottom: 10px;
+  }
+  
+  .warning-box p {
+    margin: 5px 0;
+  }
+  
+  .warning-box code {
+    background: #fff;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+  }
+  
+  .instructions-section {
+    margin-top: 50px;
+  }
+  
+  .instruction-card {
+    margin-bottom: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+  
+  .instruction-card h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.3rem;
+  }
+  
+  .instruction-card pre {
+    background: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    border: 1px solid #ddd;
+  }
+  
+  .instruction-card code {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+  }
+  
+  .instruction-card ol,
+  .instruction-card ul {
+    margin-left: 20px;
+    line-height: 1.8;
+  }
+  
+  .instruction-card a {
+    color: #0969da;
+    text-decoration: none;
+  }
+  
+  .instruction-card a:hover {
+    text-decoration: underline;
+  }
+</style>
