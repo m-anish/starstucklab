@@ -8,6 +8,7 @@ node_modules/
 .netlify/
 .cache/
 dist/
+dist/*
 .output/
 
 # Logs and temporary files
