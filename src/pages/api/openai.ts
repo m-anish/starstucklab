@@ -16,7 +16,7 @@ interface OpenAIRequest {
   };
 }
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
     // Log the request for debugging
     console.log('OpenAI API request received');
@@ -38,8 +38,8 @@ export const POST: APIRoute = async ({ request }) => {
 
     const { action, prompt, options = {} }: OpenAIRequest = JSON.parse(body);
 
-    // Get API key from server environment
-    const apiKey = import.meta.env.OPENAI_API_KEY;
+    // Get API key from Cloudflare environment
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({
