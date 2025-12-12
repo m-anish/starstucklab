@@ -5,19 +5,39 @@
 
 /**
  * Get OpenAI API key from environment
- * Note: In Tina custom fields, we access env vars differently
+ * Tina context requires different access method
  */
 function getOpenAIKey(): string {
-  // Try to get from window (client-side)
+  // Try multiple ways to access the env var
+  let key: string | undefined;
+  
   if (typeof window !== 'undefined') {
-    // @ts-ignore - Vite injects these
-    const key = import.meta.env.PUBLIC_OPENAI_API_KEY;
+    // Browser context - try window object first
+    // @ts-ignore
+    key = window.__TINA_ENV__?.PUBLIC_OPENAI_API_KEY;
+    
+    // Fallback to import.meta.env
     if (!key) {
-      throw new Error('OpenAI API key not found. Please configure PUBLIC_OPENAI_API_KEY in your .env file.');
+      // @ts-ignore
+      key = import.meta.env?.PUBLIC_OPENAI_API_KEY;
     }
-    return key;
+    
+    // Fallback to checking Vite's injected env
+    if (!key && typeof import.meta !== 'undefined') {
+      try {
+        // @ts-ignore
+        key = import.meta.env.PUBLIC_OPENAI_API_KEY;
+      } catch (e) {
+        // Silent fail
+      }
+    }
   }
-  throw new Error('OpenAI key can only be accessed client-side');
+  
+  if (!key) {
+    throw new Error('OpenAI API key not found. Please configure PUBLIC_OPENAI_API_KEY in your .env file.');
+  }
+  
+  return key;
 }
 
 /**
