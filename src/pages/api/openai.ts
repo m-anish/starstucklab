@@ -38,8 +38,15 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
     const { action, prompt, options = {} }: OpenAIRequest = JSON.parse(body);
 
-    // Get API key from Cloudflare environment
-    const apiKey = locals.env.OPENAI_API_KEY;
+    // Comprehensive multi-source fallback for max compatibility
+    const apiKey = 
+      locals.runtime?.env?.OPENAI_API_KEY ||      // Cloudflare via locals.runtime
+      context?.runtime?.env?.OPENAI_API_KEY ||    // Cloudflare via context.runtime  
+      context?.env?.OPENAI_API_KEY ||             // Cloudflare via context.env
+      locals?.env?.OPENAI_API_KEY ||              // Just in case locals.env exists
+      import.meta.env.OPENAI_API_KEY ||           // Astro build-time (local dev)
+      process.env.OPENAI_API_KEY;   
+      
     if (!apiKey) {
       return new Response(
         JSON.stringify({
