@@ -1,4 +1,5 @@
 import { defineConfig } from "tinacms";
+import AITextField from "./fields/AITextField";
 
 // Your hosting provider likely exposes this as an environment variable
 const branch =
@@ -11,7 +12,7 @@ export default defineConfig({
   branch,
 
   // Get this from tina.io
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
+  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,  // ← Kept as NEXT_PUBLIC
   // Get this from tina.io
   token: process.env.TINA_TOKEN,
 
@@ -80,13 +81,15 @@ export default defineConfig({
             label: "Date",
             required: true,
           },
+          // 🎯 AI-POWERED EXCERPT FIELD
           {
             type: "string",
             name: "excerpt",
             label: "Excerpt",
             required: true,
+            description: "A compelling one-sentence description (AI-powered)",
             ui: {
-              component: "textarea",
+              component: AITextField,  // ← AI component
             },
           },
           {
@@ -175,13 +178,15 @@ export default defineConfig({
             name: "featured",
             label: "Featured",
           },
+          // 🎯 AI-POWERED EXCERPT FIELD
           {
             type: "string",
             name: "excerpt",
             label: "Excerpt",
             required: true,
+            description: "A brief project summary (AI-powered)",
             ui: {
-              component: "textarea",
+              component: AITextField,  // ← AI component
             },
           },
           {
