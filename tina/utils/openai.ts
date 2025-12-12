@@ -4,20 +4,28 @@
  */
 
 /**
- * Get OpenAI API key from environment
- * Note: In Tina custom fields, we access env vars differently
+ * Call OpenAI API through secure server endpoint
  */
-function getOpenAIKey(): string {
-  // Try to get from window (client-side)
-  if (typeof window !== 'undefined') {
-    // @ts-ignore - Vite injects these
-    const key = import.meta.env.PUBLIC_OPENAI_API_KEY;
-    if (!key) {
-      throw new Error('OpenAI API key not found. Please configure PUBLIC_OPENAI_API_KEY in your .env file.');
-    }
-    return key;
+async function callOpenAIEndpoint(action: 'generate_text' | 'generate_image', prompt: string, options: any = {}): Promise<any> {
+  const response = await fetch('/api/openai', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      action,
+      prompt,
+      options
+    })
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'OpenAI API call failed');
   }
-  throw new Error('OpenAI key can only be accessed client-side');
+
+  const data = await response.json();
+  return data.result;
 }
 
 /**
@@ -31,44 +39,7 @@ export async function generateText(
     temperature?: number;
   } = {}
 ): Promise<string> {
-  const {
-    systemPrompt = 'You are a helpful assistant.',
-    maxTokens = 500,
-    temperature = 0.7
-  } = options;
-
-  const apiKey = getOpenAIKey();
-
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: systemPrompt
-        },
-        {
-          role: 'user',
-          content: prompt
-        }
-      ],
-      max_tokens: maxTokens,
-      temperature: temperature
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`OpenAI API error: ${error.error?.message || 'Unknown error'}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0].message.content;
+  return callOpenAIEndpoint('generate_text', prompt, options);
 }
 
 /**
@@ -172,30 +143,5 @@ export async function generateImage(
     quality?: 'standard' | 'hd';
   } = {}
 ): Promise<string> {
-  const { size = '1024x1024', quality = 'standard' } = options;
-  
-  const apiKey = getOpenAIKey();
-
-  const response = await fetch('https://api.openai.com/v1/images/generations', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${apiKey}`
-    },
-    body: JSON.stringify({
-      model: 'dall-e-3',
-      prompt: prompt,
-      n: 1,
-      size: size,
-      quality: quality
-    })
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(`DALL-E API error: ${error.error?.message || 'Unknown error'}`);
-  }
-
-  const data = await response.json();
-  return data.data[0].url;
+  return callOpenAIEndpoint('generate_image', prompt, options);
 }
