@@ -39,7 +39,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const { action, prompt, options = {} }: OpenAIRequest = JSON.parse(body);
 
     // Get API key from Cloudflare environment
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = locals.env.OPENAI_API_KEY;
     if (!apiKey) {
       return new Response(
         JSON.stringify({
