@@ -1,11 +1,10 @@
 ---
-// SPDX-License-Identifier: DWYWBDBM-1.0
-// site/src/pages/shop/[slug].astro
+// src/pages/shop/[slug].astro
 import { getCollection } from 'astro:content';
 
-// Force static generation for content collections
 export const prerender = true;
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
+import ProductNav from "../../components/ProductNav.astro";
 import AddToCartButton from "../../components/AddToCartButton.astro";
 import "../../styles/components/parchment.css";
 import "../../styles/components/product-detail.css";
@@ -26,7 +25,6 @@ export async function getStaticPaths() {
 
 const { entry } = Astro.props;
 
-// Handle case where entry might not be found or render method unavailable
 if (!entry) {
   return Astro.redirect('/shop');
 }
@@ -37,7 +35,6 @@ try {
   Content = renderResult.Content;
 } catch (error) {
   console.error('Error rendering product content:', error);
-  // Fallback: create a simple content component
   Content = () => null;
 }
 
@@ -47,87 +44,144 @@ const slug = entry.slug;
 // Image paths
 const heroImagePath = product.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
 const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
+
+// Icon mapping
+const iconMap: Record<string, string> = {
+  'telescope': '🔭',
+  'palette': '🎨',
+  'alert-triangle': '⚠️',
+  'cog': '⚙️',
+  'zap': '⚡',
+  'box': '📦',
+  'cpu': '🖥️',
+  'settings': '⚙️',
+  'shield': '🛡️',
+  'star': '⭐',
+  'circle-dot': '🎯',
+  'gauge': '📊'
+};
+
+// Stock status display
+const stockStatusMap: Record<string, { label: string; class: string }> = {
+  'in_stock': { label: 'In stock', class: 'in-stock' },
+  'low_stock': { label: 'Low stock', class: 'low-stock' },
+  'out_of_stock': { label: 'Out of stock', class: 'out-of-stock' },
+  'pre_order': { label: 'Pre-order', class: 'pre-order' }
+};
+
+const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] : stockStatusMap['in_stock'];
 ---
+
 <StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
-  <article class="product-detail-container">
-    <!-- Hero Image -->
-    <div class="product-hero-wrap">
-      <img
-        src={heroImagePath}
-        alt={product.title}
-        class="product-hero-image"
-        onerror={`this.onerror=null;this.src='${masterFallback}'`}
-      />
-    </div>
-
-    <!-- Product Content Card -->
-    <div class="parchment product-content-card">
-      <!-- Header -->
-      <header class="product-header">
-        <div class="product-meta-row">
-          {product.price && (
-            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
-          )}
-          {product.status && (
-            <span class={`status status-${product.status}`}>
-              {product.status}
-            </span>
-          )}
-        </div>
-
-        <h1>{product.title}</h1>
-
-        {product.excerpt && (
-          <p class="product-excerpt">{product.excerpt}</p>
+  <!-- Product-Specific Navigation (below main navbar) -->
+  <ProductNav product={{ slug, title: product.title }} />
+  
+  <div class="product-detail-v2">
+    <!-- Hero Section: Two Column Layout -->
+    <section class="product-hero">
+      <div class="product-hero-left">
+        <!-- Title and Tagline -->
+        <h1 class="product-title">{product.title}</h1>
+        {product.tagline && (
+          <p class="product-tagline">{product.tagline}</p>
         )}
 
-        <!-- Meta Info -->
-        <div class="product-metadata">
-          {product.date && (
-            <span class="meta-item">
-              📅 {new Date(product.date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </span>
-          )}
-        </div>
-
-        <!-- Tags -->
-        {product.tags && product.tags.length > 0 && (
-          <div class="product-tags">
-            {product.tags.map((tag: string) => (
-              <span class="tag">#{tag}</span>
-            ))}
+        <!-- Price -->
+        {product.price && (
+          <div class="product-price-block">
+            <span class="product-price">{product.currency || 'USD'} {product.price}</span>
           </div>
         )}
-      </header>
 
-      <!-- Markdown Content -->
-      <div class="product-body markdown-content">
-        <Content />
+        <!-- Buy Button -->
+        {product.status === 'available' && (
+          <div class="product-cta">
+            <AddToCartButton product={{
+              slug: slug,
+              title: product.title,
+              price: product.price,
+              currency: product.currency,
+              status: product.status
+            }} />
+          </div>
+        )}
+
+        <!-- Customization -->
+        {product.customization?.enabled && product.customization.options && (
+          <div class="product-customization">
+            <label for="customization">Customization:</label>
+            <select id="customization">
+              <option>None</option>
+              {product.customization.options.map((opt: any) => 
+                opt.values?.map((val: string) => (
+                  <option value={val}>{val}</option>
+                ))
+              )}
+            </select>
+          </div>
+        )}
+
+        <!-- Stock Status -->
+        <div class={`product-stock ${stockStatus.class}`}>
+          {stockStatus.label}
+        </div>
       </div>
 
-      <!-- Add to Cart Button - Only show if available -->
-      {product.status === 'available' && (
-        <div class="product-actions">
-          <AddToCartButton product={{
-            slug: slug,
-            title: product.title,
-            price: product.price,
-            currency: product.currency,
-            status: product.status
-          }} />
-        </div>
-      )}
+      <div class="product-hero-right">
+        <img
+          src={heroImagePath}
+          alt={product.title}
+          class="product-hero-image"
+          onerror={`this.onerror=null;this.src='${masterFallback}'`}
+        />
+      </div>
+    </section>
 
-      <!-- Back Link -->
-      <footer class="product-footer">
-        <a href="/shop" class="back-link">
-          ← Back to Shop
-        </a>
-      </footer>
-    </div>
-  </article>
+    <!-- Features Section -->
+    {product.features && product.features.length > 0 && (
+      <section class="product-features" id="features">
+        <h2>Features</h2>
+        <div class="features-grid">
+          {product.features.map((feature: any) => (
+            <div class="feature-card">
+              <div class="feature-icon">
+                {iconMap[feature.icon] || '⚙️'}
+              </div>
+              <h3 class="feature-title">{feature.title}</h3>
+              <p class="feature-description">{feature.description}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    )}
+
+    <!-- Specifications -->
+    {product.specifications && product.specifications.length > 0 && (
+      <section class="product-specifications parchment" id="specifications">
+        <h2>Specifications</h2>
+        <table class="specs-table">
+          {product.specifications.map((spec: any) => (
+            <tr>
+              <th>{spec.label}</th>
+              <td>{spec.value}</td>
+            </tr>
+          ))}
+        </table>
+      </section>
+    )}
+
+    <!-- Full Description -->
+    <section class="product-description parchment" id="reviews">
+      <div class="markdown-content">
+        <Content />
+      </div>
+    </section>
+
+    <!-- Back Link -->
+    <footer class="product-footer">
+      <a href="/shop" class="back-link">
+        ← Back to Shop
+      </a>
+    </footer>
+  </div>
 </StandardPageLayout>

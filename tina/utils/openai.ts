@@ -1,6 +1,6 @@
 // tina/utils/openai.ts
 /**
- * OpenAI API Utilities for Tina CMS
+ * OpenAI API Utilities for Tina CMS - Enhanced with Feature Generation
  */
 
 /**
@@ -63,6 +63,96 @@ Return ONLY the excerpt, nothing else.`;
   const systemPrompt = `You are a creative writer for Starstuck Lab, a maker space that builds scientific instruments, telescopes, and weather stations. Your writing style is poetic, melancholic, witty with dry humor, and tinged with cosmic existentialism.`;
 
   return generateText(prompt, { systemPrompt, maxTokens: 100, temperature: 0.8 });
+}
+
+/**
+ * Generate a tagline for a product
+ */
+export async function generateTagline(
+  title: string,
+  category?: string
+): Promise<string> {
+  const prompt = `Generate a short, catchy tagline (max 12 words) for "${title}"${category ? `, a ${category}` : ''}.
+
+The tagline should be:
+- Memorable and punchy
+- Poetic with dry humor
+- Slightly melancholic
+- Technical yet accessible
+
+Return ONLY the tagline, nothing else.`;
+
+  const systemPrompt = `You are a creative copywriter for Starstuck Lab. Your taglines are poetic, witty, and tinged with cosmic existentialism.`;
+
+  return generateText(prompt, { systemPrompt, maxTokens: 50, temperature: 0.85 });
+}
+
+/**
+ * Generate product features with icons
+ */
+export async function generateFeatures(
+  title: string,
+  options: {
+    category?: string;
+    description?: string;
+    numFeatures?: number;
+  } = {}
+): Promise<Array<{ icon: string; title: string; description: string }>> {
+  const { category, description, numFeatures = 4 } = options;
+
+  const availableIcons = [
+    'telescope', 'palette', 'alert-triangle', 'cog', 'zap', 
+    'box', 'cpu', 'settings', 'shield', 'star', 'circle-dot', 'gauge'
+  ];
+
+  const prompt = `Generate ${numFeatures} product features for "${title}"${category ? `, a ${category}` : ''}.
+${description ? `\nProduct description: ${description}\n` : ''}
+Each feature should have:
+- A title (3-7 words, descriptive and slightly humorous in Starstuck Lab style)
+- A description (12-18 words, technical yet poetic with dry humor)
+- An icon from this list: ${availableIcons.join(', ')}
+
+Style guidelines:
+- Poetic and evocative
+- Slightly melancholic with dry humor
+- Technical accuracy with existential undertones
+- Each feature should feel unique and meaningful
+
+Format as JSON array:
+[
+  {
+    "icon": "telescope",
+    "title": "Partially mythic photon-devouring optics",
+    "description": "Glass that bends light and occasionally your expectations of reality"
+  }
+]
+
+Return ONLY the JSON array, no markdown formatting, no other text.`;
+
+  const systemPrompt = `You are a creative technical writer for Starstuck Lab, a maker space that builds scientific instruments. Your writing balances poetry with precision, melancholy with wonder. You write product features that are both informative and emotionally resonant.`;
+
+  const result = await generateText(prompt, { 
+    systemPrompt, 
+    maxTokens: 600,
+    temperature: 0.8 
+  });
+
+  try {
+    // Clean up the result - remove markdown code blocks if present
+    const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    const features = JSON.parse(cleanResult);
+    
+    // Validate structure
+    if (!Array.isArray(features)) {
+      throw new Error('Response is not an array');
+    }
+    
+    return features.slice(0, numFeatures);
+  } catch (error) {
+    console.error('Failed to parse features JSON:', error);
+    console.error('Raw result:', result);
+    throw new Error('Failed to parse AI-generated features. Please try again.');
+  }
 }
 
 /**
@@ -131,6 +221,42 @@ Return ONLY a comma-separated list of tags, nothing else.`;
     .map(tag => tag.trim())
     .filter(tag => tag.length > 0)
     .slice(0, maxTags);
+}
+
+/**
+ * Generate specifications for a product
+ */
+export async function generateSpecifications(
+  title: string,
+  category: string,
+  description?: string
+): Promise<Array<{ label: string; value: string }>> {
+  const prompt = `Generate 6-8 technical specifications for "${title}", a ${category}.
+${description ? `\nDescription: ${description}\n` : ''}
+Format as JSON array of label-value pairs:
+[
+  { "label": "Dimensions", "value": "100 × 50 × 25 mm" },
+  { "label": "Weight", "value": "250g" }
+]
+
+Include realistic, appropriate specs for this type of product.
+Return ONLY the JSON array, no other text.`;
+
+  const systemPrompt = `You generate accurate technical specifications for scientific instruments and maker products.`;
+
+  const result = await generateText(prompt, { 
+    systemPrompt, 
+    maxTokens: 400,
+    temperature: 0.6 
+  });
+
+  try {
+    const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    return JSON.parse(cleanResult);
+  } catch (error) {
+    console.error('Failed to parse specifications JSON:', error);
+    throw new Error('Failed to parse AI-generated specifications. Please try again.');
+  }
 }
 
 /**

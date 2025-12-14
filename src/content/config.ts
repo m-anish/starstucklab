@@ -1,4 +1,4 @@
-// site/src/content/config.ts
+// src/content/config.ts
 import { defineCollection, z } from 'astro:content';
 import configYaml from '../../config.yaml?raw';
 import { parse as parseYaml } from 'yaml';
@@ -53,11 +53,13 @@ try {
 const categories = siteConfig.allowed_categories;
 const statuses = siteConfig.allowed_status;
 const productStatuses = ['available', 'unavailable', 'coming_soon', 'discontinued'];
+const stockStatuses = ['in_stock', 'low_stock', 'out_of_stock', 'pre_order'];
 
 // Type-safe tuples for zod enum
 const categoryEnum = [categories[0], ...categories.slice(1)] as [string, ...string[]];
 const statusEnum = [statuses[0], ...statuses.slice(1)] as [string, ...string[]];
 const productStatusEnum = [productStatuses[0], ...productStatuses.slice(1)] as [string, ...string[]];
+const stockStatusEnum = [stockStatuses[0], ...stockStatuses.slice(1)] as [string, ...string[]];
 
 // Define collections
 const projectsCollection = defineCollection({
@@ -80,12 +82,37 @@ const productsCollection = defineCollection({
   type: 'content',
   schema: z.object({
     title: z.string(),
+    tagline: z.string().optional(),
     status: z.enum(productStatusEnum),
+    stock_status: z.enum(stockStatusEnum).optional(),
     date: z.coerce.date(),
     excerpt: z.string(),
     price: z.number().optional(),
     currency: z.string().optional(),
     tags: z.array(z.string()).optional().default([]),
+    
+    // Features
+    features: z.array(z.object({
+      icon: z.string(),
+      title: z.string(),
+      description: z.string(),
+    })).optional(),
+    
+    // Customization
+    customization: z.object({
+      enabled: z.boolean().optional(),
+      options: z.array(z.object({
+        label: z.string(),
+        values: z.array(z.string()),
+      })).optional(),
+    }).optional(),
+    
+    // Specifications
+    specifications: z.array(z.object({
+      label: z.string(),
+      value: z.string(),
+    })).optional(),
+    
     images: z.any().optional()
   }),
 });

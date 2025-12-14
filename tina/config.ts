@@ -1,5 +1,6 @@
 import { defineConfig } from "tinacms";
 import AITextField from "./fields/AITextField";
+import AIFeaturesField from "./fields/AIFeaturesField";
 
 // Your hosting provider likely exposes this as an environment variable
 const branch =
@@ -12,7 +13,7 @@ export default defineConfig({
   branch,
 
   // Get this from tina.io
-  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,  // ← Kept as NEXT_PUBLIC
+  clientId: process.env.NEXT_PUBLIC_TINA_CLIENT_ID,
   // Get this from tina.io
   token: process.env.TINA_TOKEN,
 
@@ -26,7 +27,6 @@ export default defineConfig({
       mediaRoot: "assets",
     },
   },
-  // See docs on content modeling for more info on how to setup new content models: https://tina.io/docs/r/content-modelling-collections/
   schema: {
     collections: [
       // Products Collection
@@ -48,6 +48,17 @@ export default defineConfig({
             name: "title",
             label: "Title",
             required: true,
+          },
+          // 🎯 AI-POWERED TAGLINE FIELD
+          {
+            type: "string",
+            name: "tagline",
+            label: "Tagline",
+            required: false,
+            description: "Short, catchy product tagline (AI-powered)",
+            ui: {
+              component: AITextField,
+            },
           },
           {
             type: "number",
@@ -71,6 +82,13 @@ export default defineConfig({
           },
           {
             type: "string",
+            name: "stock_status",
+            label: "Stock Status",
+            options: ["in_stock", "low_stock", "out_of_stock", "pre_order"],
+            required: false,
+          },
+          {
+            type: "string",
             name: "tags",
             label: "Tags",
             list: true,
@@ -89,8 +107,111 @@ export default defineConfig({
             required: true,
             description: "A compelling one-sentence description (AI-powered)",
             ui: {
-              component: AITextField,  // ← AI component
+              component: AITextField,
             },
+          },
+          // 🎯 AI-POWERED FEATURES FIELD
+          {
+            type: "object",
+            name: "features",
+            label: "Product Features",
+            list: true,
+            ui: {
+              itemProps: (item) => {
+                return { label: item?.title || "Feature" };
+              },
+              component: AIFeaturesField,
+            },
+            fields: [
+              {
+                type: "string",
+                name: "icon",
+                label: "Icon",
+                description: "Icon name (e.g., 'telescope', 'palette', 'alert-triangle', 'cog')",
+                options: [
+                  "telescope",
+                  "palette",
+                  "alert-triangle",
+                  "cog",
+                  "zap",
+                  "box",
+                  "cpu",
+                  "settings",
+                  "shield",
+                  "star",
+                  "circle-dot",
+                  "gauge"
+                ],
+              },
+              {
+                type: "string",
+                name: "title",
+                label: "Title",
+                required: true,
+              },
+              {
+                type: "string",
+                name: "description",
+                label: "Description",
+                required: true,
+                ui: {
+                  component: "textarea",
+                },
+              },
+            ],
+          },
+          // Customization options
+          {
+            type: "object",
+            name: "customization",
+            label: "Customization Options",
+            fields: [
+              {
+                type: "boolean",
+                name: "enabled",
+                label: "Enable Customization",
+              },
+              {
+                type: "object",
+                name: "options",
+                label: "Options",
+                list: true,
+                fields: [
+                  {
+                    type: "string",
+                    name: "label",
+                    label: "Label",
+                  },
+                  {
+                    type: "string",
+                    name: "values",
+                    label: "Values",
+                    list: true,
+                  },
+                ],
+              },
+            ],
+          },
+          // Specifications
+          {
+            type: "object",
+            name: "specifications",
+            label: "Specifications",
+            list: true,
+            fields: [
+              {
+                type: "string",
+                name: "label",
+                label: "Label",
+                required: true,
+              },
+              {
+                type: "string",
+                name: "value",
+                label: "Value",
+                required: true,
+              },
+            ],
           },
           {
             type: "object",
@@ -186,7 +307,7 @@ export default defineConfig({
             required: true,
             description: "A brief project summary (AI-powered)",
             ui: {
-              component: AITextField,  // ← AI component
+              component: AITextField,
             },
           },
           {
