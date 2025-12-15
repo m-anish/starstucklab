@@ -1,0 +1,178 @@
+---
+// src/components/customization/ColorPicker.astro
+import type { CustomizationOption } from '../../lib/pricing';
+
+interface Props {
+  option: CustomizationOption;
+}
+
+const { option } = Astro.props;
+const palette = option.palette || [];
+---
+
+<div class="customization-option color-picker-option" data-option-id={option.id}>
+  <label class="option-label">
+    {option.label}
+    {option.help_text && <span class="help-text">{option.help_text}</span>}
+  </label>
+  
+  <div class="color-swatches" role="radiogroup" aria-label={option.label}>
+    {palette.map((color) => (
+      <button
+        type="button"
+        class="color-swatch"
+        data-color={color.hex}
+        data-color-name={color.name}
+        aria-label={color.name}
+        role="radio"
+        aria-checked={color.hex === option.default ? 'true' : 'false'}
+        style={`background-color: ${color.hex}`}
+      >
+        <span class="checkmark" aria-hidden="true">✓</span>
+        <span class="sr-only">{color.name}</span>
+      </button>
+    ))}
+  </div>
+  
+  <div class="selected-color-name" aria-live="polite">
+    {palette.find(c => c.hex === option.default)?.name || 'Select a color'}
+  </div>
+  
+  <input
+    type="hidden"
+    name={option.id}
+    data-option-id={option.id}
+    value={option.default}
+    class="customization-input"
+  />
+</div>
+
+<style>
+  .color-picker-option {
+    margin-bottom: var(--space-6);
+  }
+  
+  .option-label {
+    display: block;
+    font-family: var(--font-ui);
+    font-size: var(--text-sm);
+    font-weight: 600;
+    color: var(--ink-dark);
+    margin-bottom: var(--space-3);
+  }
+  
+  .help-text {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: 400;
+    color: var(--ink-muted);
+    margin-top: var(--space-1);
+  }
+  
+  .color-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(48px, 1fr));
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+  
+  .color-swatch {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border: 2px solid rgba(80, 50, 25, 0.2);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .color-swatch:hover {
+    transform: scale(1.05);
+    border-color: rgba(80, 50, 25, 0.4);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .color-swatch:focus-visible {
+    outline: 2px solid var(--accent-green);
+    outline-offset: 2px;
+  }
+  
+  .color-swatch .checkmark {
+    position: absolute;
+    font-size: 1.5rem;
+    color: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+    opacity: 0;
+    transform: scale(0);
+    transition: all var(--transition-fast);
+  }
+  
+  .color-swatch[aria-checked="true"] {
+    border-color: var(--accent-green);
+    border-width: 3px;
+    box-shadow: 0 0 0 2px rgba(42, 122, 79, 0.2);
+  }
+  
+  .color-swatch[aria-checked="true"] .checkmark {
+    opacity: 1;
+    transform: scale(1);
+  }
+  
+  .selected-color-name {
+    font-size: var(--text-sm);
+    color: var(--ink-mid);
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  @media (max-width: 640px) {
+    .color-swatches {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>
+
+<script>
+  document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', (e) => {
+      const button = e.currentTarget as HTMLButtonElement;
+      const optionId = button.closest('[data-option-id]')?.getAttribute('data-option-id');
+      if (!optionId) return;
+      
+      const color = button.dataset.color!;
+      const colorName = button.dataset.colorName!;
+      
+      // Update all swatches in this group
+      const allSwatches = button.parentElement!.querySelectorAll('.color-swatch');
+      allSwatches.forEach(s => s.setAttribute('aria-checked', 'false'));
+      button.setAttribute('aria-checked', 'true');
+      
+      // Update hidden input
+      const input = button.closest('.color-picker-option')!.querySelector('input[type="hidden"]') as HTMLInputElement;
+      input.value = color;
+      
+      // Update color name display
+      const nameDisplay = button.closest('.color-picker-option')!.querySelector('.selected-color-name');
+      if (nameDisplay) nameDisplay.textContent = colorName;
+      
+      // Dispatch change event
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+  });
+</script>
