@@ -6,8 +6,10 @@ export const prerender = true;
 import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
 import ProductNav from "../../components/ProductNav.astro";
 import AddToCartButton from "../../components/AddToCartButton.astro";
+import CustomizationPanel from "../../components/CustomizationPanel.astro";
 import "../../styles/components/parchment.css";
 import "../../styles/components/product-detail.css";
+import "../../styles/components/customization.css";
 
 // Build-time: tell Astro which slugs to pre-render
 export async function getStaticPaths() {
@@ -93,6 +95,11 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
           </div>
         )}
 
+        <!-- Customization Panel (if enabled) -->
+        {product.customization?.enabled && (
+          <CustomizationPanel product={product} />
+        )}
+
         <!-- Buy Button -->
         {product.status === 'available' && (
           <div class="product-cta">
@@ -103,21 +110,6 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
               currency: product.currency,
               status: product.status
             }} />
-          </div>
-        )}
-
-        <!-- Customization -->
-        {product.customization?.enabled && product.customization.options && (
-          <div class="product-customization">
-            <label for="customization">Customization:</label>
-            <select id="customization">
-              <option>None</option>
-              {product.customization.options.map((opt: any) => 
-                opt.values?.map((val: string) => (
-                  <option value={val}>{val}</option>
-                ))
-              )}
-            </select>
           </div>
         )}
 
