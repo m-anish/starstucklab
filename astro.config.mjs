@@ -1,8 +1,10 @@
 // astro.config.mjs
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
+import react from '@astrojs/react';
 
 export default defineConfig({
+  integrations: [react()],
   site: 'https://starstucklab.com',
   output: 'server', // Enable server-side rendering
   adapter: cloudflare({
