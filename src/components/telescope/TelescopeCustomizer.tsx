@@ -82,10 +82,10 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
 
   // Discover STL files dynamically
   const discoverSTLFiles = async (): Promise<string[]> => {
-    const modules = import.meta.glob('/public/models/*.stl', { 
-      eager: false,
-      as: 'url'
-    });
+  const modules = import.meta.glob('/public/models/*.stl?url', { 
+    eager: false,
+    import: 'default'
+  });
     
     const files = Object.keys(modules).map(path => path.replace('/public', ''));
     console.log('📂 Discovered STL files:', files);
