@@ -4,34 +4,36 @@ import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Color picker for telescope components
-const pickColorForFile = (fileName: string, tubeColor: string, mountColor: string): string => {
+const pickColorForFile = (
+  fileName: string, 
+  tubeAColor: string, 
+  tubeBColor: string, 
+  baseColor: string
+): string => {
   const name = fileName.toLowerCase().replace(/['"]/g, '').replace(/\s+/g, '-').replace(/_/g, '-').trim();
   
-  if (name.startsWith('tube-')) return tubeColor;
-  if (name.startsWith('base-')) return mountColor;
-  if (name.startsWith('black-')) return '#1a1a1a'; // Always black
-  if (name.startsWith('mirror-')) return '#b2d9dbff'; // Always bluish-silver
+  if (name.startsWith('tube-a-')) return tubeAColor;
+  if (name.startsWith('tube-b-')) return tubeBColor;
+  if (name.startsWith('base-')) return baseColor;
+  if (name.startsWith('black-')) return '#1a1a1a';
+  if (name.startsWith('mirror-')) return '#b2d9db';
   
-  return '#9a9a9a'; // Default gray for other parts
+  return '#9a9a9a';
 };
 
-// Color presets for quick selection
-const COLOR_PRESETS = {
-  tube: [
-    { name: 'Midnight Black', hex: '#1a1a1a' },
-    { name: 'Space Gray', hex: '#4a4a4a' },
-    { name: 'Deep Navy', hex: '#1a2332' },
-    { name: 'Forest Green', hex: '#2d4a2b' },
-    { name: 'Burgundy', hex: '#4a1a1a' },
-  ],
-  mount: [
-    { name: 'Natural Wood', hex: '#8b6f47' },
-    { name: 'Dark Walnut', hex: '#5d4a37' },
-    { name: 'Cherry', hex: '#8b4513' },
-    { name: 'Ebony', hex: '#2b1810' },
-    { name: 'Birch', hex: '#d4a574' },
-  ],
-};
+// Pastel color palette with Hitchhiker's Guide meets Back to Future vibes
+const PASTEL_COLORS = [
+  { hex: '#2b2b2b', name: 'Infinite Improbability Black' },
+  { hex: '#e8e8e8', name: "Marvin's Melancholy White" },
+  { hex: '#9ca3af', name: 'Flux Capacitor Gray' },
+  { hex: '#fef3c7', name: 'Pan Galactic Yellow' },
+  { hex: '#bfdbfe', name: 'Hyperspace Bypass Blue' },
+  { hex: '#fecaca', name: 'Endangered Species Red' },
+  { hex: '#bbf7d0', name: "Don't Panic Green" },
+  { hex: '#fbcfe8', name: 'Petunias Pink' },
+  { hex: '#fed7aa', name: 'Time Circuit Orange' },
+  { hex: '#d4a574', name: 'Vogon Poetry Brown' },
+];
 
 const TelescopeCustomizer: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,12 +44,14 @@ const TelescopeCustomizer: React.FC = () => {
   const modelsRef = useRef<Map<string, THREE.Mesh>>(new Map());
   const animationFrameRef = useRef<number>();
 
-  const [tubeColor, setTubeColor] = useState('#1a1a1a');
-  const [mountColor, setMountColor] = useState('#8b6f47');
+  const [tubeAColor, setTubeAColor] = useState('#2b2b2b');
+  const [tubeBColor, setTubeBColor] = useState('#2b2b2b');
+  const [baseColor, setBaseColor] = useState('#d4a574');
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeControl, setActiveControl] = useState<'tubeA' | 'tubeB' | 'base'>('tubeA');
 
   // Detect mobile on mount
   useEffect(() => {
@@ -61,18 +65,12 @@ const TelescopeCustomizer: React.FC = () => {
 
   // Discover STL files dynamically
   const discoverSTLFiles = async (): Promise<string[]> => {
-    // Use import.meta.glob with eager: false to get file paths without importing them
     const modules = import.meta.glob('/public/models/*.stl', { 
       eager: false,
       as: 'url'
     });
     
-    // Extract just the public URLs
-    const files = Object.keys(modules).map(path => {
-      // Convert /public/models/file.stl to /models/file.stl
-      return path.replace('/public', '');
-    });
-    
+    const files = Object.keys(modules).map(path => path.replace('/public', ''));
     console.log('📂 Discovered STL files:', files);
     return files;
   };
@@ -94,8 +92,8 @@ const TelescopeCustomizer: React.FC = () => {
         const geometry = await loader.loadAsync(filePath);
         geometry.computeVertexNormals();
 
-        var metalness = 0.3;
-        var roughness = 0.7;
+        let metalness = 0.3;
+        let roughness = 0.7;
      
         const fileName = filePath.split('/').pop() || '';
         if (fileName.startsWith('mirror-')) {
@@ -104,7 +102,7 @@ const TelescopeCustomizer: React.FC = () => {
         }
 
         const material = new THREE.MeshStandardMaterial({
-          color: pickColorForFile(fileName, tubeColor, mountColor),
+          color: pickColorForFile(fileName, tubeAColor, tubeBColor, baseColor),
           metalness: metalness,
           roughness: roughness,
         });
@@ -142,20 +140,18 @@ const TelescopeCustomizer: React.FC = () => {
     if (!modelsRef.current.size) return;
 
     modelsRef.current.forEach((mesh, file) => {
-      const newColor = pickColorForFile(file, tubeColor, mountColor);
+      const newColor = pickColorForFile(file, tubeAColor, tubeBColor, baseColor);
       if (mesh.material instanceof THREE.MeshStandardMaterial) {
         mesh.material.color.setStyle(newColor);
       }
     });
-  }, [tubeColor, mountColor]);
+  }, [tubeAColor, tubeBColor, baseColor]);
 
   // Initialize Three.js scene
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Scene setup
     const scene = new THREE.Scene();
-    // scene.background = new THREE.Color(0xbbc8d1);
     sceneRef.current = scene;
 
     const w = canvasRef.current.clientWidth;
@@ -180,11 +176,10 @@ const TelescopeCustomizer: React.FC = () => {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     rendererRef.current = renderer;
 
-    // Lighting setup - three-point lighting for better visualization
+    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
 
-    // Main light (key light)
     const mainLight = new THREE.DirectionalLight(0xffffff, 2);
     mainLight.position.set(50, 50, 100);
     mainLight.castShadow = true;
@@ -192,43 +187,34 @@ const TelescopeCustomizer: React.FC = () => {
     mainLight.shadow.mapSize.height = 2048;
     scene.add(mainLight);
 
-    // Fill light
     const fillLight = new THREE.DirectionalLight(0xffffff, 1.8);
     fillLight.position.set(-30, -30, 50);
     scene.add(fillLight);
 
-    // Rim light
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
     rimLight.position.set(0, 100, 30);
     scene.add(rimLight);
 
-    // Create circular geometry (Radius 500, 64 segments for smoothness)
+    // Ground
     const groundGeometry = new THREE.CircleGeometry(500, 64);
-
     const groundMaterial = new THREE.MeshStandardMaterial({ 
-        color: 0x444444, 
-        roughness: 0.8,
-        metalness: 0
+      color: 0x444444, 
+      roughness: 0.8,
+      metalness: 0
     });
-
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-
-    // Position it 40 units down the vertical Z-axis
-    ground.position.z = -40; 
-
+    ground.position.z = -40;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // Match background and fog for the faint horizon effect
+    // Background & fog
     const backgroundColor = 0xd8e1e8;
     scene.background = new THREE.Color(backgroundColor);
     scene.fog = new THREE.Fog(backgroundColor, 1, 500);
 
-    // Sky color (top), Ground color (bottom), Intensity
-    const light = new THREE.HemisphereLight(0xffffff, 0x222222, 1);
-    light.position.set(0, 0, 1); // Light shines down from the positive Z-axis
-    scene.add(light);
-
+    const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x222222, 1);
+    hemisphereLight.position.set(0, 0, 1);
+    scene.add(hemisphereLight);
 
     // Orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
@@ -242,7 +228,6 @@ const TelescopeCustomizer: React.FC = () => {
     controls.target.set(0, 0, 0);
     controlsRef.current = controls;
 
-    // Keep camera upright (Z-up)
     const enforceUpright = () => {
       camera.up.set(0, 0, 1);
     };
@@ -265,18 +250,13 @@ const TelescopeCustomizer: React.FC = () => {
       }
 
       const group = new THREE.Group();
-      
-      meshMap.forEach((mesh) => {
-        group.add(mesh);
-      });
+      meshMap.forEach((mesh) => group.add(mesh));
 
-      // Center the model
       const box = new THREE.Box3().setFromObject(group);
       const center = box.getCenter(new THREE.Vector3());
       group.position.sub(center);
-
-      // Scale for visibility
       group.scale.setScalar(0.05);
+      
       scene.add(group);
       modelsRef.current = meshMap;
       
@@ -302,7 +282,6 @@ const TelescopeCustomizer: React.FC = () => {
     
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
       if (animationFrameRef.current) {
@@ -313,291 +292,403 @@ const TelescopeCustomizer: React.FC = () => {
     };
   }, []);
 
-  const ColorPicker = ({ 
-    title, 
-    value, 
-    onChange, 
-    presets 
-  }: { 
-    title: string; 
-    value: string; 
-    onChange: (color: string) => void;
-    presets: { name: string; hex: string }[];
-  }) => (
-    <div style={{ marginBottom: '2rem' }}>
-      <h3 style={{ 
-        fontSize: '1.1rem', 
-        marginBottom: '0.75rem',
-        color: '#f8f4e8',
-        fontWeight: 600,
-      }}>
-        {title}
-      </h3>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))',
-        gap: '0.75rem',
-      }}>
-        {presets.map((preset) => (
-          <button
-            key={preset.hex}
-            onClick={() => onChange(preset.hex)}
-            style={{
-              position: 'relative',
-              padding: '0.5rem',
-              border: value === preset.hex ? '3px solid #4ec57a' : '2px solid rgba(255,255,255,0.2)',
-              borderRadius: '8px',
-              background: preset.hex,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              minHeight: '60px',
-              display: 'flex',
-              alignItems: 'flex-end',
-            }}
-            onMouseEnter={(e) => {
-              if (value !== preset.hex) {
-                e.currentTarget.style.transform = 'scale(1.05)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.4)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (value !== preset.hex) {
-                e.currentTarget.style.transform = 'scale(1)';
-                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
-              }
-            }}
-          >
-            <span style={{
-              fontSize: '0.7rem',
-              color: '#fff',
-              textShadow: '0 1px 2px rgba(0,0,0,0.8)',
-              fontWeight: 600,
-              lineHeight: 1.2,
-            }}>
-              {preset.name}
-            </span>
-            {value === preset.hex && (
-              <span style={{
-                position: 'absolute',
-                top: '4px',
-                right: '4px',
-                fontSize: '1.2rem',
-                color: '#4ec57a',
-                textShadow: '0 0 4px rgba(0,0,0,0.5)',
-              }}>
-                ✓
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
+  const handleColorChange = (color: string) => {
+    if (activeControl === 'tubeA') setTubeAColor(color);
+    else if (activeControl === 'tubeB') setTubeBColor(color);
+    else setBaseColor(color);
+  };
+
+  const getCurrentColor = () => {
+    if (activeControl === 'tubeA') return tubeAColor;
+    if (activeControl === 'tubeB') return tubeBColor;
+    return baseColor;
+  };
 
   return (
     <div style={{ 
-      maxWidth: isMobile ? '100%' : '1400px', 
-      margin: '0 auto', 
-      padding: isMobile ? '1rem' : '2rem 1rem',
+      maxWidth: '100%',
+      margin: '0',
+      padding: '0',
       minHeight: '100vh',
+      width: '100vw',
+      overflow: 'hidden',
     }}>
+      {/* 3D Viewer - Full screen */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: isMobile ? '1fr' : '350px 1fr',
-        gap: isMobile ? '1.5rem' : '2rem',
-        alignItems: 'start',
+        position: 'relative',
+        height: '100vh',
+        width: '100%',
+        background: '#d8e1e8',
       }}>
-        {/* Control Panel */}
-        <div style={{
-          background: 'rgba(255, 255, 255, 0.03)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          borderRadius: '16px',
-          padding: isMobile ? '1.5rem' : '2rem',
-          position: isMobile ? 'relative' : 'sticky',
-          top: isMobile ? '0' : '100px',
-          maxHeight: isMobile ? 'none' : 'calc(100vh - 120px)',
-          overflowY: 'auto',
-        }}>
-          <h2 style={{ 
-            fontSize: '1.5rem', 
-            marginBottom: '1.5rem',
-            color: '#f8f4e8',
-            fontWeight: 700,
-          }}>
-            Customize Your M42
-          </h2>
+        <canvas
+          ref={canvasRef}
+          style={{
+            width: '100%',
+            height: '100%',
+            display: 'block',
+            cursor: 'grab',
+            touchAction: 'pan-y pinch-zoom',
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.cursor = 'grabbing';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.cursor = 'grab';
+          }}
+        />
 
-          <ColorPicker
-            title="Tube Color"
-            value={tubeColor}
-            onChange={setTubeColor}
-            presets={COLOR_PRESETS.tube}
-          />
-
-          <ColorPicker
-            title="Mount Color"
-            value={mountColor}
-            onChange={setMountColor}
-            presets={COLOR_PRESETS.mount}
-          />
-
-          <div style={{
-            marginTop: '2rem',
-            paddingTop: '2rem',
-            borderTop: '1px solid rgba(255,255,255,0.1)',
-          }}>
-            <button style={{
-              width: '100%',
-              padding: '1rem',
-              background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-              border: '2px solid #2a7a4f',
-              borderRadius: '8px',
-              color: '#fff',
-              fontSize: '1rem',
-              fontWeight: 700,
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.4)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-            >
-              Add to Cart
-            </button>
-
-            <p style={{
-              marginTop: '1rem',
-              fontSize: '0.85rem',
-              color: 'rgba(248,244,232,0.7)',
-              textAlign: 'center',
-            }}>
-              🖱️ {isMobile ? 'Touch to rotate • Pinch to zoom' : 'Rotate, pan, and zoom to explore'}
-            </p>
-          </div>
-        </div>
-
-        {/* 3D Viewer */}
-        <div style={{
-          position: 'relative',
-          height: isMobile ? '60vh' : '80vh',
-          borderRadius: '16px',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-          background: '#1a1f2e',
-        }}>
-          <canvas
-            ref={canvasRef}
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'block',
-              cursor: 'grab',
-              touchAction: 'none',
-            }}
-            onMouseDown={(e) => {
-              e.currentTarget.style.cursor = 'grabbing';
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.style.cursor = 'grab';
-            }}
-          />
-
-          {isLoading && !error && (
-            <div style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: '#fff',
-              textAlign: 'center',
-            }}>
+        {/* Color Controls Overlay */}
+        {!isLoading && !error && (
+          <>
+            {/* Desktop: Vertical columns on left */}
+            {!isMobile && (
               <div style={{
-                fontSize: '1.2rem',
-                marginBottom: '1rem',
-                fontWeight: 600,
+                position: 'absolute',
+                left: '20px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '24px',
+                zIndex: 100,
               }}>
-                Loading telescope...
+                {/* Tube A Control */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                  <div style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: activeControl === 'tubeA' ? '#2a7a4f' : '#666',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    background: activeControl === 'tubeA' ? 'rgba(42, 122, 79, 0.1)' : 'rgba(255,255,255,0.8)',
+                    borderRadius: '4px',
+                    border: activeControl === 'tubeA' ? '2px solid #2a7a4f' : '2px solid transparent',
+                  }}
+                  onClick={() => setActiveControl('tubeA')}
+                  >
+                    Tube A
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {PASTEL_COLORS.map((color) => (
+                      <button
+                        key={color.hex}
+                        onClick={() => {
+                          setActiveControl('tubeA');
+                          setTubeAColor(color.hex);
+                        }}
+                        title={color.name}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: color.hex,
+                          border: tubeAColor === color.hex && activeControl === 'tubeA'
+                            ? '3px solid #2a7a4f' 
+                            : '2px solid rgba(0,0,0,0.2)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tube B Control */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                  <div style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: activeControl === 'tubeB' ? '#2a7a4f' : '#666',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    background: activeControl === 'tubeB' ? 'rgba(42, 122, 79, 0.1)' : 'rgba(255,255,255,0.8)',
+                    borderRadius: '4px',
+                    border: activeControl === 'tubeB' ? '2px solid #2a7a4f' : '2px solid transparent',
+                  }}
+                  onClick={() => setActiveControl('tubeB')}
+                  >
+                    Tube B
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {PASTEL_COLORS.map((color) => (
+                      <button
+                        key={color.hex}
+                        onClick={() => {
+                          setActiveControl('tubeB');
+                          setTubeBColor(color.hex);
+                        }}
+                        title={color.name}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: color.hex,
+                          border: tubeBColor === color.hex && activeControl === 'tubeB'
+                            ? '3px solid #2a7a4f' 
+                            : '2px solid rgba(0,0,0,0.2)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Base Control */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+                  <div style={{
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: activeControl === 'base' ? '#2a7a4f' : '#666',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer',
+                    padding: '4px 8px',
+                    background: activeControl === 'base' ? 'rgba(42, 122, 79, 0.1)' : 'rgba(255,255,255,0.8)',
+                    borderRadius: '4px',
+                    border: activeControl === 'base' ? '2px solid #2a7a4f' : '2px solid transparent',
+                  }}
+                  onClick={() => setActiveControl('base')}
+                  >
+                    Base
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {PASTEL_COLORS.map((color) => (
+                      <button
+                        key={color.hex}
+                        onClick={() => {
+                          setActiveControl('base');
+                          setBaseColor(color.hex);
+                        }}
+                        title={color.name}
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          background: color.hex,
+                          border: baseColor === color.hex && activeControl === 'base'
+                            ? '3px solid #2a7a4f' 
+                            : '2px solid rgba(0,0,0,0.2)',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'scale(1.15)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
               </div>
+            )}
+
+            {/* Mobile: Horizontal rows at bottom */}
+            {isMobile && (
               <div style={{
-                width: '200px',
-                height: '4px',
-                background: 'rgba(255,255,255,0.1)',
-                borderRadius: '2px',
-                overflow: 'hidden',
+                position: 'absolute',
+                bottom: '80px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '95%',
+                maxWidth: '500px',
+                zIndex: 100,
               }}>
+                {/* Part selector buttons */}
                 <div style={{
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #4ec57a, #2a7a4f)',
-                  width: `${loadingProgress}%`,
-                  transition: 'width 0.3s ease',
-                }} />
-              </div>
-              <div style={{
-                marginTop: '0.5rem',
-                fontSize: '0.9rem',
-                color: 'rgba(255,255,255,0.7)',
-              }}>
-                {Math.round(loadingProgress)}%
-              </div>
-            </div>
-          )}
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  marginBottom: '12px',
+                }}>
+                  {['tubeA', 'tubeB', 'base'].map((part) => (
+                    <button
+                      key={part}
+                      onClick={() => setActiveControl(part as any)}
+                      style={{
+                        padding: '8px 16px',
+                        background: activeControl === part ? 'rgba(42, 122, 79, 0.9)' : 'rgba(255,255,255,0.9)',
+                        color: activeControl === part ? '#fff' : '#333',
+                        border: 'none',
+                        borderRadius: '20px',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      {part === 'tubeA' ? 'Tube A' : part === 'tubeB' ? 'Tube B' : 'Base'}
+                    </button>
+                  ))}
+                </div>
 
-          {error && (
+                {/* Color swatches */}
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center',
+                  flexWrap: 'wrap',
+                  padding: '12px',
+                  background: 'rgba(255,255,255,0.95)',
+                  borderRadius: '16px',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                }}>
+                  {PASTEL_COLORS.map((color) => (
+                    <button
+                      key={color.hex}
+                      onClick={() => handleColorChange(color.hex)}
+                      title={color.name}
+                      style={{
+                        width: '36px',
+                        height: '36px',
+                        borderRadius: '50%',
+                        background: color.hex,
+                        border: getCurrentColor() === color.hex
+                          ? '3px solid #2a7a4f' 
+                          : '2px solid rgba(0,0,0,0.2)',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Add to Cart Button */}
             <div style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
-              transform: 'translate(-50%, -50%)',
-              color: '#fff',
-              textAlign: 'center',
-              padding: '2rem',
+              bottom: isMobile ? '16px' : '20px',
+              right: isMobile ? '50%' : '20px',
+              transform: isMobile ? 'translateX(50%)' : 'none',
+              zIndex: 100,
             }}>
-              <div style={{
-                fontSize: '3rem',
-                marginBottom: '1rem',
-              }}>
-                ⚠️
-              </div>
-              <div style={{
-                fontSize: '1.2rem',
-                marginBottom: '0.5rem',
-                fontWeight: 600,
-              }}>
-                {error}
-              </div>
-              <div style={{
-                fontSize: '0.9rem',
-                color: 'rgba(255,255,255,0.7)',
-              }}>
-                Check browser console for details
-              </div>
+              <button style={{
+                padding: isMobile ? '12px 32px' : '14px 40px',
+                background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
+                border: '2px solid #2a7a4f',
+                borderRadius: '24px',
+                color: '#fff',
+                fontSize: isMobile ? '0.9rem' : '1rem',
+                fontWeight: 700,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.4)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+              }}
+              >
+                Add to Cart
+              </button>
             </div>
-          )}
+          </>
+        )}
 
-          {!isLoading && !error && (
+        {/* Loading State */}
+        {isLoading && !error && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#333',
+            textAlign: 'center',
+            zIndex: 200,
+          }}>
             <div style={{
-              position: 'absolute',
-              bottom: '1rem',
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'rgba(0,0,0,0.7)',
-              padding: '0.5rem 1rem',
-              borderRadius: '8px',
-              color: 'rgba(255,255,255,0.9)',
-              fontSize: '0.85rem',
-              backdropFilter: 'blur(4px)',
-              whiteSpace: 'nowrap',
+              fontSize: '1.2rem',
+              marginBottom: '1rem',
+              fontWeight: 600,
             }}>
-              {isMobile ? '👆 Touch to explore' : '🖱️ Drag to rotate • Scroll to zoom • Right-click to pan'}
+              Loading telescope...
             </div>
-          )}
-        </div>
+            <div style={{
+              width: '200px',
+              height: '4px',
+              background: 'rgba(0,0,0,0.1)',
+              borderRadius: '2px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #4ec57a, #2a7a4f)',
+                width: `${loadingProgress}%`,
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+            <div style={{
+              marginTop: '0.5rem',
+              fontSize: '0.9rem',
+              color: '#666',
+            }}>
+              {Math.round(loadingProgress)}%
+            </div>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: '#333',
+            textAlign: 'center',
+            padding: '2rem',
+            zIndex: 200,
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '1rem',
+            }}>
+              ⚠️
+            </div>
+            <div style={{
+              fontSize: '1.2rem',
+              marginBottom: '0.5rem',
+              fontWeight: 600,
+            }}>
+              {error}
+            </div>
+            <div style={{
+              fontSize: '0.9rem',
+              color: '#666',
+            }}>
+              Check browser console for details
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
