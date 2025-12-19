@@ -3,10 +3,29 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader';
 
+// Provide minimal ambient declarations for three/examples modules to satisfy TypeScript
+declare module 'three/examples/jsm/loaders/OBJLoader' {
+  import * as THREE from 'three';
+  export class OBJLoader extends THREE.Loader {
+    constructor(manager?: THREE.LoadingManager);
+    load(url: string, onLoad: (obj: THREE.Group) => void, onProgress?: (event: ProgressEvent) => void, onError?: (event: ErrorEvent) => void): void;
+    setMaterials(materials: any): void;
+  }
+  export default OBJLoader;
+}
+declare module 'three/examples/jsm/loaders/MTLLoader' {
+  import * as THREE from 'three';
+  export class MTLLoader extends THREE.Loader {
+    constructor(manager?: THREE.LoadingManager);
+    load(url: string, onLoad: (materials: any) => void, onProgress?: (event: ProgressEvent) => void, onError?: (event: ErrorEvent) => void): void;
+  }
+  export default MTLLoader;
+}
+
 export async function loadTelescopeOBJ(
   objPath: string,
   mtlPath?: string
-): Promise {
+): Promise<THREE.Group> {
   return new Promise((resolve, reject) => {
     const objLoader = new OBJLoader();
 
