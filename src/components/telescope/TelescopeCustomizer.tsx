@@ -5,19 +5,21 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Color picker for telescope components
 const pickColorForFile = (
-  fileName: string, 
-  tubeAColor: string, 
-  tubeBColor: string, 
+  fileName: string,
+  tubeAColor: string,
+  tubeBColor: string,
   baseColor: string
 ): string => {
   const name = fileName.toLowerCase().replace(/['"]/g, '').replace(/\s+/g, '-').replace(/_/g, '-').trim();
-  
+
   if (name.startsWith('tube-a-')) return tubeAColor;
   if (name.startsWith('tube-b-')) return tubeBColor;
   if (name.startsWith('base-')) return baseColor;
+  if (name.startsWith('mount-')) return '#f5f5f5';
+  if (name.startsWith('rod-')) return '#d6d6d6';
   if (name.startsWith('black-')) return '#1a1a1a';
   if (name.startsWith('mirror-')) return '#b2d9db';
-  
+
   return '#9a9a9a';
 };
 
@@ -43,11 +45,11 @@ const PASTEL_COLORS = [
 ];
 
 const textColorFor = (hex: string) => {
-  const c = hex.replace('#','');
-  const r = parseInt(c.substr(0,2),16);
-  const g = parseInt(c.substr(2,2),16);
-  const b = parseInt(c.substr(4,2),16);
-  const luminance = (0.299*r + 0.587*g + 0.114*b)/255;
+  const c = hex.replace('#', '');
+  const r = parseInt(c.substr(0, 2), 16);
+  const g = parseInt(c.substr(2, 2), 16);
+  const b = parseInt(c.substr(4, 2), 16);
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
   return luminance > 0.6 ? '#000' : '#fff';
 };
 
@@ -60,9 +62,9 @@ const TelescopeCustomizer: React.FC = () => {
   const modelsRef = useRef<Map<string, THREE.Mesh>>(new Map());
   const animationFrameRef = useRef<number>();
 
-const [tubeAColor, setTubeAColor] = useState('#b31021'); // Red
-const [tubeBColor, setTubeBColor] = useState('#ffd100'); // Yellow
-const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
+  const [tubeAColor, setTubeAColor] = useState('#b31021'); // Red
+  const [tubeBColor, setTubeBColor] = useState('#ffd100'); // Yellow
+  const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
   const [isLoading, setIsLoading] = useState(true);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -82,12 +84,12 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
 
   // Discover STL files dynamically
   const discoverSTLFiles = async (): Promise<string[]> => {
-  const modules = import.meta.glob('/public/models/*.stl?url', { 
-    eager: false,
-    import: 'default'
-  });
-    
-    const files = Object.keys(modules).map(path => path.replace('/public', ''));
+    const modules = import.meta.glob('/src/models/*.stl', {
+      import: 'default',
+      eager: true,
+    });
+
+    const files = Object.values(modules) as string[];
     console.log('📂 Discovered STL files:', files);
     return files;
   };
@@ -96,12 +98,12 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
   const loadSTLFiles = async () => {
     const loader = new STLLoader();
     const stlFiles = await discoverSTLFiles();
-    
+
     if (stlFiles.length === 0) {
-      console.warn('⚠️ No STL files found in /public/models/');
+      console.warn('⚠️ No STL files found');
       return new Map();
     }
-    
+
     let loaded = 0;
 
     const meshPromises = stlFiles.map(async (filePath) => {
@@ -111,11 +113,15 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
 
         let metalness = 0.3;
         let roughness = 0.7;
-     
+
         const fileName = filePath.split('/').pop() || '';
         if (fileName.startsWith('mirror-')) {
           metalness = 0.8;
           roughness = 0.1;
+        }
+        else if (fileName.startsWith('rod-')) {
+          metalness = 0.9;
+          roughness = 0.5;
         }
 
         const material = new THREE.MeshStandardMaterial({
@@ -127,10 +133,10 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
         const mesh = new THREE.Mesh(geometry, material);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        
+
         loaded++;
         setLoadingProgress((loaded / stlFiles.length) * 100);
-        
+
         console.log(`✅ Loaded: ${fileName}`);
         return { file: fileName, mesh };
       } catch (error) {
@@ -141,7 +147,7 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
 
     const results = await Promise.all(meshPromises);
     const meshMap = new Map<string, THREE.Mesh>();
-    
+
     results.forEach(result => {
       if (result) {
         meshMap.set(result.file, result.mesh);
@@ -214,8 +220,8 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
 
     // Ground
     const groundGeometry = new THREE.CircleGeometry(500, 64);
-    const groundMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0x444444, 
+    const groundMaterial = new THREE.MeshStandardMaterial({
+      color: 0x444444,
       roughness: 0.8,
       metalness: 0
     });
@@ -275,11 +281,11 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
       group.position.y += 32; // To the left
       group.position.z -= 12; // A little below center
       group.scale.setScalar(0.05);
-      
+
       scene.add(group);
       camera.lookAt(group.position);
       modelsRef.current = meshMap;
-      
+
       setIsLoading(false);
       setError(null);
     }).catch(err => {
@@ -291,15 +297,15 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
     // Handle resize
     const handleResize = () => {
       if (!canvasRef.current) return;
-      
+
       const w = canvasRef.current.clientWidth;
       const h = canvasRef.current.clientHeight;
-      
+
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
     };
-    
+
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -325,7 +331,7 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
   };
 
   return (
-    <div style={{ 
+    <div style={{
       maxWidth: '100%',
       margin: '0',
       padding: '0',
@@ -374,7 +380,7 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
               {[
                 { key: 'tubeA', color: tubeAColor, label: 'Tube A' },
                 { key: 'tubeB', color: tubeBColor, label: 'Tube B' },
-                { key: 'base',  color: baseColor,  label: 'Base'  },
+                { key: 'base', color: baseColor, label: 'Base' },
               ].map(btn => (
                 <button
                   key={btn.key}
@@ -437,7 +443,7 @@ const [baseColor, setBaseColor] = useState('#a1a3a4');   // Gray
                   onClick={() => {
                     if (activeControl === 'tubeA') setTubeAColor(color.hex);
                     if (activeControl === 'tubeB') setTubeBColor(color.hex);
-                    if (activeControl === 'base')  setBaseColor(color.hex);
+                    if (activeControl === 'base') setBaseColor(color.hex);
                     setDrawerOpen(false);
                   }}
                   style={{
