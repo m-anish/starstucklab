@@ -7,8 +7,10 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 const pickColorForFile = (fileName: string, tubeColor: string, mountColor: string): string => {
   const name = fileName.toLowerCase().replace(/['"]/g, '').replace(/\s+/g, '-').replace(/_/g, '-').trim();
   
-  if (name.includes('tube-')) return tubeColor;
-  if (name.includes('base-')) return mountColor;
+  if (name.startsWith('tube-')) return tubeColor;
+  if (name.startsWith('base-')) return mountColor;
+  if (name.startsWith('black-')) return '#1a1a1a'; // Always black
+  if (name.startsWith('mirror-')) return '#b2d9dbff'; // Always bluish-silver
   
   return '#9a9a9a'; // Default gray for other parts
 };
@@ -92,11 +94,19 @@ const TelescopeCustomizer: React.FC = () => {
         const geometry = await loader.loadAsync(filePath);
         geometry.computeVertexNormals();
 
+        var metalness = 0.3;
+        var roughness = 0.7;
+     
         const fileName = filePath.split('/').pop() || '';
+        if (fileName.startsWith('mirror-')) {
+          metalness = 0.8;
+          roughness = 0.1;
+        }
+
         const material = new THREE.MeshStandardMaterial({
           color: pickColorForFile(fileName, tubeColor, mountColor),
-          metalness: 0.3,
-          roughness: 0.7,
+          metalness: metalness,
+          roughness: roughness,
         });
 
         const mesh = new THREE.Mesh(geometry, material);
@@ -145,7 +155,7 @@ const TelescopeCustomizer: React.FC = () => {
 
     // Scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1f2e);
+    // scene.background = new THREE.Color(0xbbc8d1);
     sceneRef.current = scene;
 
     const w = canvasRef.current.clientWidth;
@@ -153,7 +163,7 @@ const TelescopeCustomizer: React.FC = () => {
 
     // Camera setup - Z is UP
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-    camera.position.set(75, -47, 19);
+    camera.position.set(75, -87, 19);
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 0);
     cameraRef.current = camera;
@@ -171,7 +181,7 @@ const TelescopeCustomizer: React.FC = () => {
     rendererRef.current = renderer;
 
     // Lighting setup - three-point lighting for better visualization
-    const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 2.5);
     scene.add(ambientLight);
 
     // Main light (key light)
@@ -183,7 +193,7 @@ const TelescopeCustomizer: React.FC = () => {
     scene.add(mainLight);
 
     // Fill light
-    const fillLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    const fillLight = new THREE.DirectionalLight(0xffffff, 1.8);
     fillLight.position.set(-30, -30, 50);
     scene.add(fillLight);
 
@@ -191,6 +201,34 @@ const TelescopeCustomizer: React.FC = () => {
     const rimLight = new THREE.DirectionalLight(0xffffff, 0.5);
     rimLight.position.set(0, 100, 30);
     scene.add(rimLight);
+
+    // Create circular geometry (Radius 500, 64 segments for smoothness)
+    const groundGeometry = new THREE.CircleGeometry(500, 64);
+
+    const groundMaterial = new THREE.MeshStandardMaterial({ 
+        color: 0x444444, 
+        roughness: 0.8,
+        metalness: 0
+    });
+
+    const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+
+    // Position it 40 units down the vertical Z-axis
+    ground.position.z = -40; 
+
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // Match background and fog for the faint horizon effect
+    const backgroundColor = 0xd8e1e8;
+    scene.background = new THREE.Color(backgroundColor);
+    scene.fog = new THREE.Fog(backgroundColor, 1, 500);
+
+    // Sky color (top), Ground color (bottom), Intensity
+    const light = new THREE.HemisphereLight(0xffffff, 0x222222, 1);
+    light.position.set(0, 0, 1); // Light shines down from the positive Z-axis
+    scene.add(light);
+
 
     // Orbit controls
     const controls = new OrbitControls(camera, renderer.domElement);
