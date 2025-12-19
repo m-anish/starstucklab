@@ -13,6 +13,7 @@ export default defineConfig({
   base: '/',
   
   vite: {
+    assetsInclude: ['**/*.stl'], // Add this line to treat .stl files as assets
     server: { 
       fs: { allow: ['..'] } 
     },
