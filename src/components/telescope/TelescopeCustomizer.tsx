@@ -159,9 +159,9 @@ const TelescopeCustomizer: React.FC = () => {
 
     // Camera setup - Z is UP
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-    camera.position.set(75, -87, 19);
+    camera.position.set(60, -50, 0);
     camera.up.set(0, 0, 1);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, 0, 40);
     cameraRef.current = camera;
 
     // Renderer setup
@@ -255,9 +255,12 @@ const TelescopeCustomizer: React.FC = () => {
       const box = new THREE.Box3().setFromObject(group);
       const center = box.getCenter(new THREE.Vector3());
       group.position.sub(center);
+      group.position.y += 32; // To the left
+      group.position.z -= 12; // A little below center
       group.scale.setScalar(0.05);
       
       scene.add(group);
+      camera.lookAt(group.position);
       modelsRef.current = meshMap;
       
       setIsLoading(false);
