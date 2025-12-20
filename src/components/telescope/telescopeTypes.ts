@@ -16,6 +16,10 @@ export interface WizardStep {
 export interface TelescopeViewerProps {
   colors: { tubeA: string; tubeB: string; base: string };
   onColorChange: (part: 'tubeA' | 'tubeB' | 'base', color: string) => void;
+  focusTarget?: string; // STL filename to focus camera on
+  showEngravingUI?: boolean;
+  engravingText?: string;
+  onEngravingChange?: (text: string) => void;
 }
 
 export interface ColorPickerProps {

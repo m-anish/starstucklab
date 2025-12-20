@@ -224,69 +224,56 @@ export default function CustomizationWizard() {
         {currentStep === 1 && (
           <div>
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Add Engraving (Optional)</h2>
-            <p style={{ marginBottom: '32px', color: '#666' }}>Personalize your telescope with custom text (max 30 characters)</p>
+            <p style={{ marginBottom: '32px', color: '#666' }}>Personalize your telescope with custom text (max 15 characters)</p>
 
-            <div style={{
-              background: '#f5f5f5',
-              padding: '32px',
-              borderRadius: '12px',
-              marginBottom: '24px',
-            }}>
-              <label style={{ display: 'block', marginBottom: '12px', fontWeight: 600 }}>
-                Engraving Text
-              </label>
-              <input
-                type="text"
-                maxLength={30}
-                value={customization.engraving}
-                onChange={(e) => updateCustomization({ engraving: e.target.value })}
-                placeholder="Enter your text..."
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  fontSize: '1.1rem',
-                  border: '2px solid #ddd',
+            <TelescopeViewer
+              colors={{
+                tubeA: customization.tubeAColor,
+                tubeB: customization.tubeBColor,
+                base: customization.baseColor,
+              }}
+              onColorChange={handleColorChange}
+              focusTarget="tube-a-uta-for-sleeve.stl"
+              showEngravingUI={true}
+              engravingText={customization.engraving}
+              onEngravingChange={(text) => updateCustomization({ engraving: text })}
+            />
+
+            <div style={{ marginTop: '24px' }}>
+              <div style={{
+                background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
+                padding: '32px',
+                borderRadius: '12px',
+                color: '#fff',
+                textAlign: 'center',
+              }}>
+                <div style={{ fontSize: '0.9rem', marginBottom: '8px', opacity: 0.9 }}>
+                  Preview:
+                </div>
+                <div style={{
+                  fontSize: '1.5rem',
+                  fontFamily: 'Georgia, serif',
+                  fontStyle: 'italic',
+                  letterSpacing: '2px',
+                }}>
+                  {customization.engraving || '(no engraving)'}
+                </div>
+              </div>
+
+              {customization.engraving && (
+                <div style={{
+                  marginTop: '16px',
+                  padding: '12px',
+                  background: 'rgba(42,122,79,0.1)',
                   borderRadius: '8px',
-                  fontFamily: 'monospace',
-                }}
-              />
-              <div style={{ marginTop: '8px', fontSize: '0.85rem', color: '#666' }}>
-                {customization.engraving.length}/30 characters
-              </div>
+                  color: '#2a7a4f',
+                  fontSize: '0.9rem',
+                  textAlign: 'center',
+                }}>
+                  ✓ Engraving will add ₹{ENGRAVING_COST.toLocaleString()} to the total price
+                </div>
+              )}
             </div>
-
-            <div style={{
-              background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-              padding: '48px',
-              borderRadius: '12px',
-              color: '#fff',
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: '0.9rem', marginBottom: '12px', opacity: 0.9 }}>
-                Preview:
-              </div>
-              <div style={{
-                fontSize: '2rem',
-                fontFamily: 'Georgia, serif',
-                fontStyle: 'italic',
-                letterSpacing: '2px',
-              }}>
-                {customization.engraving || '(no engraving)'}
-              </div>
-            </div>
-
-            {customization.engraving && (
-              <div style={{
-                marginTop: '24px',
-                padding: '16px',
-                background: 'rgba(42,122,79,0.1)',
-                borderRadius: '8px',
-                color: '#2a7a4f',
-                fontSize: '0.9rem',
-              }}>
-                ✓ Engraving will add ₹{ENGRAVING_COST.toLocaleString()} to the total price
-              </div>
-            )}
           </div>
         )}
 
