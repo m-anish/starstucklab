@@ -66,44 +66,28 @@ export default function CustomizationWizard() {
     const stored = localStorage.getItem('starstucklab_cart');
     const cart = stored ? JSON.parse(stored) : { items: [] };
 
-    if (customization.graphic && graphicPreview) {
-      const cartItem = {
-        slug: 'm42',
-        title: 'M42 Dobsonian (Customized)',
-        price: calculatePrice().toString(),
-        currency: 'INR',
-        quantity: 1,
-        customization: {
-          tubeAColor: customization.tubeAColor,
-          tubeBColor: customization.tubeBColor,
-          baseColor: customization.baseColor,
-          engraving: customization.engraving,
-          graphicData: graphicPreview,
-          graphicName: customization.graphic.name,
-        }
-      };
-      cart.items.push(cartItem);
-    } else {
-      const cartItem = {
-        slug: 'm42',
-        title: 'M42 Dobsonian (Customized)',
-        price: calculatePrice().toString(),
-        currency: 'INR',
-        quantity: 1,
-        customization: {
-          tubeAColor: customization.tubeAColor,
-          tubeBColor: customization.tubeBColor,
-          baseColor: customization.baseColor,
-          engraving: customization.engraving,
-        }
-      };
-      cart.items.push(cartItem);
-    }
+    const cartItem = {
+      slug: 'm42',
+      title: 'M42 Dobsonian (Customized)',
+      price: calculatePrice().toString(),
+      currency: 'INR',
+      quantity: 1,
+      customization: {
+        tubeAColor: customization.tubeAColor,
+        tubeBColor: customization.tubeBColor,
+        baseColor: customization.baseColor,
+        engraving: customization.engraving,
+        graphicData: graphicPreview, // Store base64 for localStorage
+        graphicName: customization.graphic?.name,
+      }
+    };
+    cart.items.push(cartItem);
 
     const expiry = new Date();
     expiry.setDate(expiry.getDate() + 30);
     cart.expiry = expiry.toISOString();
 
+    // Store cart data (File objects will be handled separately during form submission)
     localStorage.setItem('starstucklab_cart', JSON.stringify(cart));
     window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: cart.items } }));
 
