@@ -76,216 +76,6 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
 
 <StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
   <ProductNav product={{ slug, title: product.title }} />
-  
-  {isM42 && (
-    <>
-      <!-- Customization Modal -->
-      <div id="customizerModal" class="customizer-modal" aria-hidden="true">
-        <div class="modal-overlay" id="customizerOverlay"></div>
-        <div class="modal-content">
-          <div class="modal-header">
-            <h2 class="modal-title">Customize Your M42 Dobsonian</h2>
-            <button class="modal-close" id="closeCustomizer" aria-label="Close customizer">×</button>
-          </div>
-          <div class="modal-body">
-            <iframe 
-              id="customizerFrame" 
-              src="/shop/m42-customizer" 
-              title="Telescope Customizer"
-              style="width: 100%; height: 100%; border: none;"
-            ></iframe>
-          </div>
-        </div>
-      </div>
-
-      <!-- Modal Styles -->
-      <style>
-        .customizer-modal {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          z-index: 9999;
-          display: none;
-          align-items: center;
-          justify-content: center;
-        }
-
-        .customizer-modal[aria-hidden="false"] {
-          display: flex;
-        }
-
-        .modal-overlay {
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.8);
-          backdrop-filter: blur(8px);
-        }
-
-        .modal-content {
-          position: relative;
-          width: 95vw;
-          height: 95vh;
-          max-width: 1400px;
-          max-height: 900px;
-          background: #d8e1e8;
-          border-radius: 16px;
-          overflow: hidden;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-          display: flex;
-          flex-direction: column;
-        }
-
-        .modal-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          padding: 20px 24px;
-          background: rgba(255, 255, 255, 0.95);
-          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
-        }
-
-        .modal-title {
-          margin: 0;
-          font-family: 'Playfair Display', serif;
-          font-size: 1.5rem;
-          color: #222;
-        }
-
-        .modal-close {
-          width: 40px;
-          height: 40px;
-          border: none;
-          background: rgba(0, 0, 0, 0.05);
-          border-radius: 50%;
-          font-size: 28px;
-          line-height: 1;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          color: #333;
-        }
-
-        .modal-close:hover {
-          background: rgba(0, 0, 0, 0.1);
-          transform: scale(1.1);
-        }
-
-        .modal-body {
-          flex: 1;
-          position: relative;
-          overflow: hidden;
-        }
-
-        @media (max-width: 768px) {
-          .modal-content {
-            width: 100vw;
-            height: 100vh;
-            max-width: none;
-            max-height: none;
-            border-radius: 0;
-          }
-
-          .modal-header {
-            padding: 16px 20px;
-          }
-
-          .modal-title {
-            font-size: 1.2rem;
-          }
-        }
-      </style>
-
-      <!-- Modal Script -->
-      <script>
-        if (typeof window !== 'undefined') {
-          const modal = document.getElementById('customizerModal');
-          const overlay = document.getElementById('customizerOverlay');
-          const closeBtn = document.getElementById('closeCustomizer');
-          const launchBtn = document.getElementById('launchCustomizer');
-
-          function openModal() {
-            if (modal) {
-              modal.setAttribute('aria-hidden', 'false');
-              document.body.style.overflow = 'hidden';
-            }
-          }
-
-          function closeModal() {
-            if (modal) {
-              modal.setAttribute('aria-hidden', 'true');
-              document.body.style.overflow = '';
-            }
-          }
-
-          launchBtn?.addEventListener('click', openModal);
-          closeBtn?.addEventListener('click', closeModal);
-          overlay?.addEventListener('click', closeModal);
-
-          // Close on Escape key
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal?.getAttribute('aria-hidden') === 'false') {
-              closeModal();
-            }
-          });
-
-          // Listen for messages from customizer iframe
-          window.addEventListener('message', (event) => {
-            if (event.data.type === 'ADD_TO_CART') {
-              const product = event.data.product;
-              
-              try {
-                // Add to cart
-                const stored = localStorage.getItem('starstucklab_cart');
-                const data = stored ? JSON.parse(stored) : { items: [] };
-                
-                // Check if customized M42 already exists
-                const existingIndex = data.items.findIndex((i: any) => 
-                  i.slug === product.slug && 
-                  i.customization &&
-                  i.customization.tubeAColor === product.customization.tubeAColor &&
-                  i.customization.tubeBColor === product.customization.tubeBColor &&
-                  i.customization.baseColor === product.customization.baseColor
-                );
-                
-                if (existingIndex >= 0) {
-                  // Increment quantity of matching customization
-                  data.items[existingIndex].quantity += 1;
-                } else {
-                  // Add as new item
-                  data.items.push(product);
-                }
-                
-                const expiry = new Date();
-                expiry.setDate(expiry.getDate() + 30);
-                data.expiry = expiry.toISOString();
-                
-                localStorage.setItem('starstucklab_cart', JSON.stringify(data));
-                window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: data.items } }));
-                
-                // Close modal and show success
-                closeModal();
-                
-                // Open cart drawer if available
-                setTimeout(() => {
-                  if ((window as any).openCart) {
-                    (window as any).openCart();
-                  }
-                }, 300);
-                
-              } catch (err) {
-                console.error('Error adding to cart:', err);
-                alert('Error adding to cart. Please try again.');
-              }
-            }
-          });
-        }
-      </script>
-    </>
-  )}
 
   <div class="product-detail-v2">
     <!-- Enhanced Hero for M42 -->
@@ -309,17 +99,17 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
             </div>
           )}
           
-          <!-- Primary CTA: Launch Customizer -->
-          <button class="cta-primary cta-customize" id="launchCustomizer">
+          <!-- Primary CTA: Go to Customizer Page -->
+          <a href="/shop/m42-customizer" class="cta-primary cta-customize">
             <span class="cta-icon">🎨</span>
             <span class="cta-text">
               <strong>Customize Your M42</strong>
               <small>Choose colors, preview in 3D</small>
             </span>
             <span class="cta-arrow">→</span>
-          </button>
+          </a>
           
-          <!-- Secondary CTA: Quick Add -->
+          <!-- Secondary CTA: Quick Add (Standard Config) -->
           {product.status === 'available' && (
             <div class="cta-secondary-wrap">
               <AddToCartButton product={{
@@ -329,6 +119,7 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
                 currency: product.currency,
                 status: product.status
               }} />
+              <small class="quick-add-note">Add standard configuration without customization</small>
             </div>
           )}
           
@@ -487,11 +278,13 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
         transition: all 0.2s ease;
         margin: 24px 0 16px 0;
         box-shadow: 0 4px 16px rgba(42, 122, 79, 0.3);
+        text-decoration: none;
       }
 
       .cta-primary:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 24px rgba(42, 122, 79, 0.4);
+        color: white;
       }
 
       .cta-icon {
@@ -527,6 +320,15 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
 
       .cta-secondary-wrap {
         margin: 12px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .quick-add-note {
+        font-size: 0.8rem;
+        color: rgba(248, 244, 232, 0.6);
+        font-style: italic;
       }
 
       @media (max-width: 900px) {

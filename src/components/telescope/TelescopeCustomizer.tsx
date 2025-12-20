@@ -558,59 +558,10 @@ export default function CustomizationWizard() {
     localStorage.setItem('starstucklab_cart', JSON.stringify(cart));
     window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: cart.items } }));
 
-    alert('Added to cart! Redirecting to checkout...');
-    window.location.href = '/checkout';
+    // Show success message and redirect back to product page
+    alert('✓ Added to cart!');
+    window.location.href = '/shop/m42';
   };
-
-  useEffect(() => {
-    // Listen for messages from parent window
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'REQUEST_CUSTOMIZATION') {
-        // Send current customization state to parent
-        const customizationData = {
-          tubeAColor: customization.tubeAColor,
-          tubeBColor: customization.tubeBColor,
-          baseColor: customization.baseColor,
-        };
-
-        window.parent.postMessage({
-          type: 'CUSTOMIZATION_DATA',
-          data: customizationData
-        }, '*');
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [customization.tubeAColor, customization.tubeBColor, customization.baseColor]);
-
-  // // Add handleAddToCart function
-  // const handleAddToCart = () => {
-  //   const customizationData = {
-  //     tubeAColor,
-  //     tubeBColor,
-  //     baseColor,
-  //   };
-
-  //   // Send to parent window
-  //   window.parent.postMessage({
-  //     type: 'ADD_TO_CART',
-  //     product: {
-  //       slug: 'm42',
-  //       title: 'M42 Dobsonian (Customized)',
-  //       price: '29500', // Base price
-  //       currency: 'INR',
-  //       quantity: 1,
-  //       customization: customizationData
-  //     }
-  //   }, '*');
-
-  //   // Show success message
-  //   alert('Added to cart! Close this window to continue shopping.');
-  // };
 
   return (
     <div style={{
@@ -621,6 +572,25 @@ export default function CustomizationWizard() {
       borderRadius: '16px',
       boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
     }}>
+      {/* Back Button */}
+      <div style={{ marginBottom: '24px' }}>
+        <a 
+          href="/shop/m42" 
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            color: '#666',
+            textDecoration: 'none',
+            fontSize: '0.95rem',
+            transition: 'color 0.2s ease',
+          }}
+          onMouseOver={(e) => e.currentTarget.style.color = '#2a7a4f'}
+          onMouseOut={(e) => e.currentTarget.style.color = '#666'}
+        >
+          ← Back to Product Details
+        </a>
+      </div>
       {/* Progress Bar */}
       <div style={{
         display: 'flex',
