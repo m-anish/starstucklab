@@ -150,6 +150,42 @@
   color: #ef4444;
 }
 
+.checkout-customization {
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  font-size: 0.9rem;
+}
+
+.checkout-customization strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-dark);
+}
+
+.custom-colors {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.color-dot {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(80, 50, 25, 0.3);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-detail {
+  font-size: 0.85rem;
+  color: var(--ink-mid);
+  margin-top: 4px;
+  font-style: italic;
+}
+
 @media (max-width: 900px) {
   .checkout-grid {
     grid-template-columns: 1fr;

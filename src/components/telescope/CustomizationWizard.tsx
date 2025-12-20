@@ -65,16 +65,6 @@ const pickColorForFile = (fileName: string, tubeA: string, tubeB: string, base: 
 };
 
 // ============================================================================
-// MODEL POSITIONING
-// ============================================================================
-
-const positionModel = (mesh: THREE.Mesh, fileName: string): void => {
-  // Scale down if needed (STL files might be in different units)
-  const scale = 0.1; // Adjust this based on actual model sizes
-  mesh.scale.setScalar(scale);
-};
-
-// ============================================================================
 // 3D VIEWER COMPONENT
 // ============================================================================
 
@@ -151,212 +141,10 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({ colors }) => {
     };
     animate();
 
-    // Load STL files
+    // Load STL files (placeholder - replace with actual loading)
     const loader = new STLLoader();
-
-    // Define files to load based on telescope assembly
-    const stlFiles = [
-      // Base components
-      'base-front-bottom.stl',
-      'base-left-bottom.stl',
-      'base-left-top.stl',
-      'base-right-bottom.stl',
-      'base-right-top.stl',
-
-      // Black components
-      'black-6x30-finderscope-mount.stl',
-      'black-Baffle.stl',
-      'black-Celestron-51630-Red-Dot.stl',
-      'black-Dovetail-mount.stl',
-      'black-Mirror-Cell---Primary.stl',
-      'black-Mirror-Cell---Secondary.stl',
-      'black-NRF---Collet.stl',
-      'black-NRF---Drawtube.stl',
-      'black-Spider-curved-single-nut.stl',
-      'black-Svbony-SV182-6x30-finderscope.stl',
-      'black-UTA-Sleeve.stl',
-
-      // Gray components
-      'gray-Hex-bolt-M4x0.7-x-50mm_1.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm_2.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm_3.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm_4.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm_5.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm_6.stl',
-      'gray-Hex-bolt-M4x0.7-x-50mm.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_10.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_11.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_12.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_13.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_14.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_15.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_16.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_17.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_18.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_19.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_1.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_20.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_21.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_22.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_23.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_24.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_25.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_26.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_27.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_28.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_29.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_2.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_30.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_31.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_32.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_33.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_34.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_35.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_36.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_37.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_38.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_3.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_4.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_5.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_6.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_7.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_8.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7_9.stl',
-      'gray-Hex-nut-grade-A---B-M4x0.7.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_10.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_11.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_12.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_13.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_14.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_15.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_16.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_17.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_18.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_1.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_2.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_3.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_4.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_5.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_6.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_7.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_8.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12_9.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-12.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-16_1.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-16_2.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-16_3.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-16.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_1.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_2.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_3.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_4.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_5.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_6.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20_7.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-20.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-25_1.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-25.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-8_1.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-8_2.stl',
-      'gray-Hex-socket-head-cap-screw-M4x0.70-x-8.stl',
-      'gray-Nut-dome-M4x0.7_1.stl',
-      'gray-Nut-dome-M4x0.7_2.stl',
-      'gray-Nut-dome-M4x0.7.stl',
-      'gray-Nut-nyloc-M4x0.7_1.stl',
-      'gray-Nut-nyloc-M4x0.7_2.stl',
-      'gray-Nut-nyloc-M4x0.7_3.stl',
-      'gray-Nut-nyloc-M4x0.7.stl',
-
-      // Mirror components
-      'mirror-Mirror---Primary.stl',
-      'mirror-Secondary-mirror.stl',
-
-      // Mount/Structural components
-      'mount-base.stl',
-
-      // Rod components
-      'rod-base-bottom-back.stl',
-      'rod-base-bottom-front-top-front-left.stl',
-      'rod-base-bottom-front-top-front-right.stl',
-      'rod-base-bottom-left.stl',
-      'rod-base-bottom-left-top-back-left.stl',
-      'rod-base-bottom-left-top-front-left.stl',
-      'rod-base-bottom-right.stl',
-      'rod-base-bottom-right-top-back-right.stl',
-      'rod-base-bottom-right-top-front-right.stl',
-      'rod-base-top.stl',
-      'rod-ota-1-12mm_rod_1m.stl',
-      'rod-ota-2-12mm_rod_1m_1.stl',
-      'rod-ota-3-12mm_rod_1m_2.stl',
-      
-      // Tube A components
-      'tube-a-Bearing-1.stl',
-      'tube-a-Bearing-2.stl',
-      'tube-a-farsight.stl',
-      'tube-a-lta-for-sleeve.stl',
-      'tube-a-NRF---Collet-Nut-knurled.stl',
-      'tube-a-NRF---Retaining-Ring.stl',
-      'tube-a-Thumbscrew-Small---M4-Nyloc.stl',
-      'tube-a-uta-for-sleeve.stl',
-
-      // Tube B components
-      'tube-b-Bearing-Mount-Interface.stl',
-      'tube-b-nearsight.stl',
-      'tube-b-NRF---Base.stl',
-      'tube-b-NRF--Nut-knurled.stl',
-      'tube-b-secondary-collimation-plate.stl',
-      'tube-b-thumbscrew-large-m4-nyloc_1.stl',
-      'tube-b-thumbscrew-large-m4-nyloc_2.stl',
-      'tube-b-thumbscrew-large-m4-nyloc.stl',
-      'tube-b-thumbscrew-small-m4-hex-nut_1.stl',
-      'tube-b-thumbscrew-small-m4-hex-nut_2.stl',
-      'tube-b-thumbscrew-small-m4-hex-nut.stl'
-
-    ];
-
-    // Load all STL files
-    const loadPromises = stlFiles.map(fileName => {
-      return new Promise<{ geometry: THREE.BufferGeometry; fileName: string }>((resolve, reject) => {
-        loader.load(
-          `/models/m42/${fileName}`,
-          (geometry) => {
-            resolve({ geometry, fileName });
-          },
-          undefined,
-          (error) => {
-            console.warn(`Failed to load ${fileName}:`, error);
-            reject(error);
-          }
-        );
-      });
-    });
-
-    // Process loaded models
-    Promise.allSettled(loadPromises).then((results) => {
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const { geometry, fileName } = result.value;
-
-          // Create mesh with material
-          const material = new THREE.MeshStandardMaterial({
-            color: pickColorForFile(fileName, colors.tubeA, colors.tubeB, colors.base),
-            metalness: fileName.includes('mirror') ? 0.9 : 0.1,
-            roughness: fileName.includes('mirror') ? 0.1 : 0.8,
-          });
-
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-
-          // Position models (basic positioning - may need refinement)
-          positionModel(mesh, fileName);
-
-          scene.add(mesh);
-          modelsRef.current.set(fileName, mesh);
-        }
-      });
-    });
-
+    const mockFiles = ['tube-a-main.stl', 'tube-b-main.stl', 'base-main.stl'];
+    
     // Cleanup
     return () => {
       if (animationFrameRef.current) {
@@ -501,7 +289,7 @@ export default function CustomizationWizard() {
     }
 
     updateCustomization({ graphic: file });
-
+    
     const reader = new FileReader();
     reader.onload = (ev) => {
       setGraphicPreview(ev.target?.result as string);
@@ -561,56 +349,6 @@ export default function CustomizationWizard() {
     alert('Added to cart! Redirecting to checkout...');
     window.location.href = '/checkout';
   };
-
-  useEffect(() => {
-    // Listen for messages from parent window
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'REQUEST_CUSTOMIZATION') {
-        // Send current customization state to parent
-        const customizationData = {
-          tubeAColor: customization.tubeAColor,
-          tubeBColor: customization.tubeBColor,
-          baseColor: customization.baseColor,
-        };
-
-        window.parent.postMessage({
-          type: 'CUSTOMIZATION_DATA',
-          data: customizationData
-        }, '*');
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-
-    return () => {
-      window.removeEventListener('message', handleMessage);
-    };
-  }, [customization.tubeAColor, customization.tubeBColor, customization.baseColor]);
-
-  // // Add handleAddToCart function
-  // const handleAddToCart = () => {
-  //   const customizationData = {
-  //     tubeAColor,
-  //     tubeBColor,
-  //     baseColor,
-  //   };
-
-  //   // Send to parent window
-  //   window.parent.postMessage({
-  //     type: 'ADD_TO_CART',
-  //     product: {
-  //       slug: 'm42',
-  //       title: 'M42 Dobsonian (Customized)',
-  //       price: '29500', // Base price
-  //       currency: 'INR',
-  //       quantity: 1,
-  //       customization: customizationData
-  //     }
-  //   }, '*');
-
-  //   // Show success message
-  //   alert('Added to cart! Close this window to continue shopping.');
-  // };
 
   return (
     <div style={{
@@ -679,7 +417,7 @@ export default function CustomizationWizard() {
           <div>
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Choose Your Colors</h2>
             <p style={{ marginBottom: '32px', color: '#666' }}>Select colors for each part of your telescope</p>
-
+            
             <TelescopeViewer colors={{
               tubeA: customization.tubeAColor,
               tubeB: customization.tubeBColor,
@@ -711,7 +449,7 @@ export default function CustomizationWizard() {
           <div>
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Add Engraving (Optional)</h2>
             <p style={{ marginBottom: '32px', color: '#666' }}>Personalize your telescope with custom text (max 30 characters)</p>
-
+            
             <div style={{
               background: '#f5f5f5',
               padding: '32px',
@@ -781,7 +519,7 @@ export default function CustomizationWizard() {
           <div>
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Attach Custom Graphic (Optional)</h2>
             <p style={{ marginBottom: '32px', color: '#666' }}>Upload artwork or logo (PNG, SVG, JPG - max 2MB)</p>
-
+            
             <div style={{
               border: '2px dashed #ddd',
               borderRadius: '12px',
@@ -848,7 +586,7 @@ export default function CustomizationWizard() {
           <div>
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Review Your Customization</h2>
             <p style={{ marginBottom: '32px', color: '#666' }}>Confirm your choices before adding to cart</p>
-
+            
             <div style={{
               background: '#f5f5f5',
               padding: '32px',
@@ -983,7 +721,7 @@ export default function CustomizationWizard() {
             ← Previous
           </button>
         )}
-
+        
         {currentStep < STEPS.length - 1 ? (
           <button
             onClick={nextStep}
