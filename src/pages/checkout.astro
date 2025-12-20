@@ -297,47 +297,46 @@ const indianStates = [
         localStorage.getItem("starstucklab_cart") || "{}",
       );
 
-      // Create clean cart items without graphicData for JSON payload
-      const cleanCartItems = cart.items.map((item: any) => ({
-        ...item,
-        customization: item.customization ? {
-          ...item.customization,
-          graphicData: undefined // Remove base64 data from JSON
-        } : undefined
-      }));
-
-      let customizationText = "";
-
-      cart.items.forEach((item: any, index: number) => {
-        if (item.customization) {
-          customizationText += `\n\n=== ${item.title} ===\n`;
-          if (item.customization.tubeAColor)
-            customizationText += `Tube A Color: ${item.customization.tubeAColor}\n`;
-          if (item.customization.tubeBColor)
-            customizationText += `Tube B Color: ${item.customization.tubeBColor}\n`;
-          if (item.customization.baseColor)
-            customizationText += `Base Color: ${item.customization.baseColor}\n`;
-          if (item.customization.engraving)
-            customizationText += `Engraving: "${item.customization.engraving}"\n`;
-          if (item.customization.graphicName)
-            customizationText += `Graphic: ${item.customization.graphicName}\n`;
-        }
-      });
-
       // Get email for reply-to
       const emailInput = document.getElementById("email") as HTMLInputElement;
       if (emailInput && formEmail) {
         formEmail.value = emailInput.value;
       }
 
-      // Set clean cart items (without base64 data)
-      formCartItems!.value = JSON.stringify(cleanCartItems);
+      // Set cart items with base64 data included
+      formCartItems!.value = JSON.stringify(cart.items);
 
       // Calculate and set total
-      const total = cleanCartItems.reduce((sum: number, item: any) => {
+      const total = cart.items.reduce((sum: number, item: any) => {
         return sum + (parseFloat(item.price) || 0) * item.quantity;
       }, 0);
       formTotal!.value = total.toFixed(2);
+
+      // Create HTML-formatted customization details with inline images
+      let customizationHtml = "<h3>Customization Details</h3>";
+
+      cart.items.forEach((item: any, index: number) => {
+        if (item.customization) {
+          customizationHtml += `<h4>=== ${item.title} ===</h4>`;
+          customizationHtml += "<ul>";
+
+          if (item.customization.tubeAColor)
+            customizationHtml += `<li><strong>Tube A Color:</strong> ${item.customization.tubeAColor}</li>`;
+          if (item.customization.tubeBColor)
+            customizationHtml += `<li><strong>Tube B Color:</strong> ${item.customization.tubeBColor}</li>`;
+          if (item.customization.baseColor)
+            customizationHtml += `<li><strong>Base Color:</strong> ${item.customization.baseColor}</li>`;
+          if (item.customization.engraving)
+            customizationHtml += `<li><strong>Engraving:</strong> "${item.customization.engraving}"</li>`;
+
+          if (item.customization.graphicName && item.customization.graphicData) {
+            customizationHtml += `<li><strong>Custom Graphic:</strong> ${item.customization.graphicName}</li>`;
+            customizationHtml += `<li><img src="${item.customization.graphicData}" alt="${item.customization.graphicName}" style="max-width: 300px; max-height: 300px; border: 1px solid #ccc; margin: 10px 0;" /></li>`;
+          }
+
+          customizationHtml += "</ul>";
+        }
+      });
 
       // Disable form
       submitBtn!.disabled = true;
@@ -347,32 +346,8 @@ const indianStates = [
       try {
         const formData = new FormData(form);
 
-        // Add customization details
-        formData.set("customization_details", customizationText);
-
-        // Add graphic files directly to FormData
-        cart.items.forEach((item: any, index: number) => {
-          if (item.customization?.graphicData && item.customization?.graphicName) {
-            try {
-              // Convert base64 to blob
-              const base64Data = item.customization.graphicData.split(',')[1];
-              const mimeType = item.customization.graphicData.split(',')[0].split(':')[1].split(';')[0];
-              const byteCharacters = atob(base64Data);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: mimeType });
-
-              // Create file and append to FormData
-              const file = new File([blob], item.customization.graphicName, { type: mimeType });
-              formData.append(`graphic_${index}`, file);
-            } catch (error) {
-              console.error("Error converting graphic to file:", error);
-            }
-          }
-        });
+        // Add HTML-formatted customization details
+        formData.set("customization_details", customizationHtml);
 
         const response = await fetch(form.action, {
           method: "POST",
