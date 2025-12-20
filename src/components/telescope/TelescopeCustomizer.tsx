@@ -99,7 +99,7 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({ colors }) => {
     const h = canvasRef.current.clientHeight;
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-    camera.position.set(60, -50, 0);
+    camera.position.set(80, -70, 0);
     camera.up.set(0, 0, 1);
     camera.lookAt(0, 0, 40);
 
@@ -132,7 +132,7 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({ colors }) => {
       roughness: 0.8,
     });
     const ground = new THREE.Mesh(groundGeometry, groundMaterial);
-    ground.position.z = -40;
+    ground.position.z = -60;
     ground.receiveShadow = true;
     scene.add(ground);
 
