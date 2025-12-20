@@ -5,10 +5,6 @@ import type { CustomizationState, WizardStep } from './telescopeTypes';
 import TelescopeViewer from './TelescopeViewer';
 import ColorPicker from './ColorPicker';
 
-// ============================================================================
-// MAIN WIZARD COMPONENT
-// ============================================================================
-
 export default function CustomizationWizard() {
   const [currentStep, setCurrentStep] = useState(0);
   const [customization, setCustomization] = useState<CustomizationState>({
@@ -67,11 +63,9 @@ export default function CustomizationWizard() {
   };
 
   const handleAddToCart = () => {
-    // Get existing cart
     const stored = localStorage.getItem('starstucklab_cart');
     const cart = stored ? JSON.parse(stored) : { items: [] };
 
-    // Convert graphic to base64 for storage
     if (customization.graphic && graphicPreview) {
       const cartItem = {
         slug: 'm42',
@@ -88,7 +82,6 @@ export default function CustomizationWizard() {
           graphicName: customization.graphic.name,
         }
       };
-
       cart.items.push(cartItem);
     } else {
       const cartItem = {
@@ -104,7 +97,6 @@ export default function CustomizationWizard() {
           engraving: customization.engraving,
         }
       };
-
       cart.items.push(cartItem);
     }
 
@@ -115,7 +107,6 @@ export default function CustomizationWizard() {
     localStorage.setItem('starstucklab_cart', JSON.stringify(cart));
     window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: cart.items } }));
 
-    // Show success message and redirect back to product page
     alert('✓ Added to cart!');
     window.location.href = '/shop/m42';
   };
@@ -148,6 +139,7 @@ export default function CustomizationWizard() {
           ← Back to Product Details
         </a>
       </div>
+
       {/* Progress Bar */}
       <div style={{
         display: 'flex',
@@ -200,7 +192,7 @@ export default function CustomizationWizard() {
       </div>
 
       {/* Step Content */}
-      <div style={{ minHeight: '500px', marginBottom: '32px' }}>
+      <div style={{ minHeight: '550px', marginBottom: '32px' }}>
         {/* Step 0: Colors */}
         {currentStep === 0 && (
           <div>
@@ -215,8 +207,6 @@ export default function CustomizationWizard() {
               }}
               onColorChange={handleColorChange}
             />
-
-
           </div>
         )}
 
@@ -233,7 +223,7 @@ export default function CustomizationWizard() {
                 base: customization.baseColor,
               }}
               onColorChange={handleColorChange}
-              focusTarget="tube-a-uta-for-sleeve.stl"
+              focusTarget="engraving"
               showEngravingUI={true}
               engravingText={customization.engraving}
               onEngravingChange={(text) => updateCustomization({ engraving: text })}
@@ -283,31 +273,17 @@ export default function CustomizationWizard() {
             <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Attach Custom Graphic (Optional)</h2>
             <p style={{ marginBottom: '32px', color: '#666' }}>Upload artwork or logo (PNG, SVG, JPG - max 2MB)</p>
 
-            <div style={{
-              border: '2px dashed #ddd',
-              borderRadius: '12px',
-              padding: '48px',
-              textAlign: 'center',
-              background: '#fafafa',
-              cursor: 'pointer',
-            }}>
-              <input
-                type="file"
-                accept=".png,.svg,.jpg,.jpeg"
-                onChange={handleGraphicUpload}
-                style={{ display: 'none' }}
-                id="graphic-upload"
-              />
-              <label htmlFor="graphic-upload" style={{ cursor: 'pointer' }}>
-                <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📁</div>
-                <div style={{ fontSize: '1.1rem', fontWeight: 600, marginBottom: '8px' }}>
-                  Click to upload or drag and drop
-                </div>
-                <div style={{ fontSize: '0.9rem', color: '#666' }}>
-                  PNG, SVG, or JPG (max 2MB)
-                </div>
-              </label>
-            </div>
+            <TelescopeViewer
+              colors={{
+                tubeA: customization.tubeAColor,
+                tubeB: customization.tubeBColor,
+                base: customization.baseColor,
+              }}
+              onColorChange={handleColorChange}
+              focusTarget="graphic"
+              showGraphicUI={true}
+              onGraphicUpload={handleGraphicUpload}
+            />
 
             {graphicPreview && (
               <div style={{ marginTop: '32px' }}>
@@ -332,9 +308,9 @@ export default function CustomizationWizard() {
                 <div style={{
                   marginTop: '24px',
                   padding: '16px',
-                  background: 'rgba(42,122,79,0.1)',
+                  background: 'rgba(74,144,226,0.1)',
                   borderRadius: '8px',
-                  color: '#2a7a4f',
+                  color: '#4a90e2',
                   fontSize: '0.9rem',
                 }}>
                   ✓ Custom graphic will add ₹{GRAPHIC_COST.toLocaleString()} to the total price
@@ -344,43 +320,90 @@ export default function CustomizationWizard() {
           </div>
         )}
 
-        {/* Step 3: Review */}
+{/* Step 3: Review */}
         {currentStep === 3 && (
           <div>
-            <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Review Your Customization</h2>
-            <p style={{ marginBottom: '32px', color: '#666' }}>Confirm your choices before adding to cart</p>
+            <h2 style={{ 
+              marginBottom: '8px', 
+              fontSize: '1.8rem',
+              color: '#1a1412', // Dark text on light background
+              fontFamily: 'var(--font-display)'
+            }}>
+              Review Your Customization
+            </h2>
+            <p style={{ 
+              marginBottom: '32px', 
+              color: '#5a3214', // Darker muted text
+              fontFamily: 'var(--font-body)'
+            }}>
+              Confirm your choices before adding to cart
+            </p>
+
+            <TelescopeViewer
+              colors={{
+                tubeA: customization.tubeAColor,
+                tubeB: customization.tubeBColor,
+                base: customization.baseColor,
+              }}
+              onColorChange={handleColorChange}
+              showReviewMode={true}
+            />
 
             <div style={{
-              background: '#f5f5f5',
-              padding: '32px',
-              borderRadius: '12px',
-              marginBottom: '24px',
+              background: '#fbf0db', // Parchment cream
+              border: '1px solid rgba(90, 50, 20, 0.15)',
+              borderRadius: 'var(--radius-xl)',
+              padding: 'var(--space-8)',
+              marginTop: 'var(--space-8)',
+              marginBottom: 'var(--space-6)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}>
-              <div style={{ marginBottom: '24px' }}>
-                <div style={{ fontWeight: 600, marginBottom: '12px', fontSize: '1.1rem' }}>Colors</div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ marginBottom: 'var(--space-6)' }}>
+                <div style={{ 
+                  fontWeight: 600, 
+                  marginBottom: 'var(--space-4)', 
+                  fontSize: 'var(--text-lg)',
+                  color: '#1a1412',
+                  fontFamily: 'var(--font-ui)'
+                }}>
+                  Colors Selected
+                </div>
+                <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap' }}>
                   {[
                     { label: 'Tube A', color: customization.tubeAColor },
                     { label: 'Tube B', color: customization.tubeBColor },
                     { label: 'Base', color: customization.baseColor },
                   ].map(item => (
                     <div key={item.label} style={{
-                      flex: 1,
-                      padding: '16px',
-                      borderRadius: '8px',
+                      flex: '1 1 150px',
+                      padding: 'var(--space-4)',
+                      borderRadius: 'var(--radius-lg)',
                       background: '#fff',
+                      border: '1px solid rgba(90, 50, 20, 0.12)',
                       textAlign: 'center',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                     }}>
                       <div style={{
                         width: '60px',
                         height: '60px',
                         borderRadius: '50%',
                         background: item.color,
-                        margin: '0 auto 8px',
-                        border: '3px solid rgba(0,0,0,0.1)',
+                        margin: '0 auto var(--space-2)',
+                        border: '3px solid rgba(0, 0, 0, 0.15)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
                       }} />
-                      <div style={{ fontSize: '0.85rem', fontWeight: 600 }}>{item.label}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#666', marginTop: '4px' }}>
+                      <div style={{ 
+                        fontSize: 'var(--text-sm)', 
+                        fontWeight: 600,
+                        color: '#1a1412',
+                        marginBottom: 'var(--space-1)'
+                      }}>
+                        {item.label}
+                      </div>
+                      <div style={{ 
+                        fontSize: 'var(--text-xs)', 
+                        color: '#5a3214'
+                      }}>
                         {PASTEL_COLORS.find(c => c.hex === item.color)?.name}
                       </div>
                     </div>
@@ -389,15 +412,31 @@ export default function CustomizationWizard() {
               </div>
 
               {customization.engraving && (
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontWeight: 600, marginBottom: '12px', fontSize: '1.1rem' }}>Engraving</div>
+                <div style={{ 
+                  marginBottom: 'var(--space-6)',
+                  paddingBottom: 'var(--space-6)',
+                  borderBottom: '1px solid rgba(90, 50, 20, 0.12)'
+                }}>
+                  <div style={{ 
+                    fontWeight: 600, 
+                    marginBottom: 'var(--space-3)', 
+                    fontSize: 'var(--text-lg)',
+                    color: '#1a1412',
+                    fontFamily: 'var(--font-ui)'
+                  }}>
+                    Engraving
+                  </div>
                   <div style={{
                     background: '#fff',
-                    padding: '16px',
-                    borderRadius: '8px',
+                    border: '1px solid rgba(90, 50, 20, 0.12)',
+                    padding: 'var(--space-4)',
+                    borderRadius: 'var(--radius-lg)',
                     fontFamily: 'Georgia, serif',
                     fontStyle: 'italic',
-                    fontSize: '1.2rem',
+                    fontSize: 'var(--text-xl)',
+                    color: '#1a1412',
+                    textAlign: 'center',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                   }}>
                     "{customization.engraving}"
                   </div>
@@ -405,27 +444,50 @@ export default function CustomizationWizard() {
               )}
 
               {customization.graphic && (
-                <div>
-                  <div style={{ fontWeight: 600, marginBottom: '12px', fontSize: '1.1rem' }}>Custom Graphic</div>
+                <div style={{
+                  paddingBottom: 'var(--space-6)',
+                  borderBottom: '1px solid rgba(90, 50, 20, 0.12)'
+                }}>
+                  <div style={{ 
+                    fontWeight: 600, 
+                    marginBottom: 'var(--space-3)', 
+                    fontSize: 'var(--text-lg)',
+                    color: '#1a1412',
+                    fontFamily: 'var(--font-ui)'
+                  }}>
+                    Custom Graphic
+                  </div>
                   <div style={{
                     background: '#fff',
-                    padding: '16px',
-                    borderRadius: '8px',
+                    border: '1px solid rgba(90, 50, 20, 0.12)',
+                    padding: 'var(--space-4)',
+                    borderRadius: 'var(--radius-lg)',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '16px',
+                    gap: 'var(--space-4)',
+                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                   }}>
                     {graphicPreview && (
                       <img src={graphicPreview} alt="Graphic" style={{
                         width: '80px',
                         height: '80px',
                         objectFit: 'cover',
-                        borderRadius: '8px',
+                        borderRadius: 'var(--radius-lg)',
+                        border: '2px solid rgba(90, 50, 20, 0.15)',
                       }} />
                     )}
                     <div>
-                      <div style={{ fontWeight: 600 }}>{customization.graphic.name}</div>
-                      <div style={{ fontSize: '0.85rem', color: '#666', marginTop: '4px' }}>
+                      <div style={{ 
+                        fontWeight: 600,
+                        color: '#1a1412',
+                        marginBottom: 'var(--space-1)'
+                      }}>
+                        {customization.graphic.name}
+                      </div>
+                      <div style={{ 
+                        fontSize: 'var(--text-sm)', 
+                        color: '#5a3214'
+                      }}>
                         {(customization.graphic.size / 1024).toFixed(1)} KB
                       </div>
                     </div>
@@ -435,18 +497,35 @@ export default function CustomizationWizard() {
             </div>
 
             <div style={{
-              background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-              padding: '32px',
-              borderRadius: '12px',
+              background: 'linear-gradient(135deg, var(--accent-green) 0%, #1d5a3d 100%)',
+              padding: 'var(--space-8)',
+              borderRadius: 'var(--radius-xl)',
               color: '#fff',
+              boxShadow: '0 8px 24px rgba(42, 122, 79, 0.3)',
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
                 <div>
-                  <div style={{ fontSize: '0.9rem', opacity: 0.9, marginBottom: '4px' }}>Total Price</div>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 700 }}>
+                  <div style={{ 
+                    fontSize: 'var(--text-base)', 
+                    opacity: 0.95, 
+                    marginBottom: 'var(--space-2)',
+                    fontFamily: 'var(--font-ui)'
+                  }}>
+                    Total Price
+                  </div>
+                  <div style={{ 
+                    fontSize: 'clamp(2rem, 5vw, 2.5rem)', 
+                    fontWeight: 700,
+                    fontFamily: 'var(--font-display)',
+                    marginBottom: 'var(--space-2)'
+                  }}>
                     ₹{calculatePrice().toLocaleString()}
                   </div>
-                  <div style={{ fontSize: '0.85rem', opacity: 0.8, marginTop: '8px' }}>
+                  <div style={{ 
+                    fontSize: 'var(--text-sm)', 
+                    opacity: 0.9,
+                    fontFamily: 'var(--font-body)'
+                  }}>
                     Base: ₹{BASE_PRICE.toLocaleString()}
                     {customization.engraving && ` + Engraving: ₹${ENGRAVING_COST.toLocaleString()}`}
                     {customization.graphic && ` + Graphic: ₹${GRAPHIC_COST.toLocaleString()}`}

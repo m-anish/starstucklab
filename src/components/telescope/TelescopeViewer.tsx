@@ -7,13 +7,21 @@ import { PASTEL_COLORS } from './telescopeColors';
 import { pickColorForFile, positionModel } from './telescopeUtils';
 import type { TelescopeViewerProps } from './telescopeTypes';
 
-const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
+// Add this interface at the top of the file for the onGraphicUpload handler
+interface ExtendedTelescopeViewerProps extends TelescopeViewerProps {
+  onGraphicUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+}
+
+const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
   colors,
   onColorChange,
   focusTarget,
   showEngravingUI,
   engravingText,
-  onEngravingChange
+  onEngravingChange,
+  showGraphicUI,
+  onGraphicUpload,
+  showReviewMode
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
@@ -21,8 +29,11 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
   const cameraRef = React.useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = React.useRef<any>(null);
   const animationFrameRef = React.useRef<number>();
+  const orbitAnimationRef = React.useRef<number | null>(null);
   const [selectedPart, setSelectedPart] = useState<'tubeA' | 'tubeB' | 'base' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const initialCameraPosition = React.useRef(new THREE.Vector3(80, -70, 0));
+  const initialCameraTarget = React.useRef(new THREE.Vector3(0, 0, 40));
 
   // Initialize scene
   useEffect(() => {
@@ -35,10 +46,14 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
     const h = canvasRef.current.clientHeight;
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-    camera.position.set(80, -70, 0);
+    camera.position.set(120, -100, 10); // Zoomed out further
     camera.up.set(0, 0, 1);
-    camera.lookAt(0, 0, 40);
+    camera.lookAt(0, 0, 30);
     cameraRef.current = camera;
+    
+    // Store initial position and target
+    initialCameraPosition.current.set(120, -100, 10);
+    initialCameraTarget.current.set(0, 0, 30);
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
@@ -82,26 +97,30 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
     controlsRef.current = controls;
 
     // Debug logging for camera positioning
-    controls.addEventListener('change', () => {
-      console.log('🎥 Camera Position:', {
-        x: camera.position.x.toFixed(2),
-        y: camera.position.y.toFixed(2),
-        z: camera.position.z.toFixed(2)
-      });
-
-      // Calculate look-at target (where camera is pointing)
-      const direction = new THREE.Vector3();
-      camera.getWorldDirection(direction);
-      const distance = 50; // Distance to look-at point
-      const target = new THREE.Vector3();
-      target.copy(camera.position).add(direction.multiplyScalar(distance));
-
-      console.log('🎯 Camera Target:', {
-        x: target.x.toFixed(2),
-        y: target.y.toFixed(2),
-        z: target.z.toFixed(2)
-      });
-    });
+    // Press 'C' key to log current camera view (for capturing positions)
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === 'c' || e.key === 'C') {
+        console.log('📸 === CAMERA VIEW CAPTURED ===');
+        console.log('🎥 Camera Position:', {
+          x: camera.position.x.toFixed(2),
+          y: camera.position.y.toFixed(2),
+          z: camera.position.z.toFixed(2)
+        });
+        console.log('🎯 Controls Target (Look-At):', {
+          x: controls.target.x.toFixed(2),
+          y: controls.target.y.toFixed(2),
+          z: controls.target.z.toFixed(2)
+        });
+        console.log('📋 Copy this for focusTarget config:');
+        console.log(`{
+  camera: new THREE.Vector3(${camera.position.x.toFixed(2)}, ${camera.position.y.toFixed(2)}, ${camera.position.z.toFixed(2)}),
+  target: new THREE.Vector3(${controls.target.x.toFixed(2)}, ${controls.target.y.toFixed(2)}, ${controls.target.z.toFixed(2)})
+}`);
+        console.log('================================');
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyPress);
 
     // Animation loop
     const animate = () => {
@@ -162,6 +181,7 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
+      window.removeEventListener('keydown', handleKeyPress);
       controls.dispose();
       renderer.dispose();
     };
@@ -181,76 +201,163 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
 
   // Handle camera focus animation
   useEffect(() => {
-    if (!focusTarget || !cameraRef.current || !modelsRef.current) return;
+    if (!focusTarget || !cameraRef.current || !controlsRef.current) return;
 
     setIsAnimating(true);
 
-    // Use the exact coordinates from your manual camera positioning
-    const cameraPosition = new THREE.Vector3(-29.88, -3.26, 51.77);
-    const lookAtTarget = new THREE.Vector3(-4.92, -0.54, 8.53);
-
     const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    
     const startPosition = camera.position.clone();
+    const startTarget = controls.target.clone();
 
-    console.log('🎬 Starting camera animation');
-    console.log('📍 Start position:', startPosition);
-    console.log('🎯 Target position:', cameraPosition);
-    console.log('👁️ Look-at target:', lookAtTarget);
-
-    // Disable controls initially, but enable during animation for proper target updates
-    if (controlsRef.current) {
-      controlsRef.current.enabled = false;
-      console.log('🚫 Controls disabled initially');
+    // Define target views for different focus targets
+    let targetView;
+    
+    if (focusTarget === 'engraving') {
+      // REPLACE THESE VALUES: Use the 'C' key to capture your desired engraving view
+      targetView = {
+      camera: new THREE.Vector3(-25.40, -15.70, 29.95),
+      target: new THREE.Vector3(-5.78, -28.42, 30.55)
+      };
+    } else if (focusTarget === 'graphic') {
+      // REPLACE THESE VALUES: Use the 'C' key to capture your desired graphic upload view
+      targetView = {
+      camera: new THREE.Vector3(-25.40, -15.70, 29.95),
+      target: new THREE.Vector3(-5.78, -28.42, 30.55)
+      };
+    } else {
+      return; // Unknown focus target
     }
 
-    // Animate camera over 2 seconds
-    const duration = 2000;
+    console.log('🎬 Starting camera animation to:', focusTarget);
+    console.log('📍 Start position:', startPosition);
+    console.log('🎯 Start target:', startTarget);
+    console.log('📍 End position:', targetView.camera);
+    console.log('🎯 End target:', targetView.target);
+
+    // Disable controls during animation
+    controls.enabled = false;
+
+    // Animate camera over 3 seconds (50% slower than before)
+    const duration = 3000;
     const startTime = Date.now();
 
     const animateCamera = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Smooth easing function
-      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      // Smooth easing function (ease-in-out cubic)
+      const easeProgress = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
 
       // Interpolate camera position
-      camera.position.lerpVectors(startPosition, cameraPosition, easeProgress);
-
-      // Set OrbitControls target and enable controls temporarily for proper rotation update
-      if (controlsRef.current) {
-        controlsRef.current.target.copy(lookAtTarget);
-        controlsRef.current.enabled = true;
-        controlsRef.current.update(); // Force update to apply target rotation
-      }
-
-      console.log(`📹 Animation progress: ${(progress * 100).toFixed(1)}% - Camera at:`, camera.position.clone());
+      camera.position.lerpVectors(startPosition, targetView.camera, easeProgress);
+      
+      // Interpolate controls target (look-at point)
+      controls.target.lerpVectors(startTarget, targetView.target, easeProgress);
+      
+      // Update controls to apply the new target
+      controls.update();
 
       if (progress < 1) {
         requestAnimationFrame(animateCamera);
       } else {
-        console.log('✅ Animation complete - final camera position:', camera.position);
-        console.log('👁️ Final look-at target:', lookAtTarget);
+        console.log('✅ Animation complete');
+        console.log('📍 Final camera position:', camera.position);
+        console.log('🎯 Final target:', controls.target);
         setIsAnimating(false);
-        // Keep controls disabled when focused on engraving target
-        if (controlsRef.current) {
-          controlsRef.current.enabled = false;
-        }
+        // Keep controls disabled when focused
       }
     };
 
     animateCamera();
   }, [focusTarget]);
 
-  // Re-enable controls when not in engraving mode
+  // Re-enable controls when not in engraving/graphic mode
   useEffect(() => {
-    if (!showEngravingUI && controlsRef.current) {
+    if (!showEngravingUI && !showGraphicUI && !showReviewMode && controlsRef.current) {
       controlsRef.current.enabled = true;
     }
-  }, [showEngravingUI]);
+  }, [showEngravingUI, showGraphicUI, showReviewMode]);
+
+  // Handle review mode - animate back to initial position and orbit
+  useEffect(() => {
+    if (!showReviewMode || !cameraRef.current || !controlsRef.current) return;
+
+    const camera = cameraRef.current;
+    const controls = controlsRef.current;
+    
+    const startPosition = camera.position.clone();
+    const startTarget = controls.target.clone();
+
+    console.log('🎬 Starting review mode animation');
+
+    // Disable controls during animation
+    controls.enabled = false;
+
+    // First animate back to initial position
+    const duration = 2000;
+    const startTime = Date.now();
+
+    const animateToStart = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      const easeProgress = progress < 0.5
+        ? 4 * progress * progress * progress
+        : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+
+      camera.position.lerpVectors(startPosition, initialCameraPosition.current, easeProgress);
+      controls.target.lerpVectors(startTarget, initialCameraTarget.current, easeProgress);
+      controls.update();
+
+      if (progress < 1) {
+        requestAnimationFrame(animateToStart);
+      } else {
+        console.log('✅ Returned to initial position, starting orbit');
+        startOrbitAnimation();
+      }
+    };
+
+    const startOrbitAnimation = () => {
+      const orbitSpeed = 0.0015; // Slow rotation
+      const orbitRadius = Math.sqrt(
+        Math.pow(initialCameraPosition.current.x, 2) + 
+        Math.pow(initialCameraPosition.current.y, 2)
+      );
+      let angle = Math.atan2(initialCameraPosition.current.y, initialCameraPosition.current.x);
+
+      const orbit = () => {
+        angle += orbitSpeed;
+        
+        camera.position.x = orbitRadius * Math.cos(angle);
+        camera.position.y = orbitRadius * Math.sin(angle);
+        camera.position.z = initialCameraPosition.current.z;
+        
+        controls.target.copy(initialCameraTarget.current);
+        controls.update();
+
+        orbitAnimationRef.current = requestAnimationFrame(orbit);
+      };
+
+      orbit();
+    };
+
+    animateToStart();
+
+    // Cleanup orbit animation
+    return () => {
+      if (orbitAnimationRef.current) {
+        cancelAnimationFrame(orbitAnimationRef.current);
+        orbitAnimationRef.current = null;
+      }
+    };
+  }, [showReviewMode]);
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '400px' }}>
+    <div className="telescope-viewer-container" style={{ position: 'relative', width: '100%', height: '500px' }}>
       <canvas
         ref={canvasRef}
         style={{
@@ -262,46 +369,48 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
         }}
       />
 
-      {/* Color Control Buttons */}
-      <div style={{
-        position: 'absolute',
-        bottom: '20px',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: '16px',
-        zIndex: 10,
-      }}>
-        {[
-          { key: 'tubeA', label: 'Tube A', color: colors.tubeA },
-          { key: 'tubeB', label: 'Tube B', color: colors.tubeB },
-          { key: 'base', label: 'Base', color: colors.base },
-        ].map(({ key, label, color }) => (
-          <button
-            key={key}
-            onClick={() => setSelectedPart(key as 'tubeA' | 'tubeB' | 'base')}
-            style={{
-              width: '80px',
-              height: '80px',
-              borderRadius: '50%',
-              background: color,
-              border: selectedPart === key ? '3px solid #2a7a4f' : '3px solid rgba(255,255,255,0.8)',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.7rem',
-              fontWeight: 600,
-              color: color === '#f7f7f7' ? '#333' : '#fff',
-              textShadow: '0 1px 2px rgba(0,0,0,0.5)',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Color Control Buttons - Hidden when showing engraving/graphic UI */}
+      {!showEngravingUI && !showGraphicUI && (
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: '16px',
+          zIndex: 10,
+        }}>
+          {[
+            { key: 'tubeA', label: 'Tube A', color: colors.tubeA },
+            { key: 'tubeB', label: 'Tube B', color: colors.tubeB },
+            { key: 'base', label: 'Base', color: colors.base },
+          ].map(({ key, label, color }) => (
+            <button
+              key={key}
+              onClick={() => setSelectedPart(key as 'tubeA' | 'tubeB' | 'base')}
+              style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                background: color,
+                border: selectedPart === key ? '3px solid #2a7a4f' : '3px solid rgba(255,255,255,0.8)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.7rem',
+                fontWeight: 600,
+                color: color === '#f7f7f7' ? '#333' : '#fff',
+                textShadow: '0 1px 2px rgba(0,0,0,0.5)',
+                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Color Selector Overlay */}
       {selectedPart && (
@@ -396,6 +505,107 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
         </div>
       )}
 
+      {/* Graphic Upload UI Overlay */}
+      {showGraphicUI && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 15,
+          pointerEvents: 'none',
+        }}>
+          {/* File Upload Dialog */}
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: 'rgba(255, 255, 255, 0.95)',
+            padding: '20px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+            pointerEvents: 'auto',
+            minWidth: '320px',
+          }}>
+            <h4 style={{
+              margin: '0 0 16px 0',
+              color: '#333',
+              fontSize: '1.1rem',
+              fontWeight: 600,
+            }}>
+              Upload Custom Graphic
+            </h4>
+
+            <div style={{
+              border: '2px dashed #ddd',
+              borderRadius: '8px',
+              padding: '32px 20px',
+              textAlign: 'center',
+              background: '#fafafa',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = '#2a7a4f';
+              e.currentTarget.style.background = '#f0f8f4';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = '#ddd';
+              e.currentTarget.style.background = '#fafafa';
+            }}>
+              <input
+                type="file"
+                accept=".png,.svg,.jpg,.jpeg"
+                onChange={onGraphicUpload}
+                style={{ display: 'none' }}
+                id="graphic-upload-input"
+              />
+              <label htmlFor="graphic-upload-input" style={{ cursor: 'pointer', display: 'block' }}>
+                <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📁</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: 600, marginBottom: '6px', color: '#333' }}>
+                  Click to upload
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#666' }}>
+                  PNG, SVG, JPG (max 2MB)
+                </div>
+              </label>
+            </div>
+          </div>
+
+          {/* Translucent bubble for graphic area */}
+          <div style={{
+            position: 'absolute',
+            top: '45%',
+            left: '50%',
+            transform: 'translate(-50%, -55%)',
+            zIndex: 16,
+          }}>
+            <div style={{
+              width: '120px',
+              height: '100px',
+              borderRadius: '50%',
+              background: 'rgba(74, 144, 226, 0.5)',
+              border: '3px solid rgba(74, 144, 226, 0.8)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.9rem',
+              fontWeight: 600,
+              color: '#fff',
+              textShadow: '0 2px 4px rgba(0,0,0,0.3)',
+              boxShadow: '0 4px 16px rgba(74, 144, 226, 0.4)',
+              animation: 'pulse 2s infinite',
+            }}>
+              Graphic Area
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Engraving UI Overlay */}
       {showEngravingUI && (
         <div style={{
@@ -408,7 +618,7 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 15,
-          pointerEvents: 'none', // Allow interaction with 3D scene behind
+          pointerEvents: 'none',
         }}>
           {/* Engraving Input Popup */}
           <div style={{
@@ -460,31 +670,35 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
           {/* Arrow pointing to engraving location */}
           <div style={{
             position: 'absolute',
-            top: '50%',
-            left: '70%',
+            top: '60%',
+            left: '65%',
             transform: 'translate(-50%, -50%)',
             zIndex: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
           }}>
+            {/* Left-pointing arrow */}
             <div style={{
               width: '0',
               height: '0',
-              borderLeft: '20px solid transparent',
-              borderRight: '20px solid transparent',
-              borderBottom: '30px solid #ff6b6b',
+              borderTop: '20px solid transparent',
+              borderBottom: '20px solid transparent',
+              borderRight: '30px solid #ff6b6b',
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
-              animation: 'bounce 2s infinite',
+              animation: 'bounceHorizontal 2s infinite',
             }} />
+            
+            {/* Label beside arrow */}
             <div style={{
-              position: 'absolute',
-              top: '-25px',
-              left: '-10px',
               background: '#ff6b6b',
               color: '#fff',
-              padding: '4px 8px',
-              borderRadius: '4px',
-              fontSize: '0.8rem',
+              padding: '8px 12px',
+              borderRadius: '6px',
+              fontSize: '0.85rem',
               fontWeight: 600,
               whiteSpace: 'nowrap',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
             }}>
               Engraving Area
             </div>
@@ -492,7 +706,6 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
         </div>
       )}
 
-      {/* Add bounce animation CSS */}
       <style dangerouslySetInnerHTML={{
         __html: `
           @keyframes bounce {
@@ -504,6 +717,39 @@ const TelescopeViewer: React.FC<TelescopeViewerProps> = ({
             }
             60% {
               transform: translateY(-5px);
+            }
+          }
+          
+          @keyframes bounceHorizontal {
+            0%, 20%, 50%, 80%, 100% {
+              transform: translateX(0);
+            }
+            40% {
+              transform: translateX(-10px);
+            }
+            60% {
+              transform: translateX(-5px);
+            }
+          }
+          
+          @keyframes pulse {
+            0%, 100% {
+              transform: scale(1);
+              opacity: 0.8;
+            }
+            50% {
+              transform: scale(1.05);
+              opacity: 1;
+            }
+          }
+        `
+      }} />
+      {/* Responsive height adjustment */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media (max-width: 640px) {
+            .telescope-viewer-container {
+              height: 350px !important;
             }
           }
         `
