@@ -74,6 +74,7 @@ const indianStates = [
           class="checkout-form"
           action="https://formspree.io/f/xblpnpgb"
           method="POST"
+          enctype="multipart/form-data"
         >
           <!-- Hidden fields for cart data -->
           <input
@@ -295,6 +296,16 @@ const indianStates = [
       const cart = JSON.parse(
         localStorage.getItem("starstucklab_cart") || "{}",
       );
+
+      // Create clean cart items without graphicData for JSON payload
+      const cleanCartItems = cart.items.map((item: any) => ({
+        ...item,
+        customization: item.customization ? {
+          ...item.customization,
+          graphicData: undefined // Remove base64 data from JSON
+        } : undefined
+      }));
+
       let customizationText = "";
 
       cart.items.forEach((item: any, index: number) => {
@@ -310,9 +321,38 @@ const indianStates = [
             customizationText += `Engraving: "${item.customization.engraving}"\n`;
           if (item.customization.graphicName)
             customizationText += `Graphic: ${item.customization.graphicName}\n`;
+        }
+      });
 
-          // Handle graphic attachments - convert base64 to file input
-          if (item.customization.graphicData && item.customization.graphicName) {
+      // Get email for reply-to
+      const emailInput = document.getElementById("email") as HTMLInputElement;
+      if (emailInput && formEmail) {
+        formEmail.value = emailInput.value;
+      }
+
+      // Set clean cart items (without base64 data)
+      formCartItems!.value = JSON.stringify(cleanCartItems);
+
+      // Calculate and set total
+      const total = cleanCartItems.reduce((sum: number, item: any) => {
+        return sum + (parseFloat(item.price) || 0) * item.quantity;
+      }, 0);
+      formTotal!.value = total.toFixed(2);
+
+      // Disable form
+      submitBtn!.disabled = true;
+      submitBtn!.textContent = "Placing Order...";
+      formStatus!.style.display = "none";
+
+      try {
+        const formData = new FormData(form);
+
+        // Add customization details
+        formData.set("customization_details", customizationText);
+
+        // Add graphic files directly to FormData
+        cart.items.forEach((item: any, index: number) => {
+          if (item.customization?.graphicData && item.customization?.graphicName) {
             try {
               // Convert base64 to blob
               const base64Data = item.customization.graphicData.split(',')[1];
@@ -325,52 +365,15 @@ const indianStates = [
               const byteArray = new Uint8Array(byteNumbers);
               const blob = new Blob([byteArray], { type: mimeType });
 
-              // Create file input for Formspree attachment
-              const fileInput = document.createElement("input");
-              fileInput.type = "file";
-              fileInput.name = `graphic_${index}`;
-              fileInput.style.display = "none";
-
-              // Create a File object from the blob
+              // Create file and append to FormData
               const file = new File([blob], item.customization.graphicName, { type: mimeType });
-              const dataTransfer = new DataTransfer();
-              dataTransfer.items.add(file);
-              fileInput.files = dataTransfer.files;
-
-              form.appendChild(fileInput);
+              formData.append(`graphic_${index}`, file);
             } catch (error) {
               console.error("Error converting graphic to file:", error);
             }
           }
-        }
-      });
+        });
 
-      // Add hidden field if it doesn't exist
-      let customField = document.getElementById(
-        "formCustomization",
-      ) as HTMLInputElement;
-      if (!customField) {
-        customField = document.createElement("input");
-        customField.type = "hidden";
-        customField.name = "customization_details";
-        customField.id = "formCustomization";
-        form.appendChild(customField);
-      }
-      customField.value = customizationText;
-
-      // Get email for reply-to
-      const emailInput = document.getElementById("email") as HTMLInputElement;
-      if (emailInput && formEmail) {
-        formEmail.value = emailInput.value;
-      }
-
-      // Disable form
-      submitBtn!.disabled = true;
-      submitBtn!.textContent = "Placing Order...";
-      formStatus!.style.display = "none";
-
-      try {
-        const formData = new FormData(form);
         const response = await fetch(form.action, {
           method: "POST",
           body: formData,
