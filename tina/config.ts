@@ -1,6 +1,10 @@
 import { defineConfig } from "tinacms";
 import AITextField from "./fields/AITextField";
 import AIFeaturesField from "./fields/AIFeaturesField";
+import AISpecificationsField from "./fields/AISpecificationsField";
+import AITagsField from "./fields/AITagsField";
+import AIDescriptionField from "./fields/AIDescriptionField";
+import AIImageField from "./fields/AIImageField";
 
 // Your hosting provider likely exposes this as an environment variable
 const branch =
@@ -49,6 +53,14 @@ export default defineConfig({
             label: "Title",
             required: true,
           },
+          {
+            type: "string",
+            name: "category",
+            label: "Category",
+            options: ["Telescope", "Weather Station", "Electronics", "Hardware", "Software", "Other"],
+            required: false,
+            description: "Product category for AI content generation"
+          },
           // 🎯 AI-POWERED TAGLINE FIELD
           {
             type: "string",
@@ -87,11 +99,16 @@ export default defineConfig({
             options: ["in_stock", "low_stock", "out_of_stock", "pre_order"],
             required: false,
           },
+          // 🎯 AI-POWERED TAGS FIELD
           {
             type: "string",
             name: "tags",
             label: "Tags",
             list: true,
+            description: "Relevant tags for search and categorization (AI-powered)",
+            ui: {
+              component: AITagsField,
+            },
           },
           {
             type: "datetime",
@@ -192,12 +209,19 @@ export default defineConfig({
               },
             ],
           },
-          // Specifications
+          // 🎯 AI-POWERED SPECIFICATIONS FIELD
           {
             type: "object",
             name: "specifications",
             label: "Specifications",
             list: true,
+            description: "Technical specifications (AI-powered generation available)",
+            ui: {
+              itemProps: (item) => {
+                return { label: item?.label || "Specification" };
+              },
+              component: AISpecificationsField,
+            },
             fields: [
               {
                 type: "string",
@@ -213,10 +237,15 @@ export default defineConfig({
               },
             ],
           },
+          // 🎯 AI-POWERED IMAGES FIELD
           {
             type: "object",
             name: "images",
             label: "Images",
+            description: "Product images (AI generation available)",
+            ui: {
+              component: AIImageField,
+            },
             fields: [
               {
                 type: "string",
@@ -224,6 +253,16 @@ export default defineConfig({
                 label: "Master Image Path",
               }
             ]
+          },
+          // 🎯 AI-POWERED DESCRIPTION FIELD
+          {
+            type: "string",
+            name: "ai_description",
+            label: "AI-Generated Description",
+            description: "Full product description (AI-powered)",
+            ui: {
+              component: AIDescriptionField,
+            },
           },
           {
             type: "rich-text",

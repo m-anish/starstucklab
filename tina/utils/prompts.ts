@@ -48,3 +48,17 @@ export function getPromptTemplate(
   // @ts-ignore
   return template(...args);
 }
+
+export function getImagePromptTemplate(
+  title: string,
+  type: 'telescope' | 'weather' | 'electronics' | 'general'
+): string {
+  const styles = {
+    telescope: 'astronomical instrument, technical elegance, dark background with stars, professional scientific photography',
+    weather: 'meteorological device, clean design, atmospheric elements, studio lighting',
+    electronics: 'electronic circuit board, technical precision, close-up detail, professional product photography',
+    general: 'scientific instrument, professional studio lighting, high quality commercial product shot'
+  };
+
+  return `warm studio-ghibli themed ${styles[type]}, clean white background, technically accurate, high resolution, professional product photography, Studio Ghibli art style, warm lighting, magical realism, detailed craftsmanship`;
+}

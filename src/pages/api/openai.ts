@@ -121,7 +121,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'dall-e-3',
+          model: 'gpt-image-1.5',
           prompt: prompt,
           n: 1,
           size: size,
