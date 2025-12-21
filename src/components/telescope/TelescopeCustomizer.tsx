@@ -77,7 +77,7 @@ export default function CustomizationWizard() {
         tubeBColor: customization.tubeBColor,
         baseColor: customization.baseColor,
         engraving: customization.engraving,
-        graphicData: graphicPreview, // Store base64 for localStorage
+        graphicData: graphicPreview,
         graphicName: customization.graphic?.name,
       }
     };
@@ -87,7 +87,6 @@ export default function CustomizationWizard() {
     expiry.setDate(expiry.getDate() + 30);
     cart.expiry = expiry.toISOString();
 
-    // Store cart data (File objects will be handled separately during form submission)
     localStorage.setItem('starstucklab_cart', JSON.stringify(cart));
     window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: cart.items } }));
 
@@ -96,29 +95,22 @@ export default function CustomizationWizard() {
   };
 
   return (
-    <div style={{
+    <div className="parchment" style={{
       maxWidth: '900px',
       margin: '0 auto',
-      padding: '20px',
-      background: 'rgba(255,255,255,0.95)',
-      borderRadius: '16px',
-      boxShadow: '0 8px 32px rgba(0,0,0,0.15)',
     }}>
       {/* Back Button */}
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: 'var(--space-6)' }}>
         <a 
           href="/shop/m42" 
+          className="back-link"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
             gap: '8px',
-            color: '#666',
             textDecoration: 'none',
-            fontSize: '0.95rem',
-            transition: 'color 0.2s ease',
+            color: 'var(--ink-dark)',
           }}
-          onMouseOver={(e) => e.currentTarget.style.color = '#2a7a4f'}
-          onMouseOut={(e) => e.currentTarget.style.color = '#666'}
         >
           ← Back to Product Details
         </a>
@@ -128,8 +120,8 @@ export default function CustomizationWizard() {
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        marginBottom: '40px',
-        padding: '0 20px',
+        marginBottom: 'var(--space-10)',
+        padding: '0 var(--space-5)',
       }}>
         {STEPS.map((step, idx) => (
           <div key={step.id} style={{
@@ -176,12 +168,12 @@ export default function CustomizationWizard() {
       </div>
 
       {/* Step Content */}
-      <div style={{ minHeight: '550px', marginBottom: '32px' }}>
+      <div style={{ minHeight: '550px', marginBottom: 'var(--space-8)' }}>
         {/* Step 0: Colors */}
         {currentStep === 0 && (
           <div>
-            <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Choose Your Colors</h2>
-            <p style={{ marginBottom: '32px', color: '#666' }}>Select colors for each part of your telescope</p>
+            <h2 style={{ marginBottom: 'var(--space-2)' }}>Choose Your Colors</h2>
+            <p className="lead">Select colors for each part of your telescope</p>
 
             <TelescopeViewer
               colors={{
@@ -197,8 +189,8 @@ export default function CustomizationWizard() {
         {/* Step 1: Engraving */}
         {currentStep === 1 && (
           <div>
-            <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Add Engraving (Optional)</h2>
-            <p style={{ marginBottom: '32px', color: '#666' }}>Personalize your telescope with custom text (max 15 characters)</p>
+            <h2 style={{ marginBottom: 'var(--space-2)' }}>Add Engraving (Optional)</h2>
+            <p className="lead">Personalize your telescope with custom text (max 15 characters)</p>
 
             <TelescopeViewer
               colors={{
@@ -213,11 +205,48 @@ export default function CustomizationWizard() {
               onEngravingChange={(text) => updateCustomization({ engraving: text })}
             />
 
-            <div style={{ marginTop: '24px' }}>
+            {/* Mobile Engraving Input - shown below 3D viewer on mobile */}
+            <div className="mobile-engraving-ui" style={{ 
+              display: 'none', 
+              marginTop: 'var(--space-6)' 
+            }}>
+              <div className="parchment parchment--nested">
+                <h4 style={{ margin: '0 0 var(--space-3) 0' }}>
+                  Add Engraving Text
+                </h4>
+                <input
+                  type="text"
+                  maxLength={15}
+                  value={customization.engraving}
+                  onChange={(e) => updateCustomization({ engraving: e.target.value })}
+                  placeholder="Enter engraving text..."
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    fontSize: '1rem',
+                    border: '2px solid rgba(80, 50, 25, 0.25)',
+                    borderRadius: '8px',
+                    fontFamily: 'monospace',
+                    marginBottom: '8px',
+                    background: 'rgba(255, 250, 240, 0.9)',
+                    color: 'var(--parchment-text)',
+                  }}
+                />
+                <div style={{
+                  fontSize: '0.8rem',
+                  color: 'var(--parchment-italic)',
+                  textAlign: 'right',
+                }}>
+                  {customization.engraving.length}/15 characters
+                </div>
+              </div>
+            </div>
+
+            <div style={{ marginTop: 'var(--space-6)' }}>
               <div style={{
                 background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-                padding: '32px',
-                borderRadius: '12px',
+                padding: 'var(--space-8)',
+                borderRadius: 'var(--radius-xl)',
                 color: '#fff',
                 textAlign: 'center',
               }}>
@@ -236,10 +265,10 @@ export default function CustomizationWizard() {
 
               {customization.engraving && (
                 <div style={{
-                  marginTop: '16px',
-                  padding: '12px',
+                  marginTop: 'var(--space-4)',
+                  padding: 'var(--space-3)',
                   background: 'rgba(42,122,79,0.1)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-lg)',
                   color: '#2a7a4f',
                   fontSize: '0.9rem',
                   textAlign: 'center',
@@ -254,8 +283,8 @@ export default function CustomizationWizard() {
         {/* Step 2: Graphic */}
         {currentStep === 2 && (
           <div>
-            <h2 style={{ marginBottom: '8px', fontSize: '1.8rem' }}>Attach Custom Graphic (Optional)</h2>
-            <p style={{ marginBottom: '32px', color: '#666' }}>Upload artwork or logo (PNG, SVG, JPG - max 2MB)</p>
+            <h2 style={{ marginBottom: 'var(--space-2)' }}>Attach Custom Graphic (Optional)</h2>
+            <p className="lead">Upload artwork or logo (PNG, SVG, JPG - max 2MB)</p>
 
             <TelescopeViewer
               colors={{
@@ -269,14 +298,56 @@ export default function CustomizationWizard() {
               onGraphicUpload={handleGraphicUpload}
             />
 
-            {graphicPreview && (
-              <div style={{ marginTop: '32px' }}>
-                <div style={{ fontWeight: 600, marginBottom: '12px' }}>Preview:</div>
+            {/* Mobile Graphic Upload - shown below 3D viewer on mobile */}
+            <div className="mobile-graphic-ui" style={{ 
+              display: 'none', 
+              marginTop: 'var(--space-6)' 
+            }}>
+              <div className="parchment parchment--nested">
+                <h5 style={{ margin: '0 0 var(--space-4) 0' }}>
+                  Upload Custom Graphic
+                </h5>
                 <div style={{
-                  background: '#fff',
-                  padding: '24px',
-                  borderRadius: '12px',
-                  border: '2px solid #ddd',
+                  border: '2px dashed rgba(80, 50, 25, 0.3)',
+                  borderRadius: '8px',
+                  padding: '32px 20px',
+                  textAlign: 'center',
+                  background: 'rgba(255, 250, 240, 0.6)',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}>
+                  <input
+                    type="file"
+                    accept=".png,.svg,.jpg,.jpeg"
+                    onChange={handleGraphicUpload}
+                    style={{ display: 'none' }}
+                    id="graphic-upload-mobile"
+                  />
+                  <label htmlFor="graphic-upload-mobile" style={{ cursor: 'pointer', display: 'block' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📁</div>
+                    <div style={{ 
+                      fontSize: '0.95rem', 
+                      fontWeight: 600, 
+                      marginBottom: '6px', 
+                      color: 'var(--parchment-heading)' 
+                    }}>
+                      Click to upload
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.8rem', 
+                      color: 'var(--parchment-italic)' 
+                    }}>
+                      PNG, SVG, JPG (max 2MB)
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {graphicPreview && (
+              <div style={{ marginTop: 'var(--space-8)' }}>
+                <div style={{ fontWeight: 600, marginBottom: 'var(--space-3)' }}>Preview:</div>
+                <div className="parchment parchment--nested" style={{
                   textAlign: 'center',
                 }}>
                   <img
@@ -284,16 +355,16 @@ export default function CustomizationWizard() {
                     alt="Preview"
                     style={{ maxWidth: '100%', maxHeight: '300px', borderRadius: '8px' }}
                   />
-                  <div style={{ marginTop: '16px', fontSize: '0.9rem', color: '#666' }}>
+                  <div style={{ marginTop: 'var(--space-4)', fontSize: '0.9rem' }}>
                     {customization.graphic?.name}
                   </div>
                 </div>
 
                 <div style={{
-                  marginTop: '24px',
-                  padding: '16px',
+                  marginTop: 'var(--space-6)',
+                  padding: 'var(--space-4)',
                   background: 'rgba(74,144,226,0.1)',
-                  borderRadius: '8px',
+                  borderRadius: 'var(--radius-lg)',
                   color: '#4a90e2',
                   fontSize: '0.9rem',
                 }}>
@@ -304,22 +375,13 @@ export default function CustomizationWizard() {
           </div>
         )}
 
-{/* Step 3: Review */}
+        {/* Step 3: Review */}
         {currentStep === 3 && (
           <div>
-            <h2 style={{ 
-              marginBottom: '8px', 
-              fontSize: '1.8rem',
-              color: '#1a1412', // Dark text on light background
-              fontFamily: 'var(--font-display)'
-            }}>
+            <h2 style={{ marginBottom: 'var(--space-2)' }}>
               Review Your Customization
             </h2>
-            <p style={{ 
-              marginBottom: '32px', 
-              color: '#5a3214', // Darker muted text
-              fontFamily: 'var(--font-body)'
-            }}>
+            <p className="lead">
               Confirm your choices before adding to cart
             </p>
 
@@ -333,22 +395,15 @@ export default function CustomizationWizard() {
               showReviewMode={true}
             />
 
-            <div style={{
-              background: '#fbf0db', // Parchment cream
-              border: '1px solid rgba(90, 50, 20, 0.15)',
-              borderRadius: 'var(--radius-xl)',
-              padding: 'var(--space-8)',
+            <div className="parchment parchment--nested" style={{
               marginTop: 'var(--space-8)',
               marginBottom: 'var(--space-6)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
             }}>
               <div style={{ marginBottom: 'var(--space-6)' }}>
                 <div style={{ 
                   fontWeight: 600, 
                   marginBottom: 'var(--space-4)', 
                   fontSize: 'var(--text-lg)',
-                  color: '#1a1412',
-                  fontFamily: 'var(--font-ui)'
                 }}>
                   Colors Selected
                 </div>
@@ -362,10 +417,9 @@ export default function CustomizationWizard() {
                       flex: '1 1 150px',
                       padding: 'var(--space-4)',
                       borderRadius: 'var(--radius-lg)',
-                      background: '#fff',
+                      background: 'rgba(255, 250, 240, 0.6)',
                       border: '1px solid rgba(90, 50, 20, 0.12)',
                       textAlign: 'center',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                     }}>
                       <div style={{
                         width: '60px',
@@ -379,14 +433,13 @@ export default function CustomizationWizard() {
                       <div style={{ 
                         fontSize: 'var(--text-sm)', 
                         fontWeight: 600,
-                        color: '#1a1412',
                         marginBottom: 'var(--space-1)'
                       }}>
                         {item.label}
                       </div>
                       <div style={{ 
                         fontSize: 'var(--text-xs)', 
-                        color: '#5a3214'
+                        color: 'var(--parchment-italic)'
                       }}>
                         {PASTEL_COLORS.find(c => c.hex === item.color)?.name}
                       </div>
@@ -405,22 +458,18 @@ export default function CustomizationWizard() {
                     fontWeight: 600, 
                     marginBottom: 'var(--space-3)', 
                     fontSize: 'var(--text-lg)',
-                    color: '#1a1412',
-                    fontFamily: 'var(--font-ui)'
                   }}>
                     Engraving
                   </div>
                   <div style={{
-                    background: '#fff',
+                    background: 'rgba(255, 250, 240, 0.6)',
                     border: '1px solid rgba(90, 50, 20, 0.12)',
                     padding: 'var(--space-4)',
                     borderRadius: 'var(--radius-lg)',
                     fontFamily: 'Georgia, serif',
                     fontStyle: 'italic',
                     fontSize: 'var(--text-xl)',
-                    color: '#1a1412',
                     textAlign: 'center',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                   }}>
                     "{customization.engraving}"
                   </div>
@@ -428,28 +477,22 @@ export default function CustomizationWizard() {
               )}
 
               {customization.graphic && (
-                <div style={{
-                  paddingBottom: 'var(--space-6)',
-                  borderBottom: '1px solid rgba(90, 50, 20, 0.12)'
-                }}>
+                <div>
                   <div style={{ 
                     fontWeight: 600, 
                     marginBottom: 'var(--space-3)', 
                     fontSize: 'var(--text-lg)',
-                    color: '#1a1412',
-                    fontFamily: 'var(--font-ui)'
                   }}>
                     Custom Graphic
                   </div>
                   <div style={{
-                    background: '#fff',
+                    background: 'rgba(255, 250, 240, 0.6)',
                     border: '1px solid rgba(90, 50, 20, 0.12)',
                     padding: 'var(--space-4)',
                     borderRadius: 'var(--radius-lg)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 'var(--space-4)',
-                    boxShadow: '0 1px 3px rgba(0, 0, 0, 0.06)',
                   }}>
                     {graphicPreview && (
                       <img src={graphicPreview} alt="Graphic" style={{
@@ -461,17 +504,10 @@ export default function CustomizationWizard() {
                       }} />
                     )}
                     <div>
-                      <div style={{ 
-                        fontWeight: 600,
-                        color: '#1a1412',
-                        marginBottom: 'var(--space-1)'
-                      }}>
+                      <div style={{ fontWeight: 600, marginBottom: 'var(--space-1)' }}>
                         {customization.graphic.name}
                       </div>
-                      <div style={{ 
-                        fontSize: 'var(--text-sm)', 
-                        color: '#5a3214'
-                      }}>
+                      <div style={{ fontSize: 'var(--text-sm)', color: 'var(--parchment-italic)' }}>
                         {(customization.graphic.size / 1024).toFixed(1)} KB
                       </div>
                     </div>
@@ -489,27 +525,13 @@ export default function CustomizationWizard() {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-4)' }}>
                 <div>
-                  <div style={{ 
-                    fontSize: 'var(--text-base)', 
-                    opacity: 0.95, 
-                    marginBottom: 'var(--space-2)',
-                    fontFamily: 'var(--font-ui)'
-                  }}>
+                  <div style={{ fontSize: 'var(--text-base)', opacity: 0.95, marginBottom: 'var(--space-2)' }}>
                     Total Price
                   </div>
-                  <div style={{ 
-                    fontSize: 'clamp(2rem, 5vw, 2.5rem)', 
-                    fontWeight: 700,
-                    fontFamily: 'var(--font-display)',
-                    marginBottom: 'var(--space-2)'
-                  }}>
+                  <div style={{ fontSize: 'clamp(2rem, 5vw, 2.5rem)', fontWeight: 700, marginBottom: 'var(--space-2)' }}>
                     ₹{calculatePrice().toLocaleString()}
                   </div>
-                  <div style={{ 
-                    fontSize: 'var(--text-sm)', 
-                    opacity: 0.9,
-                    fontFamily: 'var(--font-body)'
-                  }}>
+                  <div style={{ fontSize: 'var(--text-sm)', opacity: 0.9 }}>
                     Base: ₹{BASE_PRICE.toLocaleString()}
                     {customization.engraving && ` + Engraving: ₹${ENGRAVING_COST.toLocaleString()}`}
                     {customization.graphic && ` + Graphic: ₹${GRAPHIC_COST.toLocaleString()}`}
@@ -527,21 +549,17 @@ export default function CustomizationWizard() {
         display: 'flex',
         justifyContent: 'space-between',
         gap: '16px',
-        paddingTop: '24px',
-        borderTop: '1px solid #ddd',
+        paddingTop: 'var(--space-6)',
+        borderTop: '1px solid rgba(80, 50, 25, 0.15)',
       }}>
         {currentStep > 0 && (
           <button
             onClick={prevStep}
+            className="button"
             style={{
-              padding: '14px 32px',
-              background: '#fff',
-              border: '2px solid #ddd',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
+              background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
+              color: 'var(--ink-dark)',
+              border: '2px solid rgba(107, 74, 40, 0.3)',
             }}
           >
             ← Previous
@@ -551,17 +569,9 @@ export default function CustomizationWizard() {
         {currentStep < STEPS.length - 1 ? (
           <button
             onClick={nextStep}
+            className="button"
             style={{
               marginLeft: 'auto',
-              padding: '14px 32px',
-              background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#fff',
-              cursor: 'pointer',
-              fontSize: '1rem',
-              fontWeight: 600,
-              transition: 'all 0.2s ease',
             }}
           >
             Next Step →
@@ -569,24 +579,30 @@ export default function CustomizationWizard() {
         ) : (
           <button
             onClick={handleAddToCart}
+            className="button"
             style={{
               marginLeft: 'auto',
               padding: '16px 48px',
-              background: 'linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%)',
-              border: 'none',
-              borderRadius: '8px',
-              color: '#fff',
-              cursor: 'pointer',
               fontSize: '1.1rem',
               fontWeight: 700,
-              transition: 'all 0.2s ease',
-              boxShadow: '0 4px 12px rgba(42,122,79,0.3)',
             }}
           >
             Add to Cart 🛒
           </button>
         )}
       </div>
+
+      {/* Mobile-specific styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          @media (max-width: 640px) {
+            .mobile-engraving-ui,
+            .mobile-graphic-ui {
+              display: block !important;
+            }
+          }
+        `
+      }} />
     </div>
   );
 }

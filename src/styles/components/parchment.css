@@ -159,7 +159,8 @@
 .parchment h1,
 .parchment h2,
 .parchment h3,
-.parchment h4 {
+.parchment h4,
+.parchment h5 {
   font-family: 'Crimson Pro', 'Crimson Text', Georgia, serif;
   color: var(--parchment-heading);
   font-weight: 700;
@@ -191,6 +192,12 @@
   font-size: var(--text-xl);
   margin-bottom: var(--space-3);
   font-weight: 600;
+}
+
+.parchment h5 {
+  font-size: var(--text-lg);
+  margin-bottom: var(--space-3);
+  font-weight: 500;
 }
 
 .parchment p {
