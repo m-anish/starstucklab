@@ -114,6 +114,9 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (action === 'generate_image') {
       const { size = '1024x1024', quality = 'standard' } = options;
 
+      // Map UI quality values to DALL-E API values
+      const dalleQuality = quality === 'hd' ? 'high' : quality === 'standard' ? 'low' : quality;
+
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
@@ -125,7 +128,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           prompt: prompt,
           n: 1,
           size: size,
-          quality: quality
+          quality: dalleQuality
         })
       });
 

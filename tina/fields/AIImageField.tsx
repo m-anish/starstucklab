@@ -211,8 +211,8 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
             src={generatedImageUrl}
             alt="Generated product image"
             style={{
-              maxWidth: '200px',
-              maxHeight: '200px',
+              maxWidth: '300px',
+              maxHeight: '300px',
               border: '1px solid #ddd',
               borderRadius: '4px',
               objectFit: 'contain'

@@ -34,6 +34,8 @@ const AIDescriptionField = wrapFieldsWithMeta<AIDescriptionFieldProps>(({ input,
         long: '600-800'
       }[length];
 
+      console.log('AIDescriptionField Debug:', { title, category, excerpt, features, specifications });
+
       let prompt = `Write a ${wordCount} word product description for "${title}"${category ? `, a ${category}` : ''}.
 
 ${excerpt ? `Excerpt: ${excerpt}\n` : ''}${features.length ? `Key features: ${features.map((f: any) => f.title).join(', ')}\n` : ''}${specifications.length ? `Specifications include: ${specifications.slice(0, 3).map((s: any) => s.label).join(', ')}\n` : ''}`;

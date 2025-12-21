@@ -64,62 +64,36 @@ Return ONLY the JSON array, no other text.`;
 
   return (
     <div style={{ marginBottom: '1rem' }}>
-      {/* Field Label */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        marginBottom: '0.75rem' 
-      }}>
-        <label style={{ fontWeight: 500, fontSize: '14px' }}>
-          {meta.label || field.label}
-        </label>
-
-        <button
-          type="button"
-          onClick={generateFeatures}
-          disabled={generating}
-          style={{
-            padding: '0.5rem 1rem',
-            background: generating ? '#6c757d' : '#198754',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: generating ? 'not-allowed' : 'pointer',
-            fontSize: '13px',
-            fontWeight: 500,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem'
-          }}
-        >
-          {generating ? (
-            <>
-              <span>⏳</span>
-              <span>Generating Features...</span>
-            </>
-          ) : (
-            <>
-              <span>✨</span>
-              <span>Generate All Features</span>
-            </>
-          )}
-        </button>
-      </div>
-
-      {/* Error Message */}
-      {meta.error && (
-        <div style={{ color: '#dc3545', fontSize: '12px', marginBottom: '0.5rem' }}>
-          {meta.error}
-        </div>
-      )}
-
-      {/* Helper Text */}
-      {field.description && (
-        <div style={{ color: '#666', fontSize: '12px', marginBottom: '0.75rem' }}>
-          {field.description}
-        </div>
-      )}
+      <button
+        type="button"
+        onClick={generateFeatures}
+        disabled={generating}
+        style={{
+          padding: '0.5rem 1rem',
+          background: generating ? '#6c757d' : '#198754',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: generating ? 'not-allowed' : 'pointer',
+          fontSize: '12px',
+          fontWeight: 500,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem'
+        }}
+      >
+        {generating ? (
+          <>
+            <span>⏳</span>
+            <span>Generate Features</span>
+          </>
+        ) : (
+          <>
+            <span>✨</span>
+            <span>Generate Features</span>
+          </>
+        )}
+      </button>
     </div>
   );
 });

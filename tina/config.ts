@@ -254,21 +254,16 @@ export default defineConfig({
               }
             ]
           },
-          // 🎯 AI-POWERED DESCRIPTION FIELD
-          {
-            type: "string",
-            name: "ai_description",
-            label: "AI-Generated Description",
-            description: "Full product description (AI-powered)",
-            ui: {
-              component: AIDescriptionField,
-            },
-          },
+          // 🎯 AI-POWERED DESCRIPTION FIELD (populates body)
           {
             type: "rich-text",
             name: "body",
-            label: "Body",
+            label: "Body (AI-Generated)",
+            description: "Full product description (AI-powered generation available)",
             isBody: true,
+            ui: {
+              component: AIDescriptionField,
+            },
           },
         ],
       },
