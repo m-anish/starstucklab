@@ -263,7 +263,7 @@ const indianStates = [
         <button class="checkout-qty-btn" data-action="decrease" data-id="${item.id}">−</button>
         <span class="checkout-item-qty">${item.quantity}</span>
         <button class="checkout-qty-btn" data-action="increase" data-id="${item.id}">+</button>
-        <button class="checkout-remove-btn" data-id="${item.id}" aria-label="Remove">×</button>
+        <button class="checkout-remove-btn" data-id="${item.id}" aria-label="Remove">❌</button>
       </div>
       <div class="checkout-item-price">${item.currency} ${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
     </div>

@@ -16,7 +16,7 @@
 
 .checkout-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
+  grid-template-columns: 3fr 2fr;
   gap: var(--space-8, 32px);
 }
 
@@ -59,51 +59,57 @@
 }
 
 .checkout-qty-btn {
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: rgba(255, 255, 255, 0.8);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.9);
   color: var(--ink-dark, #28160b);
-  border-radius: var(--radius-sm, 4px);
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
+  font-weight: var(--weight-bold, 700);
   transition: all var(--transition-fast, 150ms ease);
 }
 
 .checkout-qty-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
-  border-color: rgba(0, 0, 0, 0.3);
+  background: var(--accent-green, #2a7a4f);
+  color: white;
+  border-color: var(--accent-green, #2a7a4f);
+  transform: scale(1.05);
 }
 
 .checkout-item-qty {
-  min-width: 24px;
+  min-width: 28px;
   text-align: center;
   color: var(--ink-dark, #28160b);
-  font-weight: var(--weight-medium, 500);
+  font-weight: var(--weight-semibold, 600);
+  font-size: var(--text-base, 1rem);
 }
 
 .checkout-remove-btn {
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  border-radius: var(--radius-sm, 4px);
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(239, 68, 68, 0.05);
+  color: #dc2626;
+  border-radius: 50%;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
+  font-size: 14px;
   transition: all var(--transition-fast, 150ms ease);
-  margin-left: var(--space-2, 8px);
+  margin-left: var(--space-3, 12px);
 }
 
 .checkout-remove-btn:hover {
-  background: rgba(239, 68, 68, 0.2);
-  border-color: rgba(239, 68, 68, 0.5);
+  background: #dc2626;
+  color: white;
+  border-color: #dc2626;
+  transform: scale(1.05);
 }
 
 .checkout-item-price {
@@ -122,6 +128,18 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-5, 20px);
+}
+
+.checkout-qty-btn {
+  background: linear-gradient(135deg, #e7cdb1 0%, #ecb074 100%) !important;
+  color: var(--ink-dark, #28160b) !important;
+  padding: 1rem 1rem !important;
+}
+
+.checkout-remove-btn {
+  background: linear-gradient(135deg, #f7dada 0%, #f3b4b4 100%) !important;
+  color: var(--ink-dark, #28160b) !important;
+  padding: 1rem 1rem !important;
 }
 
 .form-row {
