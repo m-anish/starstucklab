@@ -14,10 +14,7 @@ const { product } = Astro.props;
 </button>
 
 <script>
-  // Generate a unique ID for cart items
-  function generateCartItemId(): string {
-    return `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
+  import { addToCart } from '../lib/cart.ts';
 
   document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -29,29 +26,12 @@ const { product } = Astro.props;
       if (!slug || !title || !price) return;
 
       try {
-        const stored = localStorage.getItem('starstucklab_cart');
-        const data = stored ? JSON.parse(stored) : { items: [] };
-        const existingIndex = data.items.findIndex((i: any) => i.slug === slug);
-
-        if (existingIndex >= 0) {
-          data.items[existingIndex].quantity += 1;
-        } else {
-          data.items.push({
-            id: generateCartItemId(),
-            slug,
-            title,
-            price,
-            currency: currency || 'INR',
-            quantity: 1
-          });
-        }
-
-        const expiry = new Date();
-        expiry.setDate(expiry.getDate() + 30);
-        data.expiry = expiry.toISOString();
-
-        localStorage.setItem('starstucklab_cart', JSON.stringify(data));
-        window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: data.items } }));
+        addToCart({
+          slug,
+          title,
+          price,
+          currency: currency || 'INR'
+        });
 
         // Visual feedback
         const originalText = btn.textContent;

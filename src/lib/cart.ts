@@ -14,6 +14,21 @@ export interface CartItem {
 const CART_STORAGE_KEY = 'starstucklab_cart';
 const CART_EXPIRY_DAYS = 30; // Cart expires after 30 days
 
+// Listen for cross-tab cart updates
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (event.key === CART_STORAGE_KEY && event.newValue) {
+      try {
+        const data = JSON.parse(event.newValue);
+        // Dispatch custom event for cart updates from other tabs
+        window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: data.items || [] } }));
+      } catch (e) {
+        console.error('Error handling cross-tab cart update:', e);
+      }
+    }
+  });
+}
+
 export function getCart(): CartItem[] {
   if (typeof window === 'undefined') return [];
   
