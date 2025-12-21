@@ -6,6 +6,7 @@ import { stlFiles } from './telescopeStlFiles';
 import { PASTEL_COLORS } from './telescopeColors';
 import { pickColorForFile, positionModel } from './telescopeUtils';
 import type { TelescopeViewerProps } from './telescopeTypes';
+import OverlayContainer from './OverlayContainer';
 
 // ============================================================================
 // CAMERA POSITIONS - EDIT THESE TO CHANGE VIEWS
@@ -515,26 +516,8 @@ return (
 
       {/* Engraving UI - MOVED BELOW ON MOBILE */}
       {showEngravingUI && (
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? 'auto' : 0,
-          left: isMobile ? 'auto' : 0,
-          right: isMobile ? 'auto' : 0,
-          bottom: isMobile ? 'auto' : 0,
-          display: isMobile ? 'none' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 15,
-          pointerEvents: 'none',
-        }}>
-          <div className="parchment parchment--compact" style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            pointerEvents: 'auto',
-            minWidth: '300px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}>
+        <>
+          <OverlayContainer isMobile={isMobile} className="parchment parchment--compact" style={{ minWidth: '300px' }}>
             <h5 style={{
               margin: '0 0 var(--space-3) 0',
             }}>
@@ -567,7 +550,7 @@ return (
             }}>
               {(engravingText || '').length}/15 characters
             </div>
-          </div>
+          </OverlayContainer>
 
           {/* Arrow pointing to engraving location */}
           <div style={{
@@ -589,7 +572,7 @@ return (
               filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.3))',
               animation: 'bounceHorizontal 2s infinite',
             }} />
-            
+
             <div style={{
               background: '#ff6b6b',
               color: '#fff',
@@ -603,31 +586,13 @@ return (
               Engraving Area
             </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Graphic Upload UI - MOVED BELOW ON MOBILE */}
       {showGraphicUI && (
-        <div style={{
-          position: 'absolute',
-          top: isMobile ? 'auto' : 0,
-          left: isMobile ? 'auto' : 0,
-          right: isMobile ? 'auto' : 0,
-          bottom: isMobile ? 'auto' : 0,
-          display: isMobile ? 'none' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 15,
-          pointerEvents: 'none',
-        }}>
-          <div className="parchment parchment--compact" style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            pointerEvents: 'auto',
-            minWidth: '220px',
-            boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
-          }}>
+        <>
+          <OverlayContainer isMobile={isMobile}>
             <h5 style={{
               margin: '0 0 var(--space-4) 0',
             }}>
@@ -652,23 +617,23 @@ return (
               />
               <label htmlFor="graphic-upload-input" style={{ cursor: 'pointer', display: 'block' }}>
                 <div style={{ fontSize: '1.5rem', marginBottom: '12px' }}>📁</div>
-                <div style={{ 
-                  fontSize: '0.75rem', 
-                  fontWeight: 600, 
-                  marginBottom: '6px', 
-                  color: 'var(--parchment-heading)' 
+                <div style={{
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  marginBottom: '6px',
+                  color: 'var(--parchment-heading)'
                 }}>
                   Click to upload
                 </div>
-                <div style={{ 
-                  fontSize: '0.6rem', 
-                  color: 'var(--parchment-italic)' 
+                <div style={{
+                  fontSize: '0.6rem',
+                  color: 'var(--parchment-italic)'
                 }}>
                   PNG, SVG, JPG (max 2MB)
                 </div>
               </label>
             </div>
-          </div>
+          </OverlayContainer>
 
           <div style={{
             position: 'absolute',
@@ -696,7 +661,7 @@ return (
               Graphic Area
             </div>
           </div>
-        </div>
+        </>
       )}
 
       <style dangerouslySetInnerHTML={{
