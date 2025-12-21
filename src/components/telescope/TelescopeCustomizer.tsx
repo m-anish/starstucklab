@@ -578,6 +578,42 @@ export default function CustomizationWizard() {
                 <div style={{ fontSize: '4rem' }}>🔭</div>
               </div>
             </div>
+
+            {/* Bottom Action Buttons */}
+            <div style={{
+              marginTop: 'var(--space-8)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: '16px',
+              flexWrap: 'wrap'
+            }}>
+              <button
+                onClick={handleAddToCart}
+                className="button"
+                style={{
+                  padding: '16px 24px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
+                  background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+                }}
+              >
+                Add to Cart 🛒
+              </button>
+              <button
+                onClick={() => {
+                  handleAddToCart();
+                  window.location.href = '/checkout';
+                }}
+                className="button"
+                style={{
+                  padding: '16px 48px',
+                  fontSize: '1.1rem',
+                  fontWeight: 700,
+                }}
+              >
+                Buy Now 💳
+              </button>
+            </div>
           </div>
         )}
       </div>
