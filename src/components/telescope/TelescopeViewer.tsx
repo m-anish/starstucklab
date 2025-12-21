@@ -392,25 +392,26 @@ return (
       {!showEngravingUI && !showGraphicUI && !showReviewMode && (
         <div style={{
           position: 'absolute',
-          bottom: isMobile ? '20px' : '60%',
-          left: isMobile ? '50%' : '30px',
-          transform: isMobile ? 'translateX(-50%)' : 'translateY(50%)',
+          bottom: isMobile ? '20px' : '30px',
+          left: isMobile ? '20px' : '30px',
+          transform: isMobile ? 'scale(0.8)' : 'scale(1.0)',
+          transformOrigin: isMobile ? 'bottom left' : 'center',
           display: 'flex',
-          flexDirection: isMobile ? 'row' : 'column',
+          flexDirection: 'column',
           gap: '16px',
           zIndex: 10,
         }}>
           {[
-            { key: 'tubeA', label: 'Tube A', color: colors.tubeA },
-            { key: 'tubeB', label: 'Tube B', color: colors.tubeB },
+            { key: 'tubeA', label: 'A', color: colors.tubeA },
+            { key: 'tubeB', label: 'B', color: colors.tubeB },
             { key: 'base', label: 'Base', color: colors.base },
           ].map(({ key, label, color }) => (
             <button
               key={key}
               onClick={() => setSelectedPart(key as 'tubeA' | 'tubeB' | 'base')}
               style={{
-                width: '80px',
-                height: '80px',
+                width: '60px',
+                height: '60px',
                 borderRadius: '50%',
                 background: color,
                 border: selectedPart === key ? '3px solid #2a7a4f' : '3px solid rgba(255,255,255,0.8)',
@@ -418,7 +419,7 @@ return (
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '0.7rem',
+                fontSize: '1rem',
                 fontWeight: 600,
                 color: color === '#f7f7f7' ? '#333' : '#fff',
                 textShadow: '0 1px 2px rgba(0,0,0,0.5)',
@@ -454,12 +455,12 @@ return (
             maxHeight: '80%',
             overflow: 'auto',
           }}>
-            <h3 style={{
+            <h4 style={{
               margin: '0 0 var(--space-5) 0',
               textAlign: 'center',
             }}>
               Choose {selectedPart === 'tubeA' ? 'Tube A' : selectedPart === 'tubeB' ? 'Tube B' : 'Base'} Color
-            </h3>
+            </h4>
 
             <div style={{
               display: 'grid',
@@ -478,7 +479,7 @@ return (
                   }}
                   style={{
                     width: '100%',
-                    height: '70px',
+                    height: '60px',
                     borderRadius: '8px',
                     background: color.hex,
                     border: '2px solid rgba(0,0,0,0.2)',
@@ -487,9 +488,9 @@ return (
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '0.6rem',
+                    fontSize: '0.8rem',
                     fontWeight: 600,
-                    color: color.hex === '#f7f7f7' ? '#333' : '#fff',
+                    color: (color.hex === '#f7f7f7' || color.hex === '#ffd100')? '#333' : '#fff',
                     textAlign: 'center',
                     lineHeight: '1.2',
                     padding: '4px',
