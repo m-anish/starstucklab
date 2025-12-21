@@ -71,6 +71,8 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
   const [selectedPart, setSelectedPart] = useState<'tubeA' | 'tubeB' | 'base' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -186,38 +188,59 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
     };
     animate();
 
-    // Load STL files
+    // Load STL files with progress tracking
     const loader = new STLLoader();
-    const loadPromises = stlFiles.map(fileName => {
+    let loadedCount = 0;
+    const totalFiles = stlFiles.length;
+
+    const loadFile = (fileName: string) => {
       return new Promise<{ geometry: THREE.BufferGeometry; fileName: string }>((resolve, reject) => {
         loader.load(
           `/models/m42/${fileName}`,
-          (geometry) => resolve({ geometry, fileName }),
+          (geometry) => {
+            loadedCount++;
+            setLoadingProgress((loadedCount / totalFiles) * 100);
+
+            // Create mesh
+            const material = new THREE.MeshStandardMaterial({
+              color: pickColorForFile(fileName, colors.tubeA, colors.tubeB, colors.base),
+              metalness: fileName.includes('mirror') ? 0.9 : 0.1,
+              roughness: fileName.includes('mirror') ? 0.1 : 0.8,
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            positionModel(mesh, fileName);
+            scene.add(mesh);
+            modelsRef.current.set(fileName, mesh);
+
+            resolve({ geometry, fileName });
+
+            // Hide loading when all files are loaded
+            if (loadedCount >= totalFiles) {
+              setTimeout(() => setIsLoading(false), 500); // Small delay for smooth transition
+            }
+          },
           undefined,
           (error) => {
+            loadedCount++;
+            setLoadingProgress((loadedCount / totalFiles) * 100);
             console.warn(`Failed to load ${fileName}:`, error);
             reject(error);
+
+            // Still hide loading even if some files fail
+            if (loadedCount >= totalFiles) {
+              setTimeout(() => setIsLoading(false), 500);
+            }
           }
         );
       });
-    });
+    };
 
-    Promise.allSettled(loadPromises).then((results) => {
-      results.forEach((result) => {
-        if (result.status === 'fulfilled') {
-          const { geometry, fileName } = result.value;
-          const material = new THREE.MeshStandardMaterial({
-            color: pickColorForFile(fileName, colors.tubeA, colors.tubeB, colors.base),
-            metalness: fileName.includes('mirror') ? 0.9 : 0.1,
-            roughness: fileName.includes('mirror') ? 0.1 : 0.8,
-          });
-          const mesh = new THREE.Mesh(geometry, material);
-          mesh.castShadow = true;
-          mesh.receiveShadow = true;
-          positionModel(mesh, fileName);
-          scene.add(mesh);
-          modelsRef.current.set(fileName, mesh);
-        }
+    // Load all files
+    stlFiles.forEach(fileName => {
+      loadFile(fileName).catch(() => {
+        // Individual file failures are handled above
       });
     });
 
@@ -242,14 +265,14 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
     });
   }, [colors]);
 
-  // Handle camera focus animation (Steps 2 & 3) - FIXED to start from current position
+  // Handle camera focus animation (Steps 2 & 3) and return to initial (Step 1)
   useEffect(() => {
-    if (!focusTarget || !cameraRef.current || !controlsRef.current) return;
+    if (!cameraRef.current || !controlsRef.current) return;
 
     setIsAnimating(true);
     const camera = cameraRef.current;
     const controls = controlsRef.current;
-    
+
     // START FROM CURRENT POSITION (not hardcoded!)
     const startPosition = camera.position.clone();
     const startTarget = controls.target.clone();
@@ -259,6 +282,9 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
       targetView = CAMERA_VIEWS.engraving;
     } else if (focusTarget === 'graphic') {
       targetView = CAMERA_VIEWS.graphic;
+    } else if (focusTarget === null || focusTarget === undefined) {
+      // Return to initial view when going back to step 1
+      targetView = CAMERA_VIEWS.initial;
     } else {
       return;
     }
@@ -271,7 +297,7 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
     const animateCamera = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      
+
       // Smooth easing
       const easeProgress = progress < 0.5
         ? 4 * progress * progress * progress
@@ -290,7 +316,10 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
           position: camera.position.clone(),
           target: controls.target.clone()
         });
-        // Keep controls disabled when focused
+        // Re-enable controls when back to initial view, keep disabled when focused
+        if (!focusTarget) {
+          controls.enabled = true;
+        }
       }
     };
 
@@ -387,6 +416,56 @@ return (
           display: 'block',
         }}
       />
+
+      {/* Loading Progress Overlay */}
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          borderRadius: '12px',
+        }}>
+          <div className="parchment parchment--compact" style={{
+            textAlign: 'center',
+            minWidth: '250px',
+          }}>
+            <div style={{ fontSize: '1.2rem', fontWeight: 600, marginBottom: '16px' }}>
+              🔭 Loading Telescope...
+            </div>
+
+            <div style={{
+              width: '200px',
+              height: '8px',
+              background: 'rgba(0, 0, 0, 0.2)',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              margin: '0 auto 12px',
+            }}>
+              <div style={{
+                height: '100%',
+                background: 'linear-gradient(90deg, #2a7a4f, #4a90e2)',
+                width: `${loadingProgress}%`,
+                transition: 'width 0.3s ease',
+                borderRadius: '4px',
+              }} />
+            </div>
+
+            <div style={{
+              fontSize: '0.9rem',
+              color: 'var(--parchment-italic)',
+            }}>
+              {Math.round(loadingProgress)}% complete
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Color Control Buttons */}
       {!showEngravingUI && !showGraphicUI && !showReviewMode && (
