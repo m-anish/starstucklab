@@ -94,7 +94,7 @@ import "../styles/components/cart.css";
         cartBody.innerHTML = items
         .map((item: any) => {
           let customizationHtml = "";
-          
+
           // Display customization if present
           if (item.customization) {
             const c = item.customization;
@@ -108,19 +108,19 @@ import "../styles/components/cart.css";
       </div>
     `;
           }
-          
+
           return `
-    <div class="cart-item" data-slug="${item.slug}">
+    <div class="cart-item" data-id="${item.id}" data-slug="${item.slug}">
       <div class="cart-item-info">
         <h4>${item.title}</h4>
         <p class="cart-item-price">${item.currency} ${item.price}</p>
         ${customizationHtml}
       </div>
       <div class="cart-item-controls">
-        <button class="cart-qty-btn" data-action="decrease" data-slug="${item.slug}">−</button>
+        <button class="cart-qty-btn" data-action="decrease" data-id="${item.id}">−</button>
         <span class="cart-item-qty">${item.quantity}</span>
-        <button class="cart-qty-btn" data-action="increase" data-slug="${item.slug}">+</button>
-        <button class="cart-remove-btn" data-slug="${item.slug}" aria-label="Remove">×</button>
+        <button class="cart-qty-btn" data-action="increase" data-id="${item.id}">+</button>
+        <button class="cart-remove-btn" data-id="${item.id}" aria-label="Remove">×</button>
       </div>
     </div>
   `;
@@ -132,23 +132,23 @@ import "../styles/components/cart.css";
           btn.addEventListener("click", (e) => {
             const target = e.target as HTMLElement;
             const action = target.dataset.action;
-            const slug = target.dataset.slug;
-            if (slug) {
-              const item = items.find((i: any) => i.slug === slug);
+            const itemId = target.dataset.id;
+            if (itemId) {
+              const item = items.find((i: any) => i.id === itemId);
               if (item) {
                 const newQty =
                 action === "increase" ? item.quantity + 1 : item.quantity - 1;
-                updateCartQuantity(slug, newQty);
+                updateCartQuantity(itemId, newQty);
               }
             }
           });
         });
-        
+
         cartBody.querySelectorAll(".cart-remove-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
-            const slug = (btn as HTMLElement).dataset.slug;
-            if (slug) {
-              removeFromCart(slug);
+            const itemId = (btn as HTMLElement).dataset.id;
+            if (itemId) {
+              removeFromCart(itemId);
             }
           });
         });
@@ -158,21 +158,21 @@ import "../styles/components/cart.css";
       }
     }
     
-    function updateCartQuantity(slug: string, quantity: number) {
+    function updateCartQuantity(itemId: string, quantity: number) {
       try {
         const stored = localStorage.getItem("starstucklab_cart");
         if (!stored) return;
-        
+
         const data = JSON.parse(stored);
         const items = data.items || [];
-        
+
         if (quantity <= 0) {
-          data.items = items.filter((i: any) => i.slug !== slug);
+          data.items = items.filter((i: any) => i.id !== itemId);
         } else {
-          const item = items.find((i: any) => i.slug === slug);
+          const item = items.find((i: any) => i.id === itemId);
           if (item) item.quantity = quantity;
         }
-        
+
         localStorage.setItem("starstucklab_cart", JSON.stringify(data));
         window.dispatchEvent(
         new CustomEvent("cart:updated", { detail: { items: data.items } }),
@@ -182,9 +182,9 @@ import "../styles/components/cart.css";
         console.error("Error updating cart:", e);
       }
     }
-    
-    function removeFromCart(slug: string) {
-      updateCartQuantity(slug, 0);
+
+    function removeFromCart(itemId: string) {
+      updateCartQuantity(itemId, 0);
     }
     
     // Event listeners

@@ -14,48 +14,60 @@ const { product } = Astro.props;
 </button>
 
 <script>
+  // Generate a unique ID for cart items
+  function generateCartItemId(): string {
+    return `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
   document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const slug = btn.getAttribute('data-slug');
       const title = btn.getAttribute('data-title');
       const price = btn.getAttribute('data-price');
       const currency = btn.getAttribute('data-currency');
-      
+
       if (!slug || !title || !price) return;
-      
+
       try {
         const stored = localStorage.getItem('starstucklab_cart');
         const data = stored ? JSON.parse(stored) : { items: [] };
         const existingIndex = data.items.findIndex((i: any) => i.slug === slug);
-        
+
         if (existingIndex >= 0) {
           data.items[existingIndex].quantity += 1;
         } else {
-          data.items.push({ slug, title, price, currency: currency || 'INR', quantity: 1 });
+          data.items.push({
+            id: generateCartItemId(),
+            slug,
+            title,
+            price,
+            currency: currency || 'INR',
+            quantity: 1
+          });
         }
-        
+
         const expiry = new Date();
         expiry.setDate(expiry.getDate() + 30);
         data.expiry = expiry.toISOString();
-        
+
         localStorage.setItem('starstucklab_cart', JSON.stringify(data));
         window.dispatchEvent(new CustomEvent('cart:updated', { detail: { items: data.items } }));
-        
+
         // Visual feedback
         const originalText = btn.textContent;
         btn.textContent = 'Added!';
-        btn.disabled = true;
-        
+        (btn as HTMLButtonElement).disabled = true;
+
         // Open cart drawer
         if ((window as any).openCart) {
           setTimeout(() => {
             (window as any).openCart();
           }, 300);
         }
-        
+
         setTimeout(() => {
           btn.textContent = originalText;
-          btn.disabled = false;
+          (btn as HTMLButtonElement).disabled = false;
         }, 2000);
       } catch (err) {
         console.error('Error adding to cart:', err);
@@ -97,4 +109,3 @@ const { product } = Astro.props;
     cursor: not-allowed;
   }
 </style>
-

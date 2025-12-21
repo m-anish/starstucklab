@@ -76,7 +76,11 @@ export default function CustomizationWizard() {
     const stored = localStorage.getItem('starstucklab_cart');
     const cart = stored ? JSON.parse(stored) : { items: [] };
 
+    // Generate unique ID for the cart item
+    const cartItemId = `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     const cartItem = {
+      id: cartItemId,
       slug: 'm42',
       title: 'M42 Dobsonian (Customized)',
       price: calculatePrice().toString(),

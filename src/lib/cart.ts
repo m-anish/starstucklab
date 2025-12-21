@@ -2,11 +2,13 @@
 // Client-side cart management using localStorage
 
 export interface CartItem {
+  id: string;  // Unique identifier for cart items
   slug: string;
   title: string;
   price: string;  // Price as string (matches product format)
   currency: string;
   quantity: number;
+  customization?: any;  // Optional customization data
 }
 
 const CART_STORAGE_KEY = 'starstucklab_cart';
@@ -56,37 +58,43 @@ export function saveCart(items: CartItem[]): void {
   }
 }
 
+// Generate a unique ID for cart items
+function generateCartItemId(): string {
+  return `cart_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
 export function addToCart(product: { slug: string; title: string; price: string; currency: string }): void {
   const cart = getCart();
   const existingIndex = cart.findIndex(item => item.slug === product.slug);
-  
+
   if (existingIndex >= 0) {
     // Increment quantity if already in cart
     cart[existingIndex].quantity += 1;
   } else {
     // Add new item
     cart.push({
+      id: generateCartItemId(),
       ...product,
       quantity: 1
     });
   }
-  
+
   saveCart(cart);
 }
 
-export function removeFromCart(slug: string): void {
-  const cart = getCart().filter(item => item.slug !== slug);
+export function removeFromCart(itemId: string): void {
+  const cart = getCart().filter(item => item.id !== itemId);
   saveCart(cart);
 }
 
-export function updateQuantity(slug: string, quantity: number): void {
+export function updateQuantity(itemId: string, quantity: number): void {
   if (quantity <= 0) {
-    removeFromCart(slug);
+    removeFromCart(itemId);
     return;
   }
-  
+
   const cart = getCart();
-  const item = cart.find(i => i.slug === slug);
+  const item = cart.find(i => i.id === itemId);
   if (item) {
     item.quantity = quantity;
     saveCart(cart);
@@ -115,5 +123,3 @@ export function getCartTotal(): { total: number; currency: string } {
   
   return { total, currency };
 }
-
-
