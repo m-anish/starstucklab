@@ -254,11 +254,16 @@ const indianStates = [
             }
 
             return `
-    <div class="checkout-item">
-      <div>
+    <div class="checkout-item" data-id="${item.id}" data-slug="${item.slug}">
+      <div class="checkout-item-info">
         <strong>${item.title}</strong>
-        <span class="checkout-item-qty">× ${item.quantity}</span>
         ${customizationHtml}
+      </div>
+      <div class="checkout-item-controls">
+        <button class="checkout-qty-btn" data-action="decrease" data-id="${item.id}">−</button>
+        <span class="checkout-item-qty">${item.quantity}</span>
+        <button class="checkout-qty-btn" data-action="increase" data-id="${item.id}">+</button>
+        <button class="checkout-remove-btn" data-id="${item.id}" aria-label="Remove">×</button>
       </div>
       <div class="checkout-item-price">${item.currency} ${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
     </div>
@@ -269,11 +274,72 @@ const indianStates = [
         // Set hidden form fields
         formCartItems!.value = JSON.stringify(items);
         formTotal!.value = total.toFixed(2);
+
+        // Attach event listeners for cart controls
+        attachCartEventListeners(items);
       } catch (e) {
         console.error("Error loading cart:", e);
         checkoutItems!.innerHTML =
           "<p>Error loading cart. Please try again.</p>";
       }
+    }
+
+    function attachCartEventListeners(items: any[]) {
+      // Quantity control buttons
+      checkoutItems!.querySelectorAll(".checkout-qty-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          const target = e.target as HTMLElement;
+          const action = target.dataset.action;
+          const itemId = target.dataset.id;
+          if (itemId) {
+            const item = items.find((i: any) => i.id === itemId);
+            if (item) {
+              const newQty =
+                action === "increase" ? item.quantity + 1 : item.quantity - 1;
+              updateCartQuantity(itemId, newQty);
+            }
+          }
+        });
+      });
+
+      // Remove buttons
+      checkoutItems!.querySelectorAll(".checkout-remove-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const itemId = (btn as HTMLElement).dataset.id;
+          if (itemId) {
+            removeFromCart(itemId);
+          }
+        });
+      });
+    }
+
+    function updateCartQuantity(itemId: string, quantity: number) {
+      try {
+        const stored = localStorage.getItem("starstucklab_cart");
+        if (!stored) return;
+
+        const data = JSON.parse(stored);
+        const items = data.items || [];
+
+        if (quantity <= 0) {
+          data.items = items.filter((i: any) => i.id !== itemId);
+        } else {
+          const item = items.find((i: any) => i.id === itemId);
+          if (item) item.quantity = quantity;
+        }
+
+        localStorage.setItem("starstucklab_cart", JSON.stringify(data));
+        window.dispatchEvent(
+          new CustomEvent("cart:updated", { detail: { items: data.items } }),
+        );
+        loadCart(); // Reload cart to update UI
+      } catch (e) {
+        console.error("Error updating cart:", e);
+      }
+    }
+
+    function removeFromCart(itemId: string) {
+      updateCartQuantity(itemId, 0);
     }
 
     // PIN code validation
