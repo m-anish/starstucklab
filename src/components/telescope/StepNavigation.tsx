@@ -63,7 +63,7 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
                   padding: '10px 16px',
                   fontSize: '0.9rem',
                   fontWeight: 600,
-                  background: 'linear-gradient(135deg, #6bb3ff 0%, #4a90e2 100%)',
+                  background: 'linear-gradient(135deg, #4a7a2a 0%, #2a5a1a 100%)',
                 }}
               >
                 Add to Cart 🛒

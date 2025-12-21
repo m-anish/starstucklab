@@ -563,7 +563,7 @@ export default function CustomizationWizard() {
                   padding: '16px 24px',
                   fontSize: '1rem',
                   fontWeight: 600,
-                  background: 'linear-gradient(135deg, #6bb3ff 0%, #4a90e2 100%)',
+                  background: 'linear-gradient(135deg, #4a7a2a 0%, #2a5a1a 100%)',
                 }}
               >
                 Add to Cart 🛒
