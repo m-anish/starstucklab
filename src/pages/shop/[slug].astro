@@ -152,7 +152,11 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
           {product.tagline && (
             <p class="product-tagline">{product.tagline}</p>
           )}
-          
+
+          <div class={`product-stock-above-price ${stockStatus.class}`}>
+            {stockStatus.label}
+          </div>
+
           {product.price && (
             <div class="product-price-block">
               <div class="price-label">Starting at</div>
@@ -164,11 +168,11 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
               </div>
             </div>
           )}
-          
+
           {product.customization?.enabled && (
             <CustomizationPanel product={product} />
           )}
-          
+
           {product.status === 'available' && (
             <div class="product-cta">
               <AddToCartButton product={{
@@ -180,10 +184,6 @@ const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] 
               }} />
             </div>
           )}
-          
-          <div class={`product-stock ${stockStatus.class}`}>
-            {stockStatus.label}
-          </div>
         </div>
         
         <div class="product-hero-right">
