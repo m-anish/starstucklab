@@ -20,14 +20,14 @@
   margin-bottom: var(--space-20);
   min-height: 60vh;
   /* Add top margin to create space below product nav */
-  margin-top: var(--space-8);
+  margin-top: var(--space-4);
 }
 
 .product-hero-left {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
-  padding: var(--space-8) 0;
+  padding: var(--space-6) 0;
 }
 
 .product-hero-right {
@@ -59,7 +59,7 @@
   font-size: var(--text-lg);
   color: rgba(248, 244, 232, 0.9);
   line-height: 1.4;
-  margin: 0 0 var(--space-6) 0;
+  margin: 0 0 2px 0;
   font-style: italic;
   text-shadow:
     0 1px 2px rgba(0, 0, 0, 0.9),
@@ -69,7 +69,7 @@
 
 /* ===== PRICE ===== */
 .product-price-block {
-  margin: var(--space-6) 0;
+  margin: 1rem 0 1rem 0 !important;
 }
 
 .product-price {
