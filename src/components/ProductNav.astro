@@ -32,21 +32,49 @@ const { product } = Astro.props;
 <script>
   // Sticky behavior for product nav (appears below main nav)
   if (typeof window !== 'undefined') {
-    const productNav = document.getElementById('productNav');
-    const mainNav = document.querySelector('.site-nav');
-    
+    const productNav = document.getElementById('productNav') as HTMLElement;
+    const mainNav = document.querySelector('.site-nav') as HTMLElement;
+
     if (productNav && mainNav) {
-      const mainNavHeight = mainNav.offsetHeight;
-      
-      window.addEventListener('scroll', () => {
-        if (window.scrollY > 100) {
-          productNav.classList.add('is-sticky');
+      let mainNavHeight = mainNav.offsetHeight;
+
+      // Recalculate on resize (for orientation changes, etc.)
+      const updateNavHeight = () => {
+        mainNavHeight = mainNav.offsetHeight;
+        document.documentElement.style.setProperty('--main-nav-height', `${mainNavHeight}px`);
+        if (productNav.classList.contains('is-sticky')) {
           productNav.style.top = `${mainNavHeight}px`;
-        } else {
-          productNav.classList.remove('is-sticky');
-          productNav.style.top = '0';
         }
-      }, { passive: true });
+      };
+
+      window.addEventListener('resize', updateNavHeight);
+      window.addEventListener('orientationchange', updateNavHeight);
+
+      // Initial set
+      updateNavHeight();
+
+      // Optimized scroll handler
+      let ticking = false;
+      const handleScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            // Recalculate mainNavHeight on each scroll for safety
+            const currentNavHeight = mainNav.offsetHeight;
+
+            if (window.scrollY > 100) {
+              productNav.classList.add('is-sticky');
+              productNav.style.top = `${currentNavHeight}px`;
+            } else {
+              productNav.classList.remove('is-sticky');
+              productNav.style.top = '0';
+            }
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
     }
 
     // Smooth scroll to sections

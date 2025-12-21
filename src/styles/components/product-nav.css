@@ -19,11 +19,13 @@
 /* Sticky state */
 .product-nav.is-sticky {
   position: fixed;
-  top: 64px; /* Set dynamically via JS to match main nav height */
+  top: var(--main-nav-height, 64px); /* Use CSS variable */
   left: 0;
   right: 0;
+  width: 100%; /* Ensure full width */
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) translateZ(0); /* Better performance */
+  will-change: transform;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   animation: slideDown 0.3s ease-out;
 }
@@ -155,6 +157,19 @@
 
   .product-nav-inner {
     padding: 0 16px;
+  }
+}
+
+/* ===== MOBILE POSITIONING FIXES ===== */
+@media (max-width: 820px) {
+  .product-nav.is-sticky {
+    top: var(--main-nav-height, 56px); /* Smaller nav on mobile */
+  }
+}
+
+@media (max-width: 640px) {
+  .product-nav.is-sticky {
+    top: var(--main-nav-height, 52px); /* Account for compact mobile nav */
   }
 }
 
