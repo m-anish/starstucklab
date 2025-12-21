@@ -32,8 +32,23 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
   const orbitAnimationRef = React.useRef<number | null>(null);
   const [selectedPart, setSelectedPart] = useState<'tubeA' | 'tubeB' | 'base' | null>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const initialCameraPosition = React.useRef(new THREE.Vector3(80, -70, 0));
   const initialCameraTarget = React.useRef(new THREE.Vector3(0, 0, 40));
+
+  // Handle responsive design - set mobile state on client side only
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 640);
+    };
+
+    // Set initial value
+    checkMobile();
+
+    // Listen for window resize
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize scene
   useEffect(() => {
@@ -369,14 +384,16 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
         }}
       />
 
-      {/* Color Control Buttons - Hidden when showing engraving/graphic UI */}
-      {!showEngravingUI && !showGraphicUI && (
+      {/* Color Control Buttons - Hidden when showing engraving/graphic UI or review mode */}
+      {!showEngravingUI && !showGraphicUI && !showReviewMode && (
         <div style={{
           position: 'absolute',
-          bottom: '20px',
-          left: '50%',
-          transform: 'translateX(-50%)',
+          // Desktop: left side, slightly above center | Mobile: bottom center
+          bottom: isMobile ? '20px' : '60%',
+          left: isMobile ? '50%' : '30px',
+          transform: isMobile ? 'translateX(-50%)' : 'translateY(50%)',
           display: 'flex',
+          flexDirection: isMobile ? 'row' : 'column',
           gap: '16px',
           zIndex: 10,
         }}>
@@ -404,6 +421,7 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
                 textShadow: '0 1px 2px rgba(0,0,0,0.5)',
                 transition: 'all 0.2s ease',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                margin: isMobile ? '0' : '4px',
               }}
             >
               {label}
@@ -522,14 +540,19 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
           {/* File Upload Dialog */}
           <div style={{
             position: 'absolute',
-            top: '20px',
-            right: '20px',
+            // Desktop: top-right | Mobile: below 3D window
+            top: isMobile ? 'auto' : '20px',
+            right: isMobile ? 'auto' : '20px',
+            bottom: isMobile ? '20px' : 'auto',
+            left: isMobile ? '50%' : 'auto',
+            transform: isMobile ? 'translateX(-50%)' : 'none',
             background: 'rgba(255, 255, 255, 0.95)',
             padding: '20px',
             borderRadius: '12px',
             boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
             pointerEvents: 'auto',
-            minWidth: '320px',
+            minWidth: isMobile ? '280px' : '320px',
+            maxWidth: isMobile ? '90%' : 'none',
           }}>
             <h4 style={{
               margin: '0 0 16px 0',
