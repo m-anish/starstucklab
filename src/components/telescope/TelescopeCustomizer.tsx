@@ -5,6 +5,7 @@ import { BASE_PRICE, ENGRAVING_COST, GRAPHIC_COST, STEPS } from './telescopeCons
 import type { CustomizationState, WizardStep } from './telescopeTypes';
 import TelescopeViewer from './TelescopeViewer';
 import ColorPicker from './ColorPicker';
+import StepNavigation from './StepNavigation';
 
 export default function CustomizationWizard() {
   const [currentStep, setCurrentStep] = useState(0);
@@ -181,52 +182,13 @@ export default function CustomizationWizard() {
         {/* Step 0: Colors */}
         {currentStep === 0 && (
           <div>
-            {/* Navigation Buttons */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '16px',
-              marginBottom: 'var(--space-6)',
-            }}>
-              {currentStep > 0 && (
-                <button
-                  onClick={prevStep}
-                  className="button"
-                  style={{
-                    background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
-                    color: 'var(--ink-dark)',
-                    border: '2px solid rgba(107, 74, 40, 0.3)',
-                  }}
-                >
-                  ← Previous
-                </button>
-              )}
-
-              {currentStep < STEPS.length - 1 ? (
-                <button
-                  onClick={nextStep}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                  }}
-                >
-                  Next Step →
-                </button>
-              ) : (
-                <button
-                  onClick={handleAddToCart}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                    padding: '16px 48px',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  Add to Cart 🛒
-                </button>
-              )}
-            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              onPrev={prevStep}
+              onNext={nextStep}
+              onAddToCart={handleAddToCart}
+            />
 
             <TelescopeViewer
               colors={{
@@ -244,52 +206,13 @@ export default function CustomizationWizard() {
         {/* Step 1: Engraving */}
         {currentStep === 1 && (
           <div>
-            {/* Navigation Buttons */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '16px',
-              marginBottom: 'var(--space-6)',
-            }}>
-              {currentStep > 0 && (
-                <button
-                  onClick={prevStep}
-                  className="button"
-                  style={{
-                    background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
-                    color: 'var(--ink-dark)',
-                    border: '2px solid rgba(107, 74, 40, 0.3)',
-                  }}
-                >
-                  ← Previous
-                </button>
-              )}
-
-              {currentStep < STEPS.length - 1 ? (
-                <button
-                  onClick={nextStep}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                  }}
-                >
-                  Next Step →
-                </button>
-              ) : (
-                <button
-                  onClick={handleAddToCart}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                    padding: '16px 48px',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  Add to Cart 🛒
-                </button>
-              )}
-            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              onPrev={prevStep}
+              onNext={nextStep}
+              onAddToCart={handleAddToCart}
+            />
 
             <TelescopeViewer
               colors={{
@@ -384,52 +307,13 @@ export default function CustomizationWizard() {
         {/* Step 2: Graphic */}
         {currentStep === 2 && (
           <div>
-            {/* Navigation Buttons */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '16px',
-              marginBottom: 'var(--space-6)',
-            }}>
-              {currentStep > 0 && (
-                <button
-                  onClick={prevStep}
-                  className="button"
-                  style={{
-                    background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
-                    color: 'var(--ink-dark)',
-                    border: '2px solid rgba(107, 74, 40, 0.3)',
-                  }}
-                >
-                  ← Previous
-                </button>
-              )}
-
-              {currentStep < STEPS.length - 1 ? (
-                <button
-                  onClick={nextStep}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                  }}
-                >
-                  Next Step →
-                </button>
-              ) : (
-                <button
-                  onClick={handleAddToCart}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                    padding: '16px 48px',
-                    fontSize: '1.1rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  Add to Cart 🛒
-                </button>
-              )}
-            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              onPrev={prevStep}
+              onNext={nextStep}
+              onAddToCart={handleAddToCart}
+            />
 
             <TelescopeViewer
               colors={{
@@ -525,68 +409,17 @@ export default function CustomizationWizard() {
         {/* Step 3: Review */}
         {currentStep === 3 && (
           <div>
-            {/* Navigation Buttons */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              gap: '16px',
-              marginBottom: 'var(--space-6)',
-            }}>
-              {currentStep > 0 && (
-                <button
-                  onClick={prevStep}
-                  className="button"
-                  style={{
-                    background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
-                    color: 'var(--ink-dark)',
-                    border: '2px solid rgba(107, 74, 40, 0.3)',
-                  }}
-                >
-                  ← Previous
-                </button>
-              )}
-
-              {currentStep < STEPS.length - 1 ? (
-                <button
-                  onClick={nextStep}
-                  className="button"
-                  style={{
-                    marginLeft: 'auto',
-                  }}
-                >
-                  Next Step →
-                </button>
-              ) : (
-                <div style={{ display: 'flex', gap: '16px', marginLeft: 'auto' }}>
-                  <button
-                    onClick={handleAddToCart}
-                    className="button"
-                    style={{
-                      padding: '16px 24px',
-                      fontSize: '1rem',
-                      fontWeight: 600,
-                      background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
-                    }}
-                  >
-                    Add to Cart 🛒
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleAddToCart();
-                      window.location.href = '/checkout';
-                    }}
-                    className="button"
-                    style={{
-                      padding: '16px 48px',
-                      fontSize: '1.1rem',
-                      fontWeight: 700,
-                    }}
-                  >
-                    Buy Now 💳
-                  </button>
-                </div>
-              )}
-            </div>
+            <StepNavigation
+              currentStep={currentStep}
+              totalSteps={STEPS.length}
+              onPrev={prevStep}
+              onNext={nextStep}
+              onAddToCart={handleAddToCart}
+              onBuyNow={() => {
+                handleAddToCart();
+                window.location.href = '/checkout';
+              }}
+            />
 
             <TelescopeViewer
               colors={{
