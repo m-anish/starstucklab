@@ -21,14 +21,16 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
     <div style={{
       display: 'flex',
       justifyContent: 'space-between',
-      gap: '16px',
-      marginBottom: 'var(--space-6)',
+      gap: '12px',
+      marginBottom: 'var(--space-4)',
     }}>
       {currentStep > 0 && (
         <button
           onClick={onPrev}
           className="button"
           style={{
+            padding: '10px 16px',
+            fontSize: '0.9rem',
             background: 'linear-gradient(135deg, #e8d4ab 0%, #d4c4a0 100%)',
             color: 'var(--ink-dark)',
             border: '2px solid rgba(107, 74, 40, 0.3)',
@@ -44,22 +46,24 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
           className="button"
           style={{
             marginLeft: 'auto',
+            padding: '10px 16px',
+            fontSize: '0.9rem',
           }}
         >
           Next Step →
         </button>
       ) : (
-        <div style={{ display: 'flex', gap: '16px', marginLeft: 'auto' }}>
+        <div style={{ display: 'flex', gap: '12px', marginLeft: 'auto' }}>
           {onBuyNow ? (
             <>
               <button
                 onClick={onAddToCart}
                 className="button"
                 style={{
-                  padding: '16px 24px',
-                  fontSize: '1rem',
+                  padding: '10px 16px',
+                  fontSize: '0.9rem',
                   fontWeight: 600,
-                  background: 'linear-gradient(135deg, #4a90e2 0%, #357abd 100%)',
+                  background: 'linear-gradient(135deg, #6bb3ff 0%, #4a90e2 100%)',
                 }}
               >
                 Add to Cart 🛒
@@ -68,9 +72,9 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
                 onClick={onBuyNow}
                 className="button"
                 style={{
-                  padding: '16px 48px',
-                  fontSize: '1.1rem',
-                  fontWeight: 700,
+                  padding: '10px 24px',
+                  fontSize: '1rem',
+                  fontWeight: 600,
                 }}
               >
                 Buy Now 💳
@@ -81,9 +85,9 @@ const StepNavigation: React.FC<StepNavigationProps> = ({
               onClick={onAddToCart}
               className="button"
               style={{
-                padding: '16px 48px',
-                fontSize: '1.1rem',
-                fontWeight: 700,
+                padding: '10px 24px',
+                fontSize: '1rem',
+                fontWeight: 600,
               }}
             >
               Add to Cart 🛒

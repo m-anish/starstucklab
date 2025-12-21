@@ -291,7 +291,7 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
 
     controls.enabled = false;
 
-    const duration = 2000; // 2 seconds
+    const duration = 4000; // 4 seconds (100% slower)
     const startTime = Date.now();
 
     const animateCamera = () => {
@@ -346,7 +346,7 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
 
     controls.enabled = false;
 
-    const duration = 2000;
+    const duration = 4000; // 4 seconds (100% slower)
     const startTime = Date.now();
 
     const animateToReview = () => {
