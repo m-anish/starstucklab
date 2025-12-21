@@ -185,15 +185,36 @@
 /* ===== HERO IMAGE ===== */
 .product-hero-image {
   width: 100%;
-  max-width: 500px;
+  max-width: 550px;
   height: auto;
   border-radius: var(--radius-2xl);
-  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-  transition: transform var(--transition-base);
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, rgba(78, 197, 122, 0.3), rgba(248, 244, 232, 0.2)) padding-box,
+              linear-gradient(135deg, rgba(78, 197, 122, 0.6), rgba(248, 244, 232, 0.4)) border-box;
+  filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.6));
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .product-hero-image:hover {
-  transform: scale(1.02);
+  transform: scale(1.03) rotate(1deg);
+}
+
+/* Add subtle glow behind image */
+.product-hero-right::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 120%;
+  height: 120%;
+  background: radial-gradient(
+    circle,
+    rgba(78, 197, 122, 0.1) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: -1;
 }
 
 /* ===== FEATURES SECTION ===== */
