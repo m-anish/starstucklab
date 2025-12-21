@@ -13,7 +13,6 @@
 
 /* ===== HERO SECTION (TWO COLUMNS) ===== */
 .product-hero {
-  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-16);
