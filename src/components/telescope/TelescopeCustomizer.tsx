@@ -344,9 +344,11 @@ export default function CustomizationWizard() {
                     </div>
                     <div style={{
                       fontSize: '0.7rem',
-                      color: 'var(--parchment-italic)'
+                      color: 'var(--parchment-italic)',
+                      width: '200px',
+                      display: 'inline-block'
                     }}>
-                      PNG, SVG, JPG (max 2MB)
+                      Simple black and white graphic in PNG, SVG, JPG (max 2MB)
                     </div>
                   </label>
                 </div>
