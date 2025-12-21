@@ -185,6 +185,36 @@ Return ONLY the description in markdown format.`;
         )}
       </div>
 
+      {/* Description Display/Input Field */}
+      <div style={{ marginTop: '1rem' }}>
+        <label
+          style={{
+            display: 'block',
+            marginBottom: '0.25rem',
+            fontWeight: 500,
+            fontSize: '12px',
+            color: '#666'
+          }}
+        >
+          Generated Description:
+        </label>
+        <textarea
+          {...input}
+          rows={8}
+          placeholder="Description will appear here after generation..."
+          style={{
+            width: '100%',
+            padding: '0.75rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '14px',
+            fontFamily: 'inherit',
+            resize: 'vertical',
+            backgroundColor: '#fafafa'
+          }}
+        />
+      </div>
+
       {/* Error Message */}
       {meta.error && (
         <div

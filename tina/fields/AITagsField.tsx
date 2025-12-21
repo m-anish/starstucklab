@@ -199,6 +199,36 @@ Return ONLY a comma-separated list of tags, nothing else.`;
         </div>
       )}
 
+      {/* Tags Display/Input Field */}
+      <div style={{ marginTop: '1rem' }}>
+        <label
+          style={{
+            display: 'block',
+            marginBottom: '0.25rem',
+            fontWeight: 500,
+            fontSize: '12px',
+            color: '#666'
+          }}
+        >
+          Generated Tags:
+        </label>
+        <textarea
+          {...input}
+          rows={3}
+          placeholder="Tags will appear here after generation..."
+          style={{
+            width: '100%',
+            padding: '0.5rem',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '13px',
+            fontFamily: 'inherit',
+            resize: 'vertical',
+            backgroundColor: '#fafafa'
+          }}
+        />
+      </div>
+
       {/* Helper Text */}
       {!meta.error && field.description && (
         <div
