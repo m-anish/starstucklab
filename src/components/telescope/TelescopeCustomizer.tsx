@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import * as THREE from 'three';
 import { PASTEL_COLORS } from './telescopeColors';
 import { BASE_PRICE, ENGRAVING_COST, GRAPHIC_COST, STEPS } from './telescopeConstants';
 import type { CustomizationState, WizardStep } from './telescopeTypes';
@@ -15,6 +16,10 @@ export default function CustomizationWizard() {
     graphic: null,
   });
   const [graphicPreview, setGraphicPreview] = useState<string | null>(null);
+  const [cameraState, setCameraState] = useState<{
+    position: THREE.Vector3;
+    target: THREE.Vector3;
+  } | undefined>(undefined);
 
   const updateCustomization = (updates: Partial<CustomizationState>) => {
     setCustomization(prev => ({ ...prev, ...updates }));
@@ -60,6 +65,10 @@ export default function CustomizationWizard() {
       setGraphicPreview(ev.target?.result as string);
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleCameraStateChange = (state: { position: THREE.Vector3; target: THREE.Vector3 }) => {
+    setCameraState(state);
   };
 
   const handleAddToCart = () => {
@@ -182,6 +191,8 @@ export default function CustomizationWizard() {
                 base: customization.baseColor,
               }}
               onColorChange={handleColorChange}
+              cameraState={cameraState}
+              onCameraStateChange={handleCameraStateChange}
             />
           </div>
         )}
@@ -203,6 +214,8 @@ export default function CustomizationWizard() {
               showEngravingUI={true}
               engravingText={customization.engraving}
               onEngravingChange={(text) => updateCustomization({ engraving: text })}
+              cameraState={cameraState}
+              onCameraStateChange={handleCameraStateChange}
             />
 
             {/* Mobile Engraving Input - shown below 3D viewer on mobile */}
@@ -296,6 +309,8 @@ export default function CustomizationWizard() {
               focusTarget="graphic"
               showGraphicUI={true}
               onGraphicUpload={handleGraphicUpload}
+              cameraState={cameraState}
+              onCameraStateChange={handleCameraStateChange}
             />
 
             {/* Mobile Graphic Upload - shown below 3D viewer on mobile */}
@@ -393,6 +408,8 @@ export default function CustomizationWizard() {
               }}
               onColorChange={handleColorChange}
               showReviewMode={true}
+              cameraState={cameraState}
+              onCameraStateChange={handleCameraStateChange}
             />
 
             <div className="parchment parchment--nested" style={{

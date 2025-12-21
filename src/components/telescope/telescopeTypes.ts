@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export interface CustomizationState {
   tubeAColor: string;
   tubeBColor: string;
@@ -23,6 +25,12 @@ export interface TelescopeViewerProps {
   showGraphicUI?: boolean;
   onGraphicUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   showReviewMode?: boolean;
+  // Camera state for persistence across component remounts
+  cameraState?: {
+    position: THREE.Vector3;
+    target: THREE.Vector3;
+  };
+  onCameraStateChange?: (state: { position: THREE.Vector3; target: THREE.Vector3 }) => void;
 }
 
 export interface ColorPickerProps {

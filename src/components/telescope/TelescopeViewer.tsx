@@ -56,7 +56,9 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
   onEngravingChange,
   showGraphicUI,
   onGraphicUpload,
-  showReviewMode
+  showReviewMode,
+  cameraState,
+  onCameraStateChange
 }) => {
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const sceneRef = React.useRef<THREE.Scene | null>(null);
@@ -89,9 +91,12 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
     const h = canvasRef.current.clientHeight;
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 2000);
-    camera.position.copy(CAMERA_VIEWS.initial.camera);
+    // Use cameraState if provided, otherwise use initial view
+    const initialPosition = cameraState?.position || CAMERA_VIEWS.initial.camera;
+    const initialTarget = cameraState?.target || CAMERA_VIEWS.initial.target;
+    camera.position.copy(initialPosition);
     camera.up.set(0, 0, 1);
-    camera.lookAt(CAMERA_VIEWS.initial.target);
+    camera.lookAt(initialTarget);
     cameraRef.current = camera;
 
     const renderer = new THREE.WebGLRenderer({
@@ -133,8 +138,21 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.target.copy(CAMERA_VIEWS.initial.target);
+    controls.target.copy(initialTarget);
     controlsRef.current = controls;
+
+    // Listen for manual camera changes (user panning/zooming)
+    const handleControlsChange = () => {
+      // Only notify parent of manual changes when controls are enabled
+      // (not during animations when controls are disabled)
+      if (controls.enabled && onCameraStateChange) {
+        onCameraStateChange({
+          position: camera.position.clone(),
+          target: controls.target.clone()
+        });
+      }
+    };
+    controls.addEventListener('change', handleControlsChange);
 
     // Debug: Press 'C' to capture current camera view
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -266,6 +284,11 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
         requestAnimationFrame(animateCamera);
       } else {
         setIsAnimating(false);
+        // Notify parent of final camera state
+        onCameraStateChange?.({
+          position: camera.position.clone(),
+          target: controls.target.clone()
+        });
         // Keep controls disabled when focused
       }
     };
@@ -311,6 +334,11 @@ const TelescopeViewer: React.FC<ExtendedTelescopeViewerProps> = ({
       if (progress < 1) {
         requestAnimationFrame(animateToReview);
       } else {
+        // Notify parent of final camera state before starting orbit
+        onCameraStateChange?.({
+          position: camera.position.clone(),
+          target: controls.target.clone()
+        });
         startOrbitAnimation();
       }
     };
