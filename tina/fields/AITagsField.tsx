@@ -1,8 +1,7 @@
 // tina/fields/AITagsField.tsx
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
-import { generateText } from '../utils/openai';
-import { getSystemPrompt } from '../utils/prompts';
+import { useCMS } from 'tinacms';
 
 interface AITagsFieldProps {
   input: any;
@@ -15,16 +14,21 @@ const AITagsField = wrapFieldsWithMeta<AITagsFieldProps>(({ input, meta, field }
   const [customPrompt, setCustomPrompt] = useState('');
   const [showPrompt, setShowPrompt] = useState(false);
   const [maxTags, setMaxTags] = useState(5);
+  const cms = useCMS();
 
   const generateTags = async () => {
     setGenerating(true);
 
     try {
-      // Get context from form if available
-      const formValues = field?.form?.values || {};
+      // Get form values from TinaCMS
+      const form = cms.forms.all()[0];
+      const formValues = form?.values || {};
+      
       const title = formValues.title || 'Untitled';
       const category = formValues.category || 'product';
       const description = formValues.excerpt || formValues.body || '';
+
+      console.log('AITagsField - Form values:', { title, category, description });
 
       let prompt = `Generate ${maxTags} relevant tags for this product:
 
@@ -45,17 +49,33 @@ Tags should be:
 Return ONLY a comma-separated list of tags, nothing else.`;
       }
 
-      const result = await generateText(prompt, {
-        systemPrompt: getSystemPrompt('default'),
-        maxTokens: 200,
-        temperature: 0.5
+      const response = await fetch('/api/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_text',
+          prompt,
+          options: {
+            systemPrompt: 'You are a creative writer for Starstuck Lab, a maker space that builds scientific instruments, telescopes, and weather stations. Your writing style is poetic, melancholic, witty with dry humor, and tinged with cosmic existentialism.',
+            maxTokens: 200,
+            temperature: 0.5
+          }
+        })
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Generation failed');
+      }
+
+      const data = await response.json();
+      const result = data.result;
 
       // Parse comma-separated tags
       const tags = result
         .split(',')
-        .map(tag => tag.trim())
-        .filter(tag => tag.length > 0)
+        .map((tag: string) => tag.trim())
+        .filter((tag: string) => tag.length > 0)
         .slice(0, maxTags);
 
       // Update field value
@@ -72,6 +92,23 @@ Return ONLY a comma-separated list of tags, nothing else.`;
     } finally {
       setGenerating(false);
     }
+  };
+
+  const currentTags = input.value || [];
+
+  const handleTagChange = (index: number, value: string) => {
+    const updated = [...currentTags];
+    updated[index] = value;
+    input.onChange(updated);
+  };
+
+  const handleAddTag = () => {
+    input.onChange([...currentTags, '']);
+  };
+
+  const handleRemoveTag = (index: number) => {
+    const updated = currentTags.filter((_: any, i: number) => i !== index);
+    input.onChange(updated);
   };
 
   return (
@@ -186,6 +223,68 @@ Return ONLY a comma-separated list of tags, nothing else.`;
         )}
       </div>
 
+      {/* Tags Display */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {currentTags.map((tag: string, index: number) => (
+          <div
+            key={index}
+            style={{
+              display: 'flex',
+              gap: '0.5rem',
+              alignItems: 'center'
+            }}
+          >
+            <input
+              type="text"
+              value={tag}
+              onChange={(e) => handleTagChange(index, e.target.value)}
+              placeholder={`Tag ${index + 1}`}
+              style={{
+                flex: 1,
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '13px'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => handleRemoveTag(index)}
+              style={{
+                padding: '0.5rem',
+                background: '#dc3545',
+                color: 'white',
+                border: 'none',
+                borderRadius: '3px',
+                cursor: 'pointer',
+                fontSize: '11px'
+              }}
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* Add Tag Button */}
+      <button
+        type="button"
+        onClick={handleAddTag}
+        style={{
+          marginTop: '0.75rem',
+          padding: '0.5rem 1rem',
+          background: '#0969da',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '12px',
+          fontWeight: 500
+        }}
+      >
+        + Add Tag Manually
+      </button>
+
       {/* Error Message */}
       {meta.error && (
         <div
@@ -198,36 +297,6 @@ Return ONLY a comma-separated list of tags, nothing else.`;
           {meta.error}
         </div>
       )}
-
-      {/* Tags Display/Input Field */}
-      <div style={{ marginTop: '1rem' }}>
-        <label
-          style={{
-            display: 'block',
-            marginBottom: '0.25rem',
-            fontWeight: 500,
-            fontSize: '12px',
-            color: '#666'
-          }}
-        >
-          Generated Tags:
-        </label>
-        <textarea
-          {...input}
-          rows={3}
-          placeholder="Tags will appear here after generation..."
-          style={{
-            width: '100%',
-            padding: '0.5rem',
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '13px',
-            fontFamily: 'inherit',
-            resize: 'vertical',
-            backgroundColor: '#fafafa'
-          }}
-        />
-      </div>
 
       {/* Helper Text */}
       {!meta.error && field.description && (

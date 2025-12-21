@@ -1,8 +1,7 @@
 // tina/fields/AITextField.tsx
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
-import { generateExcerpt, generateDescription } from '../utils/openai';
-import { getSystemPrompt } from '../utils/prompts';
+import { useCMS } from 'tinacms';
 
 interface AITextFieldProps {
   input: any;
@@ -14,47 +13,105 @@ const AITextField = wrapFieldsWithMeta<AITextFieldProps>(({ input, meta, field }
   const [generating, setGenerating] = useState(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [showPrompt, setShowPrompt] = useState(false);
+  const cms = useCMS();
 
   const generateContent = async () => {
     setGenerating(true);
 
     try {
-      // Get context from form if available
-      const formValues = field?.form?.values || {};
+      // Get form values from TinaCMS
+      const form = cms.forms.all()[0];
+      const formValues = form?.values || {};
+      
       const title = formValues.title || 'Untitled';
-      const category = formValues.category;
+      const category = formValues.category || '';
+      const excerpt = formValues.excerpt || '';
+      const body = formValues.body || '';
+
+      console.log('AITextField - Form values:', { title, category, excerpt });
 
       let generatedText = '';
+      let prompt = '';
 
       // Determine what type of content to generate based on field name
-      if (field.name === 'excerpt') {
+      if (field.name === 'excerpt' || field.name === 'tagline') {
+        const maxWords = field.name === 'tagline' ? 12 : 20;
+        
         if (customPrompt.trim()) {
-          // Use custom prompt
-          const { generateText } = await import('../utils/openai');
-          generatedText = await generateText(customPrompt, {
-            systemPrompt: getSystemPrompt('default'),
-            maxTokens: 100,
-            temperature: 0.8
-          });
+          prompt = customPrompt;
         } else {
-          // Use excerpt generator
-          generatedText = await generateExcerpt(title, category);
+          prompt = `Generate a compelling ${field.name === 'tagline' ? 'tagline' : 'one-sentence excerpt'} (max ${maxWords} words) for "${title}"${category ? `, a ${category}` : ''}.
+
+The ${field.name} should be:
+- Poetic and intriguing
+- Slightly melancholic with dry humor
+- Evocative of cosmic existentialism
+- Technical yet elegant
+
+Return ONLY the ${field.name}, nothing else.`;
         }
+
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate_text',
+            prompt,
+            options: {
+              systemPrompt: 'You are a creative writer for Starstuck Lab, a maker space that builds scientific instruments, telescopes, and weather stations. Your writing style is poetic, melancholic, witty with dry humor, and tinged with cosmic existentialism.',
+              maxTokens: 100,
+              temperature: 0.8
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Generation failed');
+        }
+
+        const data = await response.json();
+        generatedText = data.result;
+
       } else {
-        // Generate full description
+        // Full description
         if (customPrompt.trim()) {
-          const { generateText } = await import('../utils/openai');
-          generatedText = await generateText(customPrompt, {
-            systemPrompt: getSystemPrompt('default'),
-            maxTokens: 500,
-            temperature: 0.7
-          });
+          prompt = customPrompt;
         } else {
-          generatedText = await generateDescription(title, {
-            category,
-            length: 'medium'
-          });
+          prompt = `Generate a product description for "${title}"${category ? `, a ${category}` : ''}.
+
+${excerpt ? `Excerpt: ${excerpt}\n` : ''}
+Write 200-300 words in a style that is:
+- Poetic and evocative
+- Slightly melancholic with dry humor
+- Technical yet accessible
+- Tinged with cosmic existentialism
+- Include specifications where relevant
+
+Return ONLY the description.`;
         }
+
+        const response = await fetch('/api/openai', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'generate_text',
+            prompt,
+            options: {
+              systemPrompt: 'You are a creative technical writer for Starstuck Lab. Your writing balances poetry with precision, melancholy with wonder.',
+              maxTokens: 500,
+              temperature: 0.7
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Generation failed');
+        }
+
+        const data = await response.json();
+        generatedText = data.result;
       }
 
       // Update field value

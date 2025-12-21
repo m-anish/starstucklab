@@ -1,8 +1,8 @@
 // tina/fields/AIDescriptionField.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
-import { generateText } from '../utils/openai';
-import { getSystemPrompt } from '../utils/prompts';
+import { useCMS } from 'tinacms';
+import { getFormValues, logFormDebugInfo } from '../utils/formHelper';
 
 interface AIDescriptionFieldProps {
   input: any;
@@ -15,13 +15,25 @@ const AIDescriptionField = wrapFieldsWithMeta<AIDescriptionFieldProps>(({ input,
   const [customPrompt, setCustomPrompt] = useState('');
   const [showPrompt, setShowPrompt] = useState(false);
   const [length, setLength] = useState<'short' | 'medium' | 'long'>('medium');
+  const cms = useCMS();
+
+  // Debug on mount - only run once
+  useEffect(() => {
+    console.log('=== AIDescriptionField Mounted ===');
+    logFormDebugInfo(cms, field, input, 'AIDescriptionField');
+  }, []);
 
   const generateDescription = async () => {
     setGenerating(true);
 
     try {
-      // Get context from form if available
-      const formValues = field?.form?.values || {};
+      // Get form values using helper - pass input as well
+      const formValues = getFormValues(cms, field, input);
+      
+      // Log what we got
+      console.log('Raw formValues:', formValues);
+      console.log('formValues keys:', Object.keys(formValues));
+      
       const title = formValues.title || 'Untitled';
       const category = formValues.category || 'product';
       const excerpt = formValues.excerpt || '';
@@ -34,7 +46,13 @@ const AIDescriptionField = wrapFieldsWithMeta<AIDescriptionFieldProps>(({ input,
         long: '600-800'
       }[length];
 
-      console.log('AIDescriptionField Debug:', { title, category, excerpt, features, specifications });
+      console.log('AIDescriptionField - Extracted values:', { 
+        title, 
+        category, 
+        excerpt, 
+        featuresCount: features.length,
+        specsCount: specifications.length
+      });
 
       let prompt = `Write a ${wordCount} word product description for "${title}"${category ? `, a ${category}` : ''}.
 
@@ -54,11 +72,27 @@ Write in a style that is:
 Return ONLY the description in markdown format.`;
       }
 
-      const result = await generateText(prompt, {
-        systemPrompt: getSystemPrompt('default'),
-        maxTokens: length === 'long' ? 1000 : length === 'medium' ? 700 : 400,
-        temperature: 0.7
+      const response = await fetch('/api/openai', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generate_text',
+          prompt,
+          options: {
+            systemPrompt: 'You are a creative technical writer for Starstuck Lab, a maker space that builds scientific instruments. Your writing balances poetry with precision, melancholy with wonder.',
+            maxTokens: length === 'long' ? 1000 : length === 'medium' ? 700 : 400,
+            temperature: 0.7
+          }
+        })
       });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Generation failed');
+      }
+
+      const data = await response.json();
+      const result = data.result;
 
       // Update field value
       input.onChange(result);

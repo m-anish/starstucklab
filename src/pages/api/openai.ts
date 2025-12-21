@@ -12,7 +12,7 @@ interface OpenAIRequest {
     maxTokens?: number;
     temperature?: number;
     size?: '1024x1024' | '1792x1024' | '1024x1792';
-    quality?: 'standard' | 'hd';
+    quality?: 'low' | 'medium' | 'high' | 'auto';
   };
 }
 
@@ -88,6 +88,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('OpenAI API error:', error);
         return new Response(
           JSON.stringify({
             error: `OpenAI API error: ${error.error?.message || 'Unknown error'}`
@@ -112,11 +113,14 @@ export const POST: APIRoute = async ({ request, locals }) => {
     }
 
     if (action === 'generate_image') {
-      const { size = '1024x1024', quality = 'standard' } = options;
+      const { 
+        size = '1024x1024', 
+        quality = 'medium' 
+      } = options;
 
-      // Map UI quality values to DALL-E API values
-      const dalleQuality = quality === 'hd' ? 'high' : quality === 'standard' ? 'low' : quality;
+      console.log('Generating image with:', { model: 'gpt-image-1.5', size, quality, prompt: prompt.substring(0, 100) });
 
+      // gpt-image-1.5 returns b64_json by default, no response_format parameter needed
       const response = await fetch('https://api.openai.com/v1/images/generations', {
         method: 'POST',
         headers: {
@@ -128,15 +132,17 @@ export const POST: APIRoute = async ({ request, locals }) => {
           prompt: prompt,
           n: 1,
           size: size,
-          quality: dalleQuality
+          quality: quality
+          // No response_format parameter - gpt-image-1.5 returns b64_json by default
         })
       });
 
       if (!response.ok) {
         const error = await response.json();
+        console.error('GPT-Image-1.5 API error:', error);
         return new Response(
           JSON.stringify({
-            error: `DALL-E API error: ${error.error?.message || 'Unknown error'}`
+            error: `GPT-Image-1.5 API error: ${error.error?.message || 'Unknown error'}`
           }),
           {
             status: 500,
@@ -146,9 +152,32 @@ export const POST: APIRoute = async ({ request, locals }) => {
       }
 
       const data = await response.json();
+      console.log('Image generation response received');
+      
+      // Get the base64 image data from b64_json field
+      const b64Data = data.data[0].b64_json;
+      
+      if (!b64Data) {
+        console.error('No b64_json in response:', data);
+        return new Response(
+          JSON.stringify({
+            error: 'No image data received from API'
+          }),
+          {
+            status: 500,
+            headers: { 'Content-Type': 'application/json' }
+          }
+        );
+      }
+      
+      // Convert to data URL for immediate display
+      const dataUrl = `data:image/png;base64,${b64Data}`;
+      console.log('Data URL created, length:', dataUrl.length);
+      
       return new Response(
         JSON.stringify({
-          result: data.data[0].url
+          result: dataUrl,
+          b64_json: b64Data  // Also return raw b64 in case needed
         }),
         {
           status: 200,
@@ -171,7 +200,8 @@ export const POST: APIRoute = async ({ request, locals }) => {
     console.error('OpenAI API route error:', error);
     return new Response(
       JSON.stringify({
-        error: 'Internal server error'
+        error: 'Internal server error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       }),
       {
         status: 500,

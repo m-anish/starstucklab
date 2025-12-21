@@ -237,22 +237,15 @@ export default defineConfig({
               },
             ],
           },
-          // 🎯 AI-POWERED IMAGES FIELD
+          // 🎯 AI-POWERED IMAGES FIELD (FIXED - now a simple string field)
           {
-            type: "object",
-            name: "images",
-            label: "Images",
-            description: "Product images (AI generation available)",
+            type: "string",
+            name: "image",
+            label: "Product Image",
+            description: "Product image URL or path (AI generation available)",
             ui: {
               component: AIImageField,
             },
-            fields: [
-              {
-                type: "string",
-                name: "master",
-                label: "Master Image Path",
-              }
-            ]
           },
           // 🎯 AI-POWERED DESCRIPTION FIELD (populates body)
           {
