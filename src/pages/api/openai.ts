@@ -59,7 +59,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
     if (action === 'generate_text') {
       const {
         systemPrompt = 'You are a helpful assistant.',
-        maxTokens = 500,
+        maxCompletionTokens = 500,
         temperature = 0.7
       } = options;
 
@@ -70,7 +70,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
           'Authorization': `Bearer ${apiKey}`
         },
         body: JSON.stringify({
-          model: 'gpt-4',
+          model: 'gpt-5.1',
           messages: [
             {
               role: 'system',
@@ -81,7 +81,7 @@ export const POST: APIRoute = async ({ request, locals }) => {
               content: prompt
             }
           ],
-          max_tokens: maxTokens,
+          max_completion_tokens: maxCompletionTokens,
           temperature: temperature
         })
       });

@@ -3,7 +3,7 @@ import AITextField from "./fields/AITextField";
 import AIFeaturesField from "./fields/AIFeaturesField";
 import AISpecificationsField from "./fields/AISpecificationsField";
 import AITagsField from "./fields/AITagsField";
-import AIDescriptionField from "./fields/AIDescriptionField";
+import AIDescriptionGenerator from "./fields/AIDescriptionGenerator";
 import AIImageField from "./fields/AIImageField";
 
 // Your hosting provider likely exposes this as an environment variable
@@ -237,7 +237,7 @@ export default defineConfig({
               },
             ],
           },
-          // 🎯 AI-POWERED IMAGES FIELD (FIXED - now a simple string field)
+          // 🎯 AI-POWERED IMAGES FIELD
           {
             type: "string",
             name: "image",
@@ -247,21 +247,29 @@ export default defineConfig({
               component: AIImageField,
             },
           },
-          // 🎯 AI-POWERED DESCRIPTION FIELD (populates body)
+          // 🎯 AI DESCRIPTION GENERATOR (Custom field that doesn't store data)
+          {
+            type: "string",
+            name: "_ai_generator",
+            label: "AI Description Generator",
+            description: "Generate product description using AI",
+            ui: {
+              component: AIDescriptionGenerator,
+            },
+          },
+          // 🎯 BODY FIELD (Native rich-text editor, no custom component)
           {
             type: "rich-text",
             name: "body",
-            label: "Body (AI-Generated)",
-            description: "Full product description (AI-powered generation available)",
+            label: "Product Description",
+            description: "Full product description (use AI generator above to auto-generate)",
             isBody: true,
-            ui: {
-              component: AIDescriptionField,
-            },
+            // NO custom component - use TinaCMS default rich-text editor
           },
         ],
       },
       
-      // Projects Collection
+      // Projects Collection (unchanged)
       {
         name: "project",
         label: "Projects",
@@ -326,7 +334,6 @@ export default defineConfig({
             name: "featured",
             label: "Featured",
           },
-          // 🎯 AI-POWERED EXCERPT FIELD
           {
             type: "string",
             name: "excerpt",

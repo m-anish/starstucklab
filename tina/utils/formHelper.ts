@@ -7,38 +7,36 @@
 export function getFormValues(cms: any, field: any, input?: any): any {
   let formValues: any = {};
   
-  // Method 1: Access through cms.state.forms[0].tinaForm.values
+  // Method 1: Access through cms.state.forms[0].tinaForm.values (WORKING METHOD!)
   try {
     if (cms?.state?.forms && Array.isArray(cms.state.forms) && cms.state.forms.length > 0) {
       const firstForm = cms.state.forms[0];
       
       // Check if it has tinaForm property
-      if (firstForm.tinaForm) {
-        console.log('Found tinaForm:', firstForm.tinaForm);
-        
-        // Try to get values - might be a getter
-        if (firstForm.tinaForm.values) {
-          formValues = firstForm.tinaForm.values;
-          console.log('✓ Got form values via cms.state.forms[0].tinaForm.values');
-          return formValues;
+      if (firstForm?.tinaForm) {
+        // Try to get values directly - this is a getter property
+        try {
+          const values = firstForm.tinaForm.values;
+          if (values && typeof values === 'object') {
+            console.log('✓ Got form values via cms.state.forms[0].tinaForm.values');
+            return values;
+          }
+        } catch (e) {
+          console.warn('Could not access tinaForm.values directly:', e);
         }
         
-        // Try finalForm.getState()
+        // Fallback: Try finalForm.getState()
         if (firstForm.tinaForm.finalForm && typeof firstForm.tinaForm.finalForm.getState === 'function') {
-          const state = firstForm.tinaForm.finalForm.getState();
-          if (state?.values) {
-            formValues = state.values;
-            console.log('✓ Got form values via cms.state.forms[0].tinaForm.finalForm.getState()');
-            return formValues;
+          try {
+            const state = firstForm.tinaForm.finalForm.getState();
+            if (state?.values) {
+              console.log('✓ Got form values via cms.state.forms[0].tinaForm.finalForm.getState()');
+              return state.values;
+            }
+          } catch (e) {
+            console.warn('Could not get finalForm state:', e);
           }
         }
-      }
-      
-      // Also try direct values on the form
-      if (firstForm.values) {
-        formValues = firstForm.values;
-        console.log('✓ Got form values via cms.state.forms[0].values');
-        return formValues;
       }
     }
   } catch (e) {
@@ -52,17 +50,15 @@ export function getFormValues(cms: any, field: any, input?: any): any {
       const form = forms[0];
       
       if (form?.values) {
-        formValues = form.values;
         console.log('✓ Got form values via cms.forms.all()[0].values');
-        return formValues;
+        return form.values;
       }
       
       if (form?.finalForm?.getState) {
         const state = form.finalForm.getState();
         if (state?.values) {
-          formValues = state.values;
           console.log('✓ Got form values via cms.forms.all()[0].finalForm.getState()');
-          return formValues;
+          return state.values;
         }
       }
     }
@@ -71,15 +67,8 @@ export function getFormValues(cms: any, field: any, input?: any): any {
   }
 
   console.error('❌ All methods to access form values failed');
+  console.log('cms.state:', cms?.state);
   console.log('cms.state.forms:', cms?.state?.forms);
-  if (cms?.state?.forms?.[0]) {
-    console.log('First form object:', cms.state.forms[0]);
-    console.log('First form keys:', Object.keys(cms.state.forms[0]));
-    if (cms.state.forms[0].tinaForm) {
-      console.log('tinaForm keys:', Object.keys(cms.state.forms[0].tinaForm));
-      console.log('tinaForm:', cms.state.forms[0].tinaForm);
-    }
-  }
   
   return {};
 }
