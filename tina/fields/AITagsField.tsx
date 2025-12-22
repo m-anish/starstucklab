@@ -1,7 +1,9 @@
-// tina/fields/AITagsField.tsx
+// tina/fields/AITagsField.tsx (REFACTORED)
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
+import { getFormValues } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AITagsFieldProps {
   input: any;
@@ -20,9 +22,8 @@ const AITagsField = wrapFieldsWithMeta<AITagsFieldProps>(({ input, meta, field }
     setGenerating(true);
 
     try {
-      // Get form values from TinaCMS
-      const form = cms.forms.all()[0];
-      const formValues = form?.values || {};
+      // Get form values
+      const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled';
       const category = formValues.category || 'product';
@@ -30,49 +31,23 @@ const AITagsField = wrapFieldsWithMeta<AITagsFieldProps>(({ input, meta, field }
 
       console.log('AITagsField - Form values:', { title, category, description });
 
-      let prompt = `Generate ${maxTags} relevant tags for this product:
+      // Build context for template
+      const context = {
+        max_tags: maxTags,
+        title,
+        category,
+        description_clause: description ? `\nDescription: ${description}\n` : ''
+      };
 
-Title: ${title}
-Category: ${category}
-${description ? `Description: ${description}\n` : ''}`;
-
-      if (customPrompt.trim()) {
-        prompt = customPrompt;
-      } else {
-        prompt += `
-Tags should be:
-- Relevant to the product's function and features
-- Include both technical and descriptive terms
-- Mix of specific and general terms
-- Suitable for search and categorization
-
-Return ONLY a comma-separated list of tags, nothing else.`;
-      }
-
-      const response = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate_text',
-          prompt,
-          options: {
-            systemPrompt: 'You are a creative writer for Starstuck Lab, a maker space that builds scientific instruments, telescopes, and weather stations. Your writing style is poetic, melancholic, witty with dry humor, and tinged with cosmic existentialism.',
-            maxTokens: 200,
-            temperature: 0.5
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Generation failed');
-      }
-
-      const data = await response.json();
-      const result = data.result;
+      // Generate using template
+      const result = await callOpenAIWithTemplate(
+        'product_tags',
+        context,
+        customPrompt.trim() || undefined
+      );
 
       // Parse comma-separated tags
-      const tags = result
+      const tags = result.result
         .split(',')
         .map((tag: string) => tag.trim())
         .filter((tag: string) => tag.length > 0)
@@ -172,7 +147,7 @@ Return ONLY a comma-separated list of tags, nothing else.`;
               fontSize: '14px'
             }}
           >
-            {showPrompt ? '🔽 Hide Custom Prompt' : '🔼 Custom Prompt'}
+            {showPrompt ? '🔽 Hide Options' : '🔼 Options'}
           </button>
         </div>
 
@@ -204,7 +179,7 @@ Return ONLY a comma-separated list of tags, nothing else.`;
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Optional: Enter custom AI prompt for tag generation..."
+              placeholder="Optional: Override template with custom prompt..."
               rows={3}
               style={{
                 width: '100%',
@@ -217,7 +192,7 @@ Return ONLY a comma-separated list of tags, nothing else.`;
               }}
             />
             <small style={{ color: '#666', fontSize: '12px' }}>
-              Leave empty to use smart tag generation based on title, category, and description
+              Leave empty to use template: product_tags
             </small>
           </div>
         )}
@@ -260,8 +235,8 @@ Return ONLY a comma-separated list of tags, nothing else.`;
                 fontSize: '11px'
               }}
             >
-              Remove
-            </button>
+                Remove
+              </button>
           </div>
         ))}
       </div>

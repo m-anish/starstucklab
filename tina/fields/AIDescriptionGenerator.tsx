@@ -1,8 +1,9 @@
-// tina/fields/AIDescriptionGenerator.tsx
+// tina/fields/AIDescriptionGenerator.tsx (REFACTORED)
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
 import { getFormValues } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AIDescriptionGeneratorProps {
   input: any;
@@ -10,37 +11,18 @@ interface AIDescriptionGeneratorProps {
   field: any;
 }
 
-// Helper to extract plain text from rich-text AST
-function extractTextFromRichText(value: any): string {
-  if (!value) return '';
-  if (typeof value === 'string') return value;
-  if (value.type === 'text') return value.text || '';
-  if (value.children && Array.isArray(value.children)) {
-    return value.children.map((child: any) => extractTextFromRichText(child)).join(' ');
-  }
-  return '';
-}
-
 // Simple markdown to HTML converter for preview
 function markdownToHtml(markdown: string): string {
   let html = markdown;
   
-  // Headers
   html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
   html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
   html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-  
-  // Bold
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  
-  // Italic
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  
-  // Lists
   html = html.replace(/^\* (.+)$/gim, '<li>$1</li>');
   html = html.replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>');
   
-  // Paragraphs
   html = html.split('\n\n').map(para => {
     if (para.startsWith('<h') || para.startsWith('<ul') || para.startsWith('<li>')) {
       return para;
@@ -74,7 +56,7 @@ const AIDescriptionGenerator = wrapFieldsWithMeta<AIDescriptionGeneratorProps>((
     setGenerating(true);
 
     try {
-      // Get form values using helper
+      // Get form values
       const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled';
@@ -83,13 +65,14 @@ const AIDescriptionGenerator = wrapFieldsWithMeta<AIDescriptionGeneratorProps>((
       const features = formValues.features || [];
       const specifications = formValues.specifications || [];
 
-      const wordCount = {
+      // Word count mapping
+      const wordCountMap = {
         short: '150-250',
         medium: '300-500',
         long: '600-800'
-      }[length];
+      };
 
-      console.log('AIDescriptionGenerator - Extracted values:', { 
+      console.log('AIDescriptionGenerator - Form values:', { 
         title, 
         category, 
         excerpt, 
@@ -97,57 +80,30 @@ const AIDescriptionGenerator = wrapFieldsWithMeta<AIDescriptionGeneratorProps>((
         specsCount: specifications.length
       });
 
-      let prompt = `Write a rich, detailed ${wordCount} word product description in Markdown format for "${title}"${category ? `, a ${category}` : ''}.
+      // Build context for template
+      const context = {
+        word_count: wordCountMap[length],
+        title,
+        category,
+        category_clause: category ? `, a ${category}` : '',
+        excerpt_clause: excerpt ? `Product Tagline/Excerpt: ${excerpt}\n` : '',
+        features_clause: features.length 
+          ? `\nKey Features:\n${features.map((f: any) => `- ${f.title}: ${f.description}`).join('\n')}\n`
+          : '',
+        specs_clause: specifications.length
+          ? `\nTechnical Specifications:\n${specifications.map((s: any) => `- ${s.label}: ${s.value}`).join('\n')}\n`
+          : ''
+      };
 
-${excerpt ? `Product Tagline/Excerpt: ${excerpt}\n` : ''}${features.length ? `\nKey Features:\n${features.map((f: any) => `- ${f.title}: ${f.description}`).join('\n')}\n` : ''}${specifications.length ? `\nTechnical Specifications:\n${specifications.map((s: any) => `- ${s.label}: ${s.value}`).join('\n')}\n` : ''}`;
+      // Generate using template
+      const result = await callOpenAIWithTemplate(
+        'product_description',
+        context,
+        customPrompt.trim() || undefined
+      );
 
-      if (customPrompt.trim()) {
-        prompt = customPrompt;
-      } else {
-        prompt += `
-Structure the description with:
-- A compelling opening paragraph (2-3 sentences) that sets the tone
-- Multiple detailed paragraphs covering features and benefits
-- Use **bold** for emphasis on key terms
-- Use *italic* for poetic flourishes
-- Include ## subheadings to organize sections
-- Weave in technical specifications naturally throughout
-
-Writing style:
-- Poetic and evocative with dry humor
-- Technically accurate but accessible and engaging
-- Slightly melancholic with cosmic existential undertones
-- Include vivid metaphors and imagery
-- Focus on the product's unique value and emotional resonance
-- Make it feel like a story, not a spec sheet
-
-Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
-      }
-
-      const response = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate_text',
-          prompt,
-          options: {
-            systemPrompt: 'You are a masterful creative technical writer for Starstuck Lab, a maker space that builds poetic scientific instruments. Your writing balances precision with wonder, melancholy with joy, and technical detail with emotional resonance. You write in rich markdown with proper formatting.',
-            maxTokens: length === 'long' ? 1200 : length === 'medium' ? 800 : 500,
-            temperature: 0.8
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Generation failed');
-      }
-
-      const data = await response.json();
-      const result = data.result;
-
-      console.log('Generated description:', result);
-      setGeneratedMarkdown(result);
+      console.log('Generated description:', result.result);
+      setGeneratedMarkdown(result.result);
 
       // Clear custom prompt after successful generation
       if (customPrompt.trim()) {
@@ -281,7 +237,7 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Override default prompt with custom instructions..."
+              placeholder="Override template: product_description with custom instructions..."
               rows={3}
               disabled={generating}
               style={{
@@ -295,13 +251,13 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
               }}
             />
             <small style={{ color: '#6c757d', fontSize: '12px' }}>
-              💡 Leave empty to auto-generate rich markdown based on title, category, features, and specifications
+              💡 Leave empty to use template with title, category, features, and specs
             </small>
           </div>
         )}
       </div>
 
-      {/* Side-by-Side Preview and Editor Hint */}
+      {/* Side-by-Side Preview */}
       {generatedMarkdown && (
         <div style={{ 
           display: 'grid',
@@ -364,22 +320,12 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
                 boxSizing: 'border-box'
               }}
             >
-              <style>
-                {`
-                  div[style*="grid-template-columns: 60% 40%"] * {
-                    word-wrap: break-word !important;
-                    overflow-wrap: break-word !important;
-                    word-break: break-word !important;
-                    max-width: 100% !important;
-                  }
-                `}
-              </style>
               <div dangerouslySetInnerHTML={{ __html: markdownToHtml(generatedMarkdown) }} />
             </div>
           </div>
 
           {/* Right: Instructions */}
-          <div className="whitespace-normal" style={{
+          <div style={{
             border: '2px solid #0969da',
             borderRadius: '8px',
             backgroundColor: '#e7f3ff',
@@ -395,19 +341,19 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
             </h3>
             <ol style={{ margin: 0, paddingLeft: '1.25rem', fontSize: '13px', lineHeight: '1.8', color: '#084298' }}>
               <li style={{ marginBottom: '0.75rem' }}>
-                <strong>Review the preview</strong> on the left - it shows how your content will look formatted
+                <strong>Review the preview</strong> on the left - shows formatted content
               </li>
               <li style={{ marginBottom: '0.75rem' }}>
-                <strong>Click "Copy"</strong> to copy the markdown to your clipboard
+                <strong>Click "Copy"</strong> to copy markdown to clipboard
               </li>
               <li style={{ marginBottom: '0.75rem' }}>
-                <strong>Scroll down</strong> to the "Product Description" rich-text editor
+                <strong>Scroll down</strong> to "Product Description" editor
               </li>
               <li style={{ marginBottom: '0.75rem' }}>
-                <strong>Paste the content</strong> into the editor (Ctrl+V or Cmd+V)
+                <strong>Paste content</strong> (Ctrl+V or Cmd+V)
               </li>
               <li>
-                <strong>Edit as needed</strong> - you can refine the content in the editor
+                <strong>Edit as needed</strong> in the rich-text editor
               </li>
             </ol>
             
@@ -419,7 +365,7 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
               fontSize: '12px',
               color: '#084298'
             }}>
-              <strong>💡 Tip:</strong> The preview shows formatted HTML, but the copied text is in Markdown format - perfect for the TinaCMS editor!
+              <strong>💡 Tip:</strong> Uses template: product_description with automatic content synthesis
             </div>
           </div>
         </div>
@@ -441,7 +387,7 @@ Return ONLY the markdown-formatted description, ready to paste into a CMS.`;
             color: '#084298',
             fontWeight: 500
           }}>
-            ℹ️ Click "Generate Description" to create rich, formatted content. The preview will appear above with a copy button.
+            ℹ️ Click "Generate Description" to create rich, formatted content using the product_description template
           </p>
         </div>
       )}

@@ -1,8 +1,9 @@
-// tina/fields/AIImageField.tsx
+// tina/fields/AIImageField.tsx (REFACTORED)
 import React, { useState, useEffect } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
 import { getFormValues, logFormDebugInfo } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AIImageFieldProps {
   input: any;
@@ -16,20 +17,20 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
   const [showPrompt, setShowPrompt] = useState(false);
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const [size, setSize] = useState<'1024x1024' | '1792x1024' | '1024x1792'>('1024x1024');
-  const [quality, setQuality] = useState<'low' | 'medium' | 'high' | 'auto'>('medium');
+  const [quality, setQuality] = useState<'standard' | 'hd'>('standard');
   const cms = useCMS();
 
   // Debug on mount
   useEffect(() => {
-    logFormDebugInfo(cms, field, 'AIImageField');
+    logFormDebugInfo(cms, field, input, 'AIImageField');
   }, []);
 
   const generateProductImage = async () => {
     setGenerating(true);
 
     try {
-      // Get form values using helper
-      const formValues = getFormValues(cms, field);
+      // Get form values
+      const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled Product';
       const category = formValues.category || 'scientific instrument';
@@ -42,54 +43,39 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
         allKeys: Object.keys(formValues)
       });
 
-      let prompt = `Professional product photography of "${title}", a ${category}. `;
+      // Determine category type for style enhancement
+      let categoryType: 'telescope' | 'weather' | 'electronics' | 'general' = 'general';
+      const catLower = category.toLowerCase();
+      if (catLower.includes('telescope')) categoryType = 'telescope';
+      else if (catLower.includes('weather')) categoryType = 'weather';
+      else if (catLower.includes('electronic')) categoryType = 'electronics';
 
-      if (customPrompt.trim()) {
-        prompt = customPrompt;
-      } else {
-        // Determine category type for appropriate image style
-        let categoryType: 'telescope' | 'weather' | 'electronics' | 'general' = 'general';
-        const catLower = category.toLowerCase();
-        if (catLower.includes('telescope')) categoryType = 'telescope';
-        else if (catLower.includes('weather')) categoryType = 'weather';
-        else if (catLower.includes('electronic')) categoryType = 'electronics';
+      // Build context for template
+      const context = {
+        title,
+        category,
+        style_enhancement: '' // Will be filled by variable builder
+      };
 
-        const styles = {
-          telescope: 'warm studio-ghibli themed astronomical instrument, technical elegance, dark background with stars, professional scientific photography, Studio Ghibli art style, warm lighting, magical realism, detailed craftsmanship',
-          weather: 'warm studio-ghibli themed meteorological device, clean design, atmospheric elements, studio lighting, Studio Ghibli art style, warm lighting, magical realism',
-          electronics: 'warm studio-ghibli themed electronic circuit board, technical precision, close-up detail, professional product photography, Studio Ghibli art style, warm lighting, magical realism',
-          general: 'warm studio-ghibli themed scientific instrument, professional studio lighting, high quality commercial product shot, Studio Ghibli art style, warm lighting, magical realism'
-        };
+      // Note: style_enhancement is handled by the variable builder in promptManager
+      // based on the categoryType mapping in product-prompts.json
 
-        prompt += styles[categoryType];
-        prompt += ', clean white background, technically accurate, high resolution, professional product photography';
+      console.log('Generating image with template: product_image');
 
-        if (excerpt) {
-          prompt += ` Product description: ${excerpt}`;
-        }
-      }
+      // Generate using template
+      const result = await callOpenAIWithTemplate(
+        'product_image',
+        context,
+        customPrompt.trim() || undefined
+      );
 
-      console.log('Generating image with prompt:', prompt.substring(0, 100) + '...');
+      // The result contains the image URL from DALL-E
+      const imageUrl = result.result;
 
-      const response = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate_image',
-          prompt,
-          options: { size, quality }
-        })
-      });
+      console.log('Generated image URL received');
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Image generation failed');
-      }
-
-      const data = await response.json();
-      const dataUrl = data.result; // This is now a data URL (data:image/png;base64,...)
-
-      console.log('Generated image data URL received, length:', dataUrl?.length || 0);
+      // Download and convert to data URL
+      const dataUrl = await _downloadImageAsDataUrl(imageUrl);
 
       // Store the data URL for preview
       setGeneratedImageUrl(dataUrl);
@@ -108,6 +94,18 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
     } finally {
       setGenerating(false);
     }
+  };
+
+  // Helper to download image and convert to data URL
+  const _downloadImageAsDataUrl = async (url: string): Promise<string> => {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
   };
 
   // Check if current value is a URL or data URL (for preview)
@@ -177,7 +175,7 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
               fontSize: '14px'
             }}
           >
-            {showPrompt ? '🔽 Hide Custom Prompt' : '🔼 Custom Prompt'}
+            {showPrompt ? '🔽 Hide Options' : '🔼 Options'}
           </button>
         </div>
 
@@ -209,7 +207,7 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
             </label>
             <select
               value={quality}
-              onChange={(e) => setQuality(e.target.value as 'low' | 'medium' | 'high' | 'auto')}
+              onChange={(e) => setQuality(e.target.value as 'standard' | 'hd')}
               style={{
                 padding: '0.25rem 0.5rem',
                 border: '1px solid #ddd',
@@ -217,10 +215,8 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
                 fontSize: '12px'
               }}
             >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="auto">Auto</option>
+              <option value="standard">Standard</option>
+              <option value="hd">HD</option>
             </select>
           </div>
         </div>
@@ -231,7 +227,7 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Optional: Enter custom GPT-Image-1.5 prompt for Studio Ghibli-themed image generation..."
+              placeholder="Optional: Override template: product_image with custom DALL-E prompt..."
               rows={3}
               style={{
                 width: '100%',
@@ -244,7 +240,7 @@ const AIImageField = wrapFieldsWithMeta<AIImageFieldProps>(({ input, meta, field
               }}
             />
             <small style={{ color: '#666', fontSize: '12px' }}>
-              Leave empty to generate warm Studio Ghibli-themed product photography
+              Leave empty to use template with Studio Ghibli-themed product photography
             </small>
           </div>
         )}

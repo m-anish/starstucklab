@@ -1,7 +1,9 @@
-// tina/fields/AITextField.tsx
+// tina/fields/AITextField.tsx (REFACTORED)
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
+import { getFormValues } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AITextFieldProps {
   input: any;
@@ -19,103 +21,38 @@ const AITextField = wrapFieldsWithMeta<AITextFieldProps>(({ input, meta, field }
     setGenerating(true);
 
     try {
-      // Get form values from TinaCMS
-      const form = cms.forms.all()[0];
-      const formValues = form?.values || {};
+      // Get form values
+      const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled';
       const category = formValues.category || '';
-      const excerpt = formValues.excerpt || '';
-      const body = formValues.body || '';
+      
+      console.log('AITextField - Form values:', { title, category, fieldName: field.name });
 
-      console.log('AITextField - Form values:', { title, category, excerpt });
-
-      let generatedText = '';
-      let prompt = '';
-
-      // Determine what type of content to generate based on field name
-      if (field.name === 'excerpt' || field.name === 'tagline') {
-        const maxWords = field.name === 'tagline' ? 12 : 20;
-        
-        if (customPrompt.trim()) {
-          prompt = customPrompt;
-        } else {
-          prompt = `Generate a compelling ${field.name === 'tagline' ? 'tagline' : 'one-sentence excerpt'} (max ${maxWords} words) for "${title}"${category ? `, a ${category}` : ''}.
-
-The ${field.name} should be:
-- Poetic and intriguing
-- Slightly melancholic with dry humor
-- Evocative of cosmic existentialism
-- Technical yet elegant
-
-Return ONLY the ${field.name}, nothing else.`;
-        }
-
-        const response = await fetch('/api/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate_text',
-            prompt,
-            options: {
-              systemPrompt: 'You are a creative writer for Starstuck Lab, a maker space that builds scientific instruments, telescopes, and weather stations. Your writing style is poetic, melancholic, witty with dry humor, and tinged with cosmic existentialism.',
-              maxTokens: 100,
-              temperature: 0.8
-            }
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Generation failed');
-        }
-
-        const data = await response.json();
-        generatedText = data.result;
-
-      } else {
-        // Full description
-        if (customPrompt.trim()) {
-          prompt = customPrompt;
-        } else {
-          prompt = `Generate a product description for "${title}"${category ? `, a ${category}` : ''}.
-
-${excerpt ? `Excerpt: ${excerpt}\n` : ''}
-Write 200-300 words in a style that is:
-- Poetic and evocative
-- Slightly melancholic with dry humor
-- Technical yet accessible
-- Tinged with cosmic existentialism
-- Include specifications where relevant
-
-Return ONLY the description.`;
-        }
-
-        const response = await fetch('/api/openai', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            action: 'generate_text',
-            prompt,
-            options: {
-              systemPrompt: 'You are a creative technical writer for Starstuck Lab. Your writing balances poetry with precision, melancholy with wonder.',
-              maxTokens: 500,
-              temperature: 0.7
-            }
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error || 'Generation failed');
-        }
-
-        const data = await response.json();
-        generatedText = data.result;
+      // Determine template based on field name
+      let templateId = 'product_excerpt';
+      if (field.name === 'tagline') {
+        templateId = 'product_tagline';
+      } else if (field.name === 'excerpt') {
+        templateId = 'product_excerpt';
       }
 
+      // Build context for template
+      const context = {
+        title,
+        category,
+        category_clause: category ? `, a ${category}` : ''
+      };
+
+      // Generate using template
+      const result = await callOpenAIWithTemplate(
+        templateId,
+        context,
+        customPrompt.trim() || undefined
+      );
+
       // Update field value
-      input.onChange(generatedText);
+      input.onChange(result.result);
 
       // Clear custom prompt after successful generation
       if (customPrompt.trim()) {
@@ -201,7 +138,7 @@ Return ONLY the description.`;
             <textarea
               value={customPrompt}
               onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Optional: Enter custom AI prompt... (e.g., 'Write this in a more technical tone' or 'Add more humor')"
+              placeholder="Optional: Override default template with custom prompt..."
               rows={3}
               style={{
                 width: '100%',
@@ -214,7 +151,7 @@ Return ONLY the description.`;
               }}
             />
             <small style={{ color: '#666', fontSize: '12px' }}>
-              Leave empty to use default smart generation based on title and category
+              Leave empty to use smart template-based generation
             </small>
           </div>
         )}

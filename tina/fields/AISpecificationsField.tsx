@@ -1,7 +1,9 @@
-// tina/fields/AISpecificationsField.tsx
+// tina/fields/AISpecificationsField.tsx (REFACTORED)
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
+import { getFormValues } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AISpecificationsFieldProps {
   input: any;
@@ -17,9 +19,8 @@ const AISpecificationsField = wrapFieldsWithMeta<AISpecificationsFieldProps>(({ 
     setGenerating(true);
 
     try {
-      // Get form values from TinaCMS
-      const form = cms.forms.all()[0];
-      const formValues = form?.values || {};
+      // Get form values
+      const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled';
       const category = formValues.category || 'product';
@@ -27,43 +28,18 @@ const AISpecificationsField = wrapFieldsWithMeta<AISpecificationsFieldProps>(({ 
 
       console.log('AISpecificationsField - Form values:', { title, category, description });
 
-      const prompt = `Generate 6-8 technical specifications for "${title}", a ${category}.
-${description ? `\nDescription: ${description}\n` : ''}
-Each specification should include realistic, appropriate technical details for this type of product.
+      // Build context for template
+      const context = {
+        title,
+        category,
+        description_clause: description ? `\nDescription: ${description}\n` : ''
+      };
 
-Format as JSON array of label-value pairs:
-[
-  { "label": "Dimensions", "value": "100 × 50 × 25 mm" },
-  { "label": "Weight", "value": "250g" }
-]
-
-Include specifications like dimensions, weight, materials, power requirements, operating conditions, etc.
-Return ONLY the JSON array, no markdown formatting, no other text.`;
-
-      const response = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate_text',
-          prompt,
-          options: {
-            systemPrompt: 'You generate accurate technical specifications for scientific instruments and maker products.',
-            maxTokens: 600,
-            temperature: 0.6
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Generation failed');
-      }
-
-      const data = await response.json();
-      const result = data.result;
+      // Generate using template
+      const result = await callOpenAIWithTemplate('product_specifications', context);
 
       // Parse JSON response
-      const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanResult = result.result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const specifications = JSON.parse(cleanResult);
 
       // Update field value
@@ -141,6 +117,9 @@ Return ONLY the JSON array, no markdown formatting, no other text.`;
             </>
           )}
         </button>
+        <small style={{ display: 'block', marginTop: '0.5rem', color: '#666', fontSize: '11px' }}>
+          Uses template: product_specifications (6-8 technical specs)
+        </small>
       </div>
 
       {/* Specifications List */}

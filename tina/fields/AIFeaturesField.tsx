@@ -1,7 +1,9 @@
-// tina/fields/AIFeaturesField.tsx
+// tina/fields/AIFeaturesField.tsx (REFACTORED)
 import React, { useState } from 'react';
 import { wrapFieldsWithMeta } from 'tinacms';
 import { useCMS } from 'tinacms';
+import { getFormValues } from '../utils/formHelper';
+import { callOpenAIWithTemplate } from '../utils/promptManager';
 
 interface AIFeaturesFieldProps {
   input: any;
@@ -17,9 +19,8 @@ const AIFeaturesField = wrapFieldsWithMeta<AIFeaturesFieldProps>(({ input, meta,
     setGenerating(true);
 
     try {
-      // Get form values from TinaCMS
-      const form = cms.forms.all()[0];
-      const formValues = form?.values || {};
+      // Get form values
+      const formValues = getFormValues(cms, field, input);
       
       const title = formValues.title || 'Untitled';
       const category = formValues.category || '';
@@ -27,48 +28,20 @@ const AIFeaturesField = wrapFieldsWithMeta<AIFeaturesFieldProps>(({ input, meta,
 
       console.log('AIFeaturesField - Form values:', { title, category, description });
 
-      const prompt = `Generate 4 product features for "${title}"${category ? `, a ${category}` : ''}.
-${description ? `\nProduct description: ${description}\n` : ''}
-Each feature should have:
-- A title (2-5 words, descriptive and slightly humorous)
-- A description (10-15 words, technical yet poetic)
-- Suggested icon from this list: telescope, palette, alert-triangle, cog, zap, box, cpu, settings, shield, star, circle-dot, gauge
+      // Build context for template
+      const context = {
+        title,
+        category,
+        category_clause: category ? `, a ${category}` : '',
+        description_clause: description ? `\nProduct description: ${description}\n` : '',
+        icon_list: 'telescope, palette, alert-triangle, cog, zap, box, cpu, settings, shield, star, circle-dot, gauge'
+      };
 
-Format as JSON array:
-[
-  {
-    "icon": "telescope",
-    "title": "Feature Title",
-    "description": "Brief description with dry humor and technical detail"
-  }
-]
-
-Return ONLY the JSON array, no other text.`;
-
-      const response = await fetch('/api/openai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'generate_text',
-          prompt,
-          options: {
-            systemPrompt: 'You are a creative technical writer for Starstuck Lab, a maker space that builds scientific instruments. Your writing balances poetry with precision, melancholy with wonder.',
-            maxTokens: 500,
-            temperature: 0.8
-          }
-        })
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Generation failed');
-      }
-
-      const data = await response.json();
-      const result = data.result;
+      // Generate using template
+      const result = await callOpenAIWithTemplate('product_features', context);
 
       // Parse JSON response
-      const cleanResult = result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const cleanResult = result.result.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const features = JSON.parse(cleanResult);
 
       // Update field value
@@ -146,6 +119,9 @@ Return ONLY the JSON array, no other text.`;
             </>
           )}
         </button>
+        <small style={{ display: 'block', marginTop: '0.5rem', color: '#666', fontSize: '11px' }}>
+          Uses template: product_features (4 features with icons)
+        </small>
       </div>
 
       {/* Features List */}
