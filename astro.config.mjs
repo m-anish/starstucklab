@@ -17,5 +17,16 @@ export default defineConfig({
     server: { 
       fs: { allow: ['..'] } 
     },
+    build: {
+      rollupOptions: {
+        external: (id) => {
+          // Exclude templates page in production
+          if (process.env.NODE_ENV === 'production') {
+            return id.includes('pages/admin/templates');
+          }
+          return false;
+        }
+      }
+    }
   },
 });

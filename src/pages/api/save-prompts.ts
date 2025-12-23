@@ -6,6 +6,14 @@ import fs from 'fs';
 import path from 'path';
 
 export const POST: APIRoute = async ({ request }) => {
+  
+  // Block in production
+  if (import.meta.env.PROD) {
+    return new Response(JSON.stringify({ 
+      error: 'This endpoint is only available in development mode'
+    }), { status: 403 });
+  }
+
   try {
     const updatedPrompts = await request.json();
     

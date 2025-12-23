@@ -1,13 +1,72 @@
 ---
 // src/pages/admin/templates.astro
+// DEV ONLY - Disabled in production
+
 import EditableTemplateManager from '../../components/EditableTemplateManager';
+
+// Disable in production
+const isDev = import.meta.env.DEV;
+
+if (!isDev) {
+  return Astro.redirect('/admin');
+}
 ---
 
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Template Manager</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prompt Template Manager | Tina Admin</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', 
+                   Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-size: 1.2rem;
+      color: #666;
+    }
+
+    .dev-banner {
+      position: fixed;
+      bottom: 1rem;
+      right: 1rem;
+      padding: 0.5rem 1rem;
+      background: #ffc107;
+      color: #000;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      z-index: 10000;
+    }
+  </style>
 </head>
 <body>
+  <!-- <div class="dev-banner">
+    🔧 DEV ONLY - Not available in production
+  </div>
+
+  <div id="app">
+    <div class="loading">
+      <div>🎨 Loading Template Manager...</div>
+    </div>
+  </div> -->
+
   <EditableTemplateManager client:only="react" />
 </body>
 </html>
