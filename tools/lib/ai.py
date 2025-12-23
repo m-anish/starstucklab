@@ -1,12 +1,13 @@
 """
-AI Module for Starstuck Lab CLI
+AI Module for Starstuck Lab CLI - REFACTORED WITH PROMPT TEMPLATES
 
-Centralized AI functionality for text generation, image generation, and API management.
-Handles OpenAI integration, dotenv loading, and provides consistent interfaces.
+Centralized AI functionality using unified prompt templates.
+Now loads prompts from product_prompts.json for consistency with Tina CMS.
 """
 
 import os
 import sys
+import json
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from dotenv import load_dotenv
@@ -25,13 +26,143 @@ except ImportError:
     OpenAI = None
 
 
+class PromptTemplateManager:
+    """Manages prompt templates loaded from product_prompts.json"""
+    
+    def __init__(self, prompts_file: Path):
+        self.prompts_file = prompts_file
+        self.prompts_data = None
+        self._load_prompts()
+    
+    def _load_prompts(self):
+        """Load prompts from JSON file"""
+        if not self.prompts_file.exists():
+            raise FileNotFoundError(f"Prompts file not found: {self.prompts_file}")
+        
+        with open(self.prompts_file, 'r', encoding='utf-8') as f:
+            self.prompts_data = json.load(f)
+    
+    def get_template(self, template_id: str) -> Optional[Dict[str, Any]]:
+        """Get a prompt template by ID"""
+        if not self.prompts_data:
+            return None
+        
+        # Search in prompts list
+        for prompt in self.prompts_data.get('prompts', []):
+            if prompt.get('id') == template_id:
+                return prompt
+        
+        return None
+    
+    def build_prompt(self, template_id: str, context: Dict[str, Any]) -> Optional[str]:
+        """Build a prompt from template with variable substitution"""
+        template = self.get_template(template_id)
+        if not template:
+            return None
+        
+        prompt = template['prompt']
+        
+        # Replace variables in prompt
+        for variable in template.get('variables', []):
+            value = context.get(variable, '')
+            
+            # If variable not in context, try variable builders
+            if not value and variable in self.prompts_data.get('variable_builders', {}):
+                value = self._build_variable(variable, context)
+            
+            # Replace {variable} placeholders
+            prompt = prompt.replace(f'{{{variable}}}', str(value))
+        
+        return prompt
+    
+    def _build_variable(self, variable_name: str, context: Dict[str, Any]) -> str:
+        """Build a variable using variable builder logic"""
+        builders = self.prompts_data.get('variable_builders', {})
+        builder = builders.get(variable_name)
+        
+        if not builder:
+            return ''
+        
+        # Handle direct value
+        if 'value' in builder:
+            return builder['value']
+        
+        # Handle mapping
+        if 'mapping' in builder:
+            # Get the key from context (remove _clause suffix)
+            key = context.get(variable_name.replace('_clause', ''), 'default')
+            return builder['mapping'].get(key, builder['mapping'].get('default', ''))
+        
+        # Handle logic-based builders (simplified Python evaluation)
+        if 'logic' in builder:
+            return self._evaluate_logic(builder['logic'], context)
+        
+        return ''
+    
+    def _evaluate_logic(self, logic: str, context: Dict[str, Any]) -> str:
+        """Evaluate simple logic expressions for variable builders"""
+        # Pattern: if X: return f"text {X}" else: return ""
+        import re
+        
+        # Simple if-else pattern
+        if_match = re.match(r'if\s+(\w+):\s+return\s+f?"(.+?)"\s+else:\s+return\s+f?"(.*)"', logic)
+        if if_match:
+            var_name, truthy_value, falsy_value = if_match.groups()
+            value = context.get(var_name)
+            if value:
+                # Replace {var} placeholders
+                return truthy_value.format(**context)
+            return falsy_value
+        
+        # Pattern: if X: return "text" + "\n".join(...)
+        if 'join' in logic and 'if' in logic:
+            # Extract variable name
+            var_match = re.search(r'if\s+(\w+):', logic)
+            if var_match:
+                var_name = var_match.group(1)
+                value = context.get(var_name)
+                
+                if value and isinstance(value, list):
+                    # Determine what to join based on logic
+                    if 'f.title' in logic:
+                        return '\n'.join([f"- {item.get('title', '')}: {item.get('description', '')}" 
+                                        for item in value])
+                    elif 's.label' in logic:
+                        return '\n'.join([f"- {item.get('label', '')}: {item.get('value', '')}" 
+                                        for item in value])
+        
+        return ''
+    
+    def get_persona(self) -> str:
+        """Get the persona description"""
+        if not self.prompts_data:
+            return ''
+        return self.prompts_data.get('persona', {}).get('description', '')
+    
+    def get_options(self, template_id: str) -> Dict[str, Any]:
+        """Get generation options for a template"""
+        template = self.get_template(template_id)
+        if not template:
+            return {}
+        
+        return {
+            'temperature': template.get('temperature', 0.7),
+            'max_tokens': template.get('max_tokens', 500)
+        }
+
+
 class AIClient:
     """Centralized AI client for all OpenAI operations"""
 
-    def __init__(self, provider: str = "openai"):
+    def __init__(self, provider: str = "openai", prompts_file: Optional[Path] = None):
         self.provider = provider
         self.client = None
         self._setup_client()
+        
+        # Load prompt templates if file provided
+        self.prompt_manager = None
+        if prompts_file:
+            self.prompt_manager = PromptTemplateManager(prompts_file)
 
     def _setup_client(self):
         """Setup the AI client based on provider and environment"""
@@ -57,19 +188,55 @@ class AIClient:
 
     def generate_text(self,
                      prompt: str,
+                     system_prompt: Optional[str] = None,
                      model: str = "gpt-4o-mini",
                      temperature: float = 0.7,
                      max_tokens: int = 500) -> str:
         """Generate text using the configured AI model"""
+        
+        messages = []
+        
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        
+        messages.append({"role": "user", "content": prompt})
 
         response = self.client.chat.completions.create(
             model=model,
-            messages=[{"role": "user", "content": prompt}],
+            messages=messages,
             temperature=temperature,
             max_tokens=max_tokens
         )
 
         return response.choices[0].message.content.strip()
+    
+    def generate_with_template(self,
+                              template_id: str,
+                              context: Dict[str, Any],
+                              model: str = "gpt-4o-mini") -> str:
+        """Generate text using a prompt template"""
+        if not self.prompt_manager:
+            raise ValueError("No prompt manager configured. Provide prompts_file to AIClient.")
+        
+        # Build prompt from template
+        prompt = self.prompt_manager.build_prompt(template_id, context)
+        if not prompt:
+            raise ValueError(f"Template not found: {template_id}")
+        
+        # Get options from template
+        options = self.prompt_manager.get_options(template_id)
+        
+        # Get persona as system prompt
+        system_prompt = self.prompt_manager.get_persona()
+        
+        # Generate
+        return self.generate_text(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            model=model,
+            temperature=options.get('temperature', 0.7),
+            max_tokens=options.get('max_tokens', 500)
+        )
 
     def generate_image(self,
                       prompt: str,
@@ -95,109 +262,197 @@ class AIClient:
 
 
 class AIHelper:
-    """Helper functions for common AI operations"""
+    """Helper functions for common AI operations with template support"""
 
     def __init__(self, config: Dict[str, Any]):
         self.config = config
         self.ai_config = config.get('ai', {})
         self.client = None
+        self.prompt_manager = None
+        
+        # Load prompt templates
+        self._load_prompts()
+    
+    def _load_prompts(self):
+        """Load prompt templates from data directory"""
+        from .paths import Paths
+        paths = Paths()
+        
+        prompts_file = paths.data / "product_prompts.json"
+        if prompts_file.exists():
+            try:
+                self.prompt_manager = PromptTemplateManager(prompts_file)
+            except Exception as e:
+                print(f"Warning: Failed to load prompt templates: {e}")
 
     def get_client(self) -> AIClient:
-        """Get or create AI client"""
+        """Get or create AI client with prompt manager"""
         if self.client is None:
             provider = self.ai_config.get('provider', 'openai')
-            self.client = AIClient(provider=provider)
+            
+            # Get prompts file
+            from .paths import Paths
+            paths = Paths()
+            prompts_file = paths.data / "product_prompts.json"
+            
+            self.client = AIClient(
+                provider=provider,
+                prompts_file=prompts_file if prompts_file.exists() else None
+            )
         return self.client
 
-    def generate_content(self,
-                        content_type: str,
-                        context: Dict[str, Any],
-                        page: str = None) -> Optional[str]:
-        """Generate content using configured prompts"""
-
-        # Get prompts from config
-        prompts_config = self.config.get('content', {}).get('prompts', {})
-        page_prompts = prompts_config.get(page or content_type, [])
-
-        if not page_prompts:
-            return None
-
-        # Find the right prompt by content type
-        prompt_config = None
-        for p in page_prompts:
-            if p.get('block') == content_type or p.get('id') == content_type:
-                prompt_config = p
-                break
-
-        if not prompt_config:
-            return None
-
-        # Build prompt with context
-        prompt = prompt_config['prompt']
-        for key, value in context.items():
-            prompt = prompt.replace(f"{{{{{key}}}", value)
-
-        # Generate content
-        client = self.get_client()
-        return client.generate_text(
-            prompt=prompt,
-            temperature=prompt_config.get('temperature', 0.7),
-            max_tokens=500
-        )
-
     def generate_product_content(self,
-                               product_data: Dict[str, Any],
-                               template_key: str = "_default") -> Optional[str]:
+                                product_data: Dict[str, Any],
+                                template_id: str = "product_excerpt") -> Optional[str]:
         """Generate product content using templates"""
-
-        templates = self.config.get('products', {}).get('ai_templates', {})
-        template = templates.get(template_key, templates.get('_default', {}))
-
-        if not template:
-            return None
-
-        # Build prompt
-        prompt = template['prompt'].format(
-            title=product_data.get('title', ''),
-            excerpt=product_data.get('excerpt', '')
-        )
-
-        # Generate content
+        
         client = self.get_client()
+        
+        # Build context from product data
+        context = {
+            'title': product_data.get('title', ''),
+            'category': product_data.get('category', ''),
+            'category_clause': f", a {product_data.get('category')}" if product_data.get('category') else '',
+            'excerpt': product_data.get('excerpt', ''),
+            'description': product_data.get('excerpt', ''),
+            'description_clause': f"\nDescription: {product_data.get('excerpt')}\n" if product_data.get('excerpt') else ''
+        }
+        
+        try:
+            return client.generate_with_template(template_id, context)
+        except Exception as e:
+            print(f"Warning: Template generation failed, falling back to basic generation: {e}")
+            # Fallback to basic generation
+            return self._generate_basic_content(product_data)
+    
+    def _generate_basic_content(self, product_data: Dict[str, Any]) -> str:
+        """Fallback: Basic content generation without templates"""
+        client = self.get_client()
+        
+        title = product_data.get('title', '')
+        category = product_data.get('category', '')
+        
+        prompt = f"Generate a one-sentence product excerpt for '{title}'"
+        if category:
+            prompt += f", a {category}"
+        prompt += ". Make it poetic and intriguing with dry humor."
+        
         return client.generate_text(
             prompt=prompt,
-            temperature=template.get('temperature', 0.7),
-            max_tokens=200
+            system_prompt="You are a creative writer for Starstuck Lab.",
+            temperature=0.8,
+            max_tokens=100
         )
+
+    def generate_product_features(self,
+                                  product_data: Dict[str, Any]) -> Optional[List[Dict[str, str]]]:
+        """Generate product features using template"""
+        
+        client = self.get_client()
+        
+        # Build context
+        context = {
+            'title': product_data.get('title', ''),
+            'category': product_data.get('category', ''),
+            'category_clause': f", a {product_data.get('category')}" if product_data.get('category') else '',
+            'description_clause': f"\nProduct description: {product_data.get('excerpt', '')}\n" if product_data.get('excerpt') else '',
+            'icon_list': 'telescope, palette, alert-triangle, cog, zap, box, cpu, settings, shield, star, circle-dot, gauge'
+        }
+        
+        try:
+            result = client.generate_with_template('product_features', context)
+            
+            # Parse JSON response
+            import re
+            clean_result = re.sub(r'```json\n?', '', result)
+            clean_result = re.sub(r'```\n?', '', clean_result).strip()
+            
+            features = json.loads(clean_result)
+            return features
+        except Exception as e:
+            print(f"Warning: Feature generation failed: {e}")
+            return None
+
+    def generate_product_tags(self,
+                            product_data: Dict[str, Any],
+                            max_tags: int = 5) -> Optional[List[str]]:
+        """Generate product tags using template"""
+        
+        client = self.get_client()
+        
+        # Build context
+        context = {
+            'max_tags': max_tags,
+            'title': product_data.get('title', ''),
+            'category': product_data.get('category', 'product'),
+            'description_clause': f"\nDescription: {product_data.get('excerpt', '')}\n" if product_data.get('excerpt') else ''
+        }
+        
+        try:
+            result = client.generate_with_template('product_tags', context)
+            
+            # Parse comma-separated tags
+            tags = [tag.strip() for tag in result.split(',') if tag.strip()]
+            return tags[:max_tags]
+        except Exception as e:
+            print(f"Warning: Tag generation failed: {e}")
+            return None
+
+    def generate_product_specifications(self,
+                                       product_data: Dict[str, Any]) -> Optional[List[Dict[str, str]]]:
+        """Generate product specifications using template"""
+        
+        client = self.get_client()
+        
+        # Build context
+        context = {
+            'title': product_data.get('title', ''),
+            'category': product_data.get('category', 'product'),
+            'description_clause': f"\nDescription: {product_data.get('excerpt', '')}\n" if product_data.get('excerpt') else ''
+        }
+        
+        try:
+            result = client.generate_with_template('product_specifications', context)
+            
+            # Parse JSON response
+            import re
+            clean_result = re.sub(r'```json\n?', '', result)
+            clean_result = re.sub(r'```\n?', '', clean_result).strip()
+            
+            specs = json.loads(clean_result)
+            return specs
+        except Exception as e:
+            print(f"Warning: Specification generation failed: {e}")
+            return None
 
     def generate_product_image(self,
                               prompt: str,
                               product_data: Dict[str, Any],
                               image_type: str = "photo") -> Optional[Dict[str, Any]]:
-        """Generate product image with contextual enhancement"""
-
-        # Enhance prompt based on image type and product data
-        type_enhancements = {
-            "photo": "Professional product photography, clean white background, well-lit, commercial product shot, high quality",
-            "illustration": "Digital illustration, clean design, product visualization, modern aesthetic",
-            "diagram": "Technical diagram, exploded view, clear labeling, educational illustration",
-            "lifestyle": "Lifestyle photography, contextual use, natural setting, aspirational imagery"
-        }
-
-        enhanced_prompt = f"{prompt}. {type_enhancements.get(image_type, '')}"
-
-        # Add product context
-        product_context = f"Product: {product_data.get('title', '')}. "
-        if product_data.get('tags'):
-            product_context += f"Category: {', '.join(product_data['tags'])}. "
-
-        full_prompt = product_context + enhanced_prompt
-
-        # Generate image
+        """Generate product image with template-based enhancement"""
+        
         client = self.get_client()
+        
+        # Build context for template
+        context = {
+            'title': product_data.get('title', ''),
+            'category': product_data.get('category', 'scientific instrument'),
+            'style_enhancement': ''  # Will be filled by variable builder
+        }
+        
+        # Try to use template
+        if self.prompt_manager:
+            try:
+                enhanced_prompt = self.prompt_manager.build_prompt('product_image', context)
+                if enhanced_prompt:
+                    prompt = enhanced_prompt
+            except Exception as e:
+                print(f"Warning: Could not use image template: {e}")
+        
+        # Generate image
         return client.generate_image(
-            prompt=full_prompt,
-            size="1792x1024",  # Wide format for products
+            prompt=prompt,
+            size="1792x1024",
             quality="standard"
         )
 

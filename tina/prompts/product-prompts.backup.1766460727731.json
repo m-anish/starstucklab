@@ -13,11 +13,8 @@
     "product_excerpt": {
       "id": "product_excerpt",
       "description": "One-sentence compelling product description",
-      "prompt": "Generate a compelling one-sentence excerpt (max 18 words) for \"{title}\"{category_clause}.\n\nThe excerpt should be:\n- Poetic and intriguing\n- Slightly melancholic with dry humor\n- Evocative of cosmic existentialism\n- Technical yet elegant\n\nReturn ONLY the excerpt, nothing else.",
-      "variables": [
-        "title",
-        "category_clause"
-      ],
+      "prompt": "Generate a compelling one-sentence excerpt (max 20 words) for \"{title}\"{category_clause}.\n\nThe excerpt should be:\n- Poetic and intriguing\n- Slightly melancholic with dry humor\n- Evocative of cosmic existentialism\n- Technical yet elegant\n\nReturn ONLY the excerpt, nothing else.",
+      "variables": ["title", "category_clause"],
       "options": {
         "maxTokens": 100,
         "temperature": 0.8
@@ -27,10 +24,7 @@
       "id": "product_tagline",
       "description": "Short, catchy product tagline",
       "prompt": "Generate a short, catchy tagline (max 12 words) for \"{title}\"{category_clause}.\n\nThe tagline should be:\n- Memorable and punchy\n- Poetic with dry humor\n- Slightly melancholic\n- Technical yet accessible\n\nReturn ONLY the tagline, nothing else.",
-      "variables": [
-        "title",
-        "category_clause"
-      ],
+      "variables": ["title", "category_clause"],
       "options": {
         "maxTokens": 50,
         "temperature": 0.85
