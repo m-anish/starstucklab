@@ -172,10 +172,6 @@
 }
 
 @media (max-width: 640px) {
-  .hero-overlay {
-    position: relative; /* Ensure positioning context */
-  }
-  
   .cta {
     position: absolute;
     bottom: 20vh; /* Adjust this to align with the STARSTUCKLAB sign */
@@ -185,7 +181,7 @@
   }
   
   .hero-lead {
-    margin-bottom: 0; /* Remove bottom margin since CTA is now absolute */
+    margin-bottom: 0;
   }
 }
 
