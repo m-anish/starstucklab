@@ -172,9 +172,14 @@
 }
 
 @media (max-width: 640px) {
+  .hero-overlay {
+    justify-content: flex-start;
+    padding-top: 15vh; /* Adjust this value - lower number = higher on screen */
+  }
+
   .cta {
     position: absolute;
-    bottom: 20vh; /* Adjust this to align with the STARSTUCKLAB sign */
+    bottom: 10vh; /* Adjust this to align with the STARSTUCKLAB sign */
     left: 50%;
     transform: translateX(-50%);
     margin: 0;
