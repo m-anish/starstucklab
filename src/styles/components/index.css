@@ -171,6 +171,24 @@
   }
 }
 
+@media (max-width: 640px) {
+  .hero-overlay {
+    position: relative; /* Ensure positioning context */
+  }
+  
+  .cta {
+    position: absolute;
+    bottom: 20vh; /* Adjust this to align with the STARSTUCKLAB sign */
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+  }
+  
+  .hero-lead {
+    margin-bottom: 0; /* Remove bottom margin since CTA is now absolute */
+  }
+}
+
 @media (min-width: 641px) {
   .hero-title {
     font-size: clamp(2.2rem, 5.5vw, 3rem);
