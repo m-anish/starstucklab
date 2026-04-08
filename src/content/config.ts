@@ -40,6 +40,9 @@ const productsCollection = defineCollection({
     images: z.object({
       master: z.string().optional(),
     }).optional(),
+
+    /** YouTube video ID or full URL — shown as an embedded demo on the product page */
+    youtube_url: z.string().optional(),
   }),
 });
 

@@ -3,8 +3,6 @@ import { getCollection } from 'astro:content';
 import PageLayout from '../layouts/PageLayout.astro';
 
 const allProducts = await getCollection('products');
-
-// Only show available products, sorted newest first
 const products = allProducts
   .filter((p) => p.data.status === 'available')
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
@@ -14,282 +12,315 @@ function formatPrice(price: number, currency = 'INR'): string {
   return `${currency} ${price.toLocaleString()}`;
 }
 ---
-<PageLayout title="Shop — Starstuck Lab" description="Handmade telescopes and astronomical instruments. Built to order.">
+<PageLayout
+  title="Shop — Starstuck Lab"
+  description="Handmade telescopes built to order in India. Two products. Both very good."
+  padTop={false}
+>
+  <!-- Scene background -->
+  <div class="shop-bg" aria-hidden="true">
+    <picture>
+      <source srcset="/assets/hero/workshop-wide.webp" />
+      <img
+        src="/assets/hero/hero-master.webp"
+        alt=""
+        class="shop-bg__img"
+        loading="eager"
+      />
+    </picture>
+    <div class="shop-bg__overlay"></div>
+  </div>
+
   <main class="shop">
-    <header class="shop__header container">
-      <h1 class="shop__title">Shop</h1>
-      <p class="shop__tagline">
-        Two products. Both telescopes. Both hand-built to order in a small workshop
-        somewhere in India, by one person who cares perhaps too much about collimation tolerances.
-      </p>
+    <!-- Header -->
+    <header class="shop__header">
+      <div class="container">
+        <p class="shop__eyebrow">Workshop</p>
+        <h1 class="shop__title">Available Now</h1>
+        <p class="shop__subtitle">
+          Two products. Both telescopes. Both hand-built to order in a small
+          workshop somewhere in India, by one person who cares perhaps too much
+          about collimation tolerances.
+        </p>
+      </div>
     </header>
 
-    <section class="shop__grid container">
-      {products.map((product) => {
-        const { slug } = product;
-        const { title, tagline, price, currency, stock_status, lead_time, images, excerpt } = product.data;
-        const isBuildToOrder = stock_status === 'build_to_order';
-        const isOutOfStock = stock_status === 'out_of_stock';
-
-        return (
-          <article class="product-card">
-            <a href={`/shop/${slug}`} class="product-card__image-link">
-              <div class="product-card__image-wrapper">
-                {images?.master ? (
-                  <img
-                    src={images.master}
-                    alt={title}
-                    class="product-card__image"
-                    loading="lazy"
-                  />
-                ) : (
-                  <div class="product-card__image-placeholder" aria-hidden="true">
-                    <span>✦</span>
-                  </div>
-                )}
-              </div>
-            </a>
-
-            <div class="product-card__body">
-              <div class="product-card__meta">
-                {isBuildToOrder && (
-                  <span class="product-card__badge product-card__badge--build">
-                    Build to Order
-                  </span>
-                )}
-                {isOutOfStock && (
-                  <span class="product-card__badge product-card__badge--out">
-                    Out of Stock
-                  </span>
-                )}
-              </div>
-
-              <h2 class="product-card__title">
-                <a href={`/shop/${slug}`}>{title}</a>
-              </h2>
-
-              {tagline && (
-                <p class="product-card__tagline">{tagline}</p>
-              )}
-
-              <p class="product-card__excerpt">{excerpt}</p>
-
-              <div class="product-card__footer">
-                <div class="product-card__pricing">
-                  {price && (
-                    <span class="product-card__price">{formatPrice(price, currency)}</span>
-                  )}
-                  {isBuildToOrder && lead_time && (
-                    <span class="product-card__lead-time">Ships in {lead_time}</span>
+    <!-- Product grid -->
+    <section class="shop__grid-section container">
+      {products.length === 0 ? (
+        <p class="shop__empty">
+          Nothing available right now. Check back shortly — or read the{' '}
+          <a href="/lab">Lab Notes</a> while you wait.
+        </p>
+      ) : (
+        <div class="shop__grid">
+          {products.map((product) => {
+            const { title, tagline, price, currency, stock_status, lead_time, images, excerpt } = product.data;
+            const isBuildToOrder = stock_status === 'build_to_order';
+            const isOutOfStock   = stock_status === 'out_of_stock';
+            return (
+              <a href={`/shop/${product.slug}`} class="pc">
+                <div class="pc__image-wrap">
+                  {images?.master ? (
+                    <img
+                      src={images.master}
+                      alt={title}
+                      class="pc__image"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="pc__placeholder" aria-hidden="true">✦</div>
                   )}
                 </div>
-                <a href={`/shop/${slug}`} class="product-card__cta">
-                  View Details →
-                </a>
-              </div>
-            </div>
-          </article>
-        );
-      })}
+                <div class="pc__body">
+                  <div class="pc__badges">
+                    {isBuildToOrder && <span class="pc__badge">Build to Order</span>}
+                    {isOutOfStock   && <span class="pc__badge pc__badge--out">Out of Stock</span>}
+                  </div>
+                  <h2 class="pc__title">{title}</h2>
+                  {tagline && <p class="pc__tagline">{tagline}</p>}
+                  <p class="pc__excerpt">{excerpt}</p>
+                  <div class="pc__footer">
+                    {price && (
+                      <span class="pc__price">{formatPrice(price, currency)}</span>
+                    )}
+                    {isBuildToOrder && lead_time && (
+                      <span class="pc__lead">Ships in {lead_time}</span>
+                    )}
+                    <span class="pc__arrow">View Details →</span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
     </section>
-
-    {products.length === 0 && (
-      <div class="shop__empty container">
-        <p>Nothing available right now. Check back shortly — or read the <a href="/lab">Lab Notes</a> while you wait.</p>
-      </div>
-    )}
   </main>
 </PageLayout>
 
 <style>
+  /* ── Scene background (absolutely positioned under content) ── */
+  .shop-bg {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+  }
+
+  .shop-bg__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  .shop-bg__overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(6, 4, 2, 0.78);
+  }
+
+  /* ── Main content above bg ── */
+  .shop {
+    position: relative;
+    z-index: 1;
+    min-height: 100dvh;
+    padding-top: var(--navbar-height);
+    padding-bottom: var(--space-24);
+  }
+
+  /* ── Header ── */
   .shop__header {
     padding-top: var(--space-16);
     padding-bottom: var(--space-10);
-    border-bottom: 1px solid var(--color-border);
+    text-align: center;
   }
 
-  .shop__title {
-    font-size: var(--text-5xl);
-    font-weight: var(--weight-bold);
-    letter-spacing: -0.02em;
+  .shop__eyebrow {
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-accent);
     margin-bottom: var(--space-4);
   }
 
-  .shop__tagline {
-    max-width: 56ch;
-    color: var(--color-muted);
-    font-size: var(--text-lg);
+  .shop__title {
+    font-family: var(--font-display);
+    font-size: var(--text-5xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-parchment);
+    text-shadow: 0 2px 16px rgba(0,0,0,0.6);
+    margin-bottom: var(--space-4);
+  }
+
+  .shop__subtitle {
+    max-width: 52ch;
+    margin-inline: auto;
+    color: rgba(245, 230, 200, 0.6);
+    font-size: var(--text-base);
     line-height: var(--leading-base);
+    font-style: italic;
+  }
+
+  /* ── Grid ── */
+  .shop__grid-section {
+    padding-top: var(--space-6);
   }
 
   .shop__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
     gap: var(--space-8);
-    padding-top: var(--space-12);
-    padding-bottom: var(--space-20);
   }
 
   .shop__empty {
+    text-align: center;
+    color: rgba(245, 230, 200, 0.6);
     padding: var(--space-20) 0;
-    color: var(--color-muted);
   }
 
-  /* ── Product Card ── */
-  .product-card {
+  .shop__empty a {
+    color: var(--color-accent);
+  }
+
+  /* ══════════════════════
+     PARCHMENT PRODUCT CARD
+  ══════════════════════ */
+  .pc {
     display: flex;
     flex-direction: column;
-    border: 1px solid var(--color-border);
+    text-decoration: none;
+    background: var(--color-parchment-dim);
+    border: 1px solid var(--color-parchment-dark);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    background: var(--color-surface);
-    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
+    transition: transform var(--transition-base), box-shadow var(--transition-base);
   }
 
-  .product-card:hover {
-    border-color: var(--color-faint);
-    box-shadow: var(--shadow-lg);
+  .pc:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 48px rgba(0,0,0,0.65);
   }
 
-  .product-card__image-link {
-    display: block;
-    text-decoration: none;
-  }
-
-  .product-card__image-wrapper {
+  .pc__image-wrap {
     aspect-ratio: 4/3;
     overflow: hidden;
-    background: var(--color-surface-2);
+    background: rgba(0,0,0,0.06);
   }
 
-  .product-card__image {
+  .pc__image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform var(--transition-slow);
   }
 
-  .product-card:hover .product-card__image {
-    transform: scale(1.03);
-  }
+  .pc:hover .pc__image { transform: scale(1.04); }
 
-  .product-card__image-placeholder {
+  .pc__placeholder {
     width: 100%;
     height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 3rem;
-    color: var(--color-faint);
+    font-size: 4rem;
+    color: var(--color-parchment-muted);
   }
 
-  .product-card__body {
+  .pc__body {
     display: flex;
     flex-direction: column;
     flex: 1;
     padding: var(--space-6);
   }
 
-  .product-card__meta {
+  .pc__badges {
     display: flex;
     gap: var(--space-2);
     margin-bottom: var(--space-3);
     min-height: 1.5rem;
   }
 
-  .product-card__badge {
+  .pc__badge {
+    display: inline-block;
+    font-family: var(--font-sans);
     font-size: var(--text-xs);
     font-weight: var(--weight-semibold);
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
-    padding: 2px 8px;
+    color: var(--color-price-green);
+    background: rgba(45, 106, 79, 0.12);
+    border: 1px solid rgba(45, 106, 79, 0.3);
     border-radius: var(--radius-full);
+    padding: 2px 10px;
   }
 
-  .product-card__badge--build {
-    background: rgba(201, 185, 122, 0.15);
-    color: var(--color-accent);
-    border: 1px solid var(--color-accent-dim);
-  }
-
-  .product-card__badge--out {
-    background: rgba(192, 57, 43, 0.1);
+  .pc__badge--out {
     color: var(--color-danger);
-    border: 1px solid rgba(192, 57, 43, 0.3);
+    background: rgba(192, 57, 43, 0.1);
+    border-color: rgba(192, 57, 43, 0.3);
   }
 
-  .product-card__title {
+  .pc__title {
+    font-family: var(--font-display);
     font-size: var(--text-2xl);
-    font-weight: var(--weight-bold);
+    font-weight: 700;
+    color: var(--color-parchment-text);
     margin-bottom: var(--space-2);
+    line-height: var(--leading-tight);
   }
 
-  .product-card__title a {
-    color: var(--color-text);
-    text-decoration: none;
-  }
-
-  .product-card__title a:hover {
-    color: var(--color-accent);
-  }
-
-  .product-card__tagline {
+  .pc__tagline {
     font-size: var(--text-sm);
-    color: var(--color-muted);
+    color: var(--color-parchment-muted);
     font-style: italic;
-    margin-bottom: var(--space-3);
     line-height: var(--leading-base);
+    margin-bottom: var(--space-3);
   }
 
-  .product-card__excerpt {
+  .pc__excerpt {
     font-size: var(--text-sm);
-    color: var(--color-muted);
+    color: var(--color-parchment-muted);
     line-height: var(--leading-base);
     flex: 1;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-5);
   }
 
-  .product-card__footer {
+  .pc__footer {
     display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: var(--space-4);
-    border-top: 1px solid var(--color-border);
+    align-items: baseline;
+    gap: var(--space-3);
+    flex-wrap: wrap;
     padding-top: var(--space-4);
+    border-top: 1px solid var(--color-parchment-dark);
   }
 
-  .product-card__pricing {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+  .pc__price {
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
+    font-weight: 700;
+    color: var(--color-price-green);
+    flex: 1;
   }
 
-  .product-card__price {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
-    color: var(--color-text);
-  }
-
-  .product-card__lead-time {
+  .pc__lead {
     font-size: var(--text-xs);
-    color: var(--color-muted);
+    color: var(--color-parchment-muted);
   }
 
-  .product-card__cta {
+  .pc__arrow {
     font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
-    color: var(--color-accent);
-    text-decoration: none;
-    white-space: nowrap;
+    color: var(--color-parchment-muted);
+    transition: color var(--transition-fast);
   }
 
-  .product-card__cta:hover {
-    color: var(--color-text);
-  }
+  .pc:hover .pc__arrow { color: var(--color-parchment-text); }
 
   @media (max-width: 480px) {
-    .shop__grid {
-      grid-template-columns: 1fr;
-    }
+    .shop__grid { grid-template-columns: 1fr; }
   }
 </style>

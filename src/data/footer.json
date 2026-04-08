@@ -11,18 +11,18 @@
       "title": "Quick Links",
       "links": [
         {
-          "label": "Projects",
-          "href": "/projects",
+          "label": "Shop",
+          "href": "/shop",
           "order": 1
+        },
+        {
+          "label": "Lab Notes",
+          "href": "/lab",
+          "order": 2
         },
         {
           "label": "About",
           "href": "/about",
-          "order": 2
-        },
-        {
-          "label": "Shop",
-          "href": "/shop",
           "order": 3
         },
         {

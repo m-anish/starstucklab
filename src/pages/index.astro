@@ -3,7 +3,6 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
-import CartBadge from '../components/CartBadge.astro';
 
 const allProducts = await getCollection('products');
 const featuredProducts = allProducts
@@ -11,11 +10,11 @@ const featuredProducts = allProducts
   .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
   .slice(0, 2);
 
-const labNotes = await getCollection('lab-notes')
-  .catch(() => []);
-const latestNotes = labNotes
-  .sort((a, b) => (b.data as any).date?.getTime() - (a.data as any).date?.getTime())
-  .slice(0, 2);
+// Lab notes — graceful if collection doesn't have entries yet
+const allNotes = await getCollection('lab-notes').catch(() => [] as any[]);
+const latestNotes = (allNotes as any[])
+  .sort((a, b) => b.data.date?.getTime() - a.data.date?.getTime())
+  .slice(0, 3);
 
 function formatPrice(price: number): string {
   return '₹' + price.toLocaleString('en-IN');
@@ -27,61 +26,111 @@ function formatPrice(price: number): string {
 >
   <Navbar />
 
-  <!-- ── Hero ── -->
+  <!-- ══════════════════════════════════════════
+       HERO — full-viewport scene, centered copy
+  ══════════════════════════════════════════════ -->
   <section class="hero">
-    <div class="hero__content container">
+    <!-- Fixed background: the Ghibli starry-night scene -->
+    <div class="hero__bg" aria-hidden="true">
+      <picture>
+        <source media="(min-width: 1200px)" srcset="/assets/hero/hero-desktop.webp" />
+        <source media="(min-width: 640px)"  srcset="/assets/hero/hero-laptop.webp" />
+        <source media="(min-width: 400px)"  srcset="/assets/hero/hero-tablet.webp" />
+        <img
+          src="/assets/hero/hero-master.webp"
+          alt="Starry night sky over a quiet workshop"
+          class="hero__bg-img"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </picture>
+      <div class="hero__bg-overlay"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="hero__content">
       <p class="hero__eyebrow">Handmade in India</p>
       <h1 class="hero__title">
-        Building small machines<br>for an indifferent universe.
+        Building small machines<br />
+        for an indifferent universe.
       </h1>
       <p class="hero__subtitle">
         3D-printed telescopes. Hand-assembled. Built to order.
-        Philosophically grounded in the fact that the cosmos doesn't care,
-        but the optics are very good.
+        The cosmos doesn't care — but the optics are very good.
       </p>
       <div class="hero__actions">
         <a href="/shop" class="btn btn--primary">Browse the Shop</a>
-        <a href="/lab" class="btn btn--ghost">Read the Lab Notes</a>
+        <a href="/lab"  class="btn btn--ghost">Lab Notes</a>
       </div>
     </div>
-    <div class="hero__bg" aria-hidden="true">
-      <div class="hero__star hero__star--1">✦</div>
-      <div class="hero__star hero__star--2">✦</div>
-      <div class="hero__star hero__star--3">✦</div>
+
+    <!-- Scroll cue -->
+    <div class="hero__scroll-cue" aria-hidden="true">
+      <span class="hero__scroll-line"></span>
     </div>
   </section>
 
-  <!-- ── Products ── -->
-  <section class="featured-products">
-    <div class="container">
-      <header class="section-header">
-        <h2 class="section-header__title">Telescopes</h2>
-        <a href="/shop" class="section-header__link">All products →</a>
+  <!-- ══════════════════════════════════════════
+       FEATURED PRODUCTS — parchment cards on
+       the inside-workshop scene background
+  ══════════════════════════════════════════════ -->
+  <section class="products-scene">
+    <!-- Fixed background: workshop interior (falls back to hero if not available) -->
+    <div class="products-scene__bg" aria-hidden="true">
+      <picture>
+        <source srcset="/assets/hero/workshop-wide.webp" />
+        <img
+          src="/assets/hero/hero-master.webp"
+          alt=""
+          class="products-scene__bg-img"
+          loading="lazy"
+        />
+      </picture>
+      <div class="products-scene__bg-overlay"></div>
+    </div>
+
+    <div class="products-scene__content container">
+      <header class="products-header">
+        <h2 class="products-header__title">Available Now</h2>
+        <p class="products-header__subtitle">
+          Artifacts from the workshop, lightly assembled, ready to ship.
+        </p>
       </header>
 
       <div class="products-grid">
         {featuredProducts.map((product) => {
           const { title, tagline, price, stock_status, lead_time, images } = product.data;
           const isBuildToOrder = stock_status === 'build_to_order';
+          const isOutOfStock  = stock_status === 'out_of_stock';
           return (
-            <a href={`/shop/${product.slug}`} class="fp-card">
-              <div class="fp-card__image-wrap">
+            <a href={`/shop/${product.slug}`} class="pc">
+              <div class="pc__image-wrap">
                 {images?.master ? (
-                  <img src={images.master} alt={title} class="fp-card__image" loading="lazy" />
+                  <img
+                    src={images.master}
+                    alt={title}
+                    class="pc__image"
+                    loading="lazy"
+                  />
                 ) : (
-                  <div class="fp-card__placeholder" aria-hidden="true">✦</div>
+                  <div class="pc__placeholder" aria-hidden="true">✦</div>
                 )}
               </div>
-              <div class="fp-card__body">
-                <div class="fp-card__meta">
-                  {isBuildToOrder && <span class="fp-card__badge">Build to Order</span>}
-                </div>
-                <h3 class="fp-card__title">{title}</h3>
-                {tagline && <p class="fp-card__tagline">{tagline}</p>}
-                <div class="fp-card__footer">
-                  <span class="fp-card__price">{price ? formatPrice(price) : '—'}</span>
+              <div class="pc__body">
+                {isBuildToOrder && (
+                  <span class="pc__badge">Build to Order</span>
+                )}
+                {isOutOfStock && (
+                  <span class="pc__badge pc__badge--out">Out of Stock</span>
+                )}
+                <h3 class="pc__title">{title}</h3>
+                {tagline && <p class="pc__tagline">{tagline}</p>}
+                <div class="pc__footer">
+                  {price && (
+                    <span class="pc__price">{formatPrice(price)}</span>
+                  )}
                   {isBuildToOrder && lead_time && (
-                    <span class="fp-card__lead">Ships in {lead_time}</span>
+                    <span class="pc__lead">Ships in {lead_time}</span>
                   )}
                 </div>
               </div>
@@ -89,41 +138,46 @@ function formatPrice(price: number): string {
           );
         })}
       </div>
+
+      <div class="products-cta">
+        <a href="/shop" class="btn btn--outline-light">Browse all products →</a>
+      </div>
     </div>
   </section>
 
-  <!-- ── Brand statement ── -->
+  <!-- ══════════════════════════════════════════
+       BRAND STATEMENT
+  ══════════════════════════════════════════════ -->
   <section class="brand-statement">
     <div class="container">
       <blockquote class="brand-statement__quote">
-        "Every telescope we ship is a small argument against the idea that the universe
-        is too large to be worth looking at carefully."
+        "Every telescope we ship is a small argument against the idea that the
+        universe is too large to be worth looking at carefully."
       </blockquote>
-      <p class="brand-statement__byline">— Starstuck Lab, probably at 2am</p>
+      <cite class="brand-statement__byline">— Starstuck Lab, probably at 2am</cite>
     </div>
   </section>
 
-  <!-- ── Lab Notes preview ── -->
+  <!-- ══════════════════════════════════════════
+       LAB NOTES PREVIEW
+  ══════════════════════════════════════════════ -->
   {latestNotes.length > 0 && (
     <section class="lab-preview">
       <div class="container">
-        <header class="section-header">
-          <h2 class="section-header__title">Lab Notes</h2>
-          <a href="/lab" class="section-header__link">All notes →</a>
+        <header class="lab-preview__header">
+          <h2 class="lab-preview__title">Lab Notes</h2>
+          <a href="/lab" class="lab-preview__see-all">All notes →</a>
         </header>
         <div class="lab-preview__list">
-          {latestNotes.map((note) => {
-            const data = note.data as any;
-            return (
-              <a href={`/lab/${note.slug}`} class="lab-preview__card">
-                <span class="lab-preview__date">
-                  {new Date(data.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
-                </span>
-                <span class="lab-preview__title">{data.title}</span>
-                <span class="lab-preview__arrow">→</span>
-              </a>
-            );
-          })}
+          {latestNotes.map((note) => (
+            <a href={`/lab/${note.slug}`} class="lnp">
+              <span class="lnp__date">
+                {new Date(note.data.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+              </span>
+              <span class="lnp__title">{note.data.title}</span>
+              <span class="lnp__arrow">→</span>
+            </a>
+          ))}
         </div>
       </div>
     </section>
@@ -133,322 +187,456 @@ function formatPrice(price: number): string {
 </BaseLayout>
 
 <style>
-  /* ── Hero ── */
-  .hero {
-    position: relative;
-    min-height: 90dvh;
-    display: flex;
-    align-items: center;
-    overflow: hidden;
-    padding-top: var(--navbar-height);
-  }
+/* ══════════════════════
+   HERO
+══════════════════════ */
+.hero {
+  position: relative;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding-top: var(--navbar-height);
+}
 
-  .hero__content {
-    position: relative;
-    z-index: var(--z-above);
-    max-width: 720px;
-    padding-top: var(--space-20);
-    padding-bottom: var(--space-24);
-  }
+/* Fixed background image that stays put while content scrolls */
+.hero__bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+}
 
-  .hero__eyebrow {
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-accent);
-    margin-bottom: var(--space-4);
-  }
+.hero__bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
 
-  .hero__title {
-    font-size: clamp(2.5rem, 6vw, 4.5rem);
-    font-weight: var(--weight-bold);
-    letter-spacing: -0.03em;
-    line-height: 1.05;
-    margin-bottom: var(--space-6);
-    color: var(--color-text);
-  }
+.hero__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(4, 3, 8, 0.38) 0%,
+    rgba(4, 3, 8, 0.28) 50%,
+    rgba(4, 3, 8, 0.65) 100%
+  );
+}
 
-  .hero__subtitle {
-    font-size: var(--text-lg);
-    color: var(--color-muted);
-    line-height: var(--leading-base);
-    max-width: 52ch;
-    margin-bottom: var(--space-10);
-  }
+/* Content floats above the fixed bg */
+.hero__content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  max-width: 720px;
+  padding: var(--space-8) var(--space-6);
+}
 
-  .hero__actions {
-    display: flex;
-    gap: var(--space-4);
-    flex-wrap: wrap;
-  }
+.hero__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  margin-bottom: var(--space-5);
+}
 
-  .hero__bg {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-  }
+.hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 5rem);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  color: #fff;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.6);
+  margin-bottom: var(--space-6);
+}
 
-  .hero__star {
-    position: absolute;
-    color: var(--color-accent);
-    opacity: 0.15;
-    animation: twinkle 4s ease-in-out infinite;
-  }
+.hero__subtitle {
+  font-size: var(--text-lg);
+  color: rgba(255,255,255,0.72);
+  line-height: var(--leading-base);
+  max-width: 48ch;
+  margin: 0 auto var(--space-10);
+  text-shadow: 0 1px 8px rgba(0,0,0,0.5);
+}
 
-  .hero__star--1 { top: 15%; right: 12%; font-size: 2rem; animation-delay: 0s; }
-  .hero__star--2 { top: 55%; right: 25%; font-size: 1rem; animation-delay: 1.5s; }
-  .hero__star--3 { top: 30%; right: 8%;  font-size: 0.75rem; animation-delay: 3s; }
+.hero__actions {
+  display: flex;
+  gap: var(--space-4);
+  justify-content: center;
+  flex-wrap: wrap;
+}
 
-  @keyframes twinkle {
-    0%, 100% { opacity: 0.08; }
-    50% { opacity: 0.25; }
-  }
+.hero__scroll-cue {
+  position: absolute;
+  bottom: var(--space-8);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
-  /* ── Buttons ── */
-  .btn {
-    display: inline-flex;
-    align-items: center;
-    padding: var(--space-3) var(--space-6);
-    border: 2px solid currentColor;
-    border-radius: var(--radius-md);
-    font-weight: var(--weight-semibold);
-    font-size: var(--text-base);
-    text-decoration: none;
-    transition: background var(--transition-base), color var(--transition-base);
-  }
+.hero__scroll-line {
+  width: 1px;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0.5), transparent);
+  animation: scrollLine 2s ease-in-out infinite;
+}
 
-  .btn--primary {
-    background: var(--color-text);
-    color: var(--color-bg);
-    border-color: var(--color-text);
-  }
+@keyframes scrollLine {
+  0%, 100% { opacity: 0.3; transform: scaleY(1); }
+  50%       { opacity: 0.8; transform: scaleY(0.6) translateY(12px); }
+}
 
-  .btn--primary:hover {
-    background: var(--color-accent);
-    color: var(--color-bg);
-    border-color: var(--color-accent);
-  }
+/* ══════════════════════
+   BUTTONS (scoped to this page)
+══════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-3) var(--space-7, 1.75rem);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base), border-color var(--transition-base);
+}
 
-  .btn--ghost {
-    background: transparent;
-    color: var(--color-muted);
-    border-color: var(--color-border);
-  }
+.btn--primary {
+  background: #fff;
+  color: #0c0c0e;
+  border-color: #fff;
+}
 
-  .btn--ghost:hover {
-    color: var(--color-text);
-    border-color: var(--color-muted);
-  }
+.btn--primary:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #0c0c0e;
+}
 
-  /* ── Section header ── */
-  .section-header {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    margin-bottom: var(--space-8);
-    padding-bottom: var(--space-4);
-    border-bottom: 1px solid var(--color-border);
-  }
+.btn--ghost {
+  background: rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.85);
+  border-color: rgba(255,255,255,0.35);
+  backdrop-filter: blur(4px);
+}
 
-  .section-header__title {
-    font-size: var(--text-2xl);
-    font-weight: var(--weight-bold);
-    letter-spacing: -0.01em;
-  }
+.btn--ghost:hover {
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+}
 
-  .section-header__link {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    text-decoration: none;
-  }
+.btn--outline-light {
+  background: transparent;
+  color: var(--color-parchment);
+  border-color: rgba(245,230,200,0.45);
+}
 
-  .section-header__link:hover {
-    color: var(--color-accent);
-  }
+.btn--outline-light:hover {
+  background: rgba(245,230,200,0.1);
+  border-color: var(--color-parchment);
+}
 
-  /* ── Featured products ── */
-  .featured-products {
-    padding: var(--space-20) 0;
-    border-top: 1px solid var(--color-border);
-  }
+/* ══════════════════════
+   PRODUCTS SCENE
+══════════════════════ */
+.products-scene {
+  position: relative;
+  /* Sits above the hero fixed bg */
+  z-index: 1;
+  background: transparent;
+  padding: var(--space-24) 0;
+  /* Create an opaque section so the bg shows through but with its own darker overlay */
+}
 
-  .products-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: var(--space-6);
-  }
+/* The workshop bg — also fixed, layered on top of hero bg */
+.products-scene__bg {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
 
-  .fp-card {
-    display: block;
-    text-decoration: none;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    background: var(--color-surface);
-    transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
-  }
+.products-scene__bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
 
-  .fp-card:hover {
-    border-color: var(--color-faint);
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-lg);
-  }
+.products-scene__bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 5, 2, 0.72);
+}
 
-  .fp-card__image-wrap {
-    aspect-ratio: 4/3;
-    overflow: hidden;
-    background: var(--color-surface-2);
-  }
+.products-scene__content {
+  position: relative;
+  z-index: 1;
+}
 
-  .fp-card__image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform var(--transition-slow);
-  }
+/* ── Products header ── */
+.products-header {
+  text-align: center;
+  margin-bottom: var(--space-10);
+}
 
-  .fp-card:hover .fp-card__image {
-    transform: scale(1.04);
-  }
+.products-header__title {
+  font-family: var(--font-display);
+  font-size: var(--text-4xl);
+  font-weight: 700;
+  color: var(--color-parchment);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  margin-bottom: var(--space-3);
+}
 
-  .fp-card__placeholder {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    color: var(--color-faint);
-  }
+.products-header__subtitle {
+  font-size: var(--text-base);
+  color: rgba(245, 230, 200, 0.65);
+  font-style: italic;
+}
 
-  .fp-card__body {
-    padding: var(--space-5) var(--space-5) var(--space-4);
-  }
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-6);
+  margin-bottom: var(--space-10);
+}
 
-  .fp-card__meta {
-    min-height: 1.5rem;
-    margin-bottom: var(--space-2);
-  }
+/* ── Parchment product card ── */
+.pc {
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  background: var(--color-parchment-dim);
+  border: 1px solid var(--color-parchment-dark);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.05) inset;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
+}
 
-  .fp-card__badge {
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--color-accent);
-    background: rgba(201, 185, 122, 0.1);
-    border: 1px solid var(--color-accent-dim);
-    padding: 2px 8px;
-    border-radius: var(--radius-full);
-  }
+.pc:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 36px rgba(0,0,0,0.55);
+}
 
-  .fp-card__title {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
-    color: var(--color-text);
-    margin-bottom: var(--space-1);
-  }
+.pc__image-wrap {
+  aspect-ratio: 4/3;
+  overflow: hidden;
+  background: rgba(0,0,0,0.08);
+}
 
-  .fp-card__tagline {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    font-style: italic;
-    line-height: var(--leading-base);
-    margin-bottom: var(--space-4);
-  }
+.pc__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
 
-  .fp-card__footer {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-3);
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--color-border);
-  }
+.pc:hover .pc__image {
+  transform: scale(1.04);
+}
 
-  .fp-card__price {
-    font-size: var(--text-lg);
-    font-weight: var(--weight-bold);
-    color: var(--color-text);
-  }
+.pc__placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  color: var(--color-parchment-muted);
+}
 
-  .fp-card__lead {
-    font-size: var(--text-xs);
-    color: var(--color-muted);
-  }
+.pc__body {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
 
-  /* ── Brand statement ── */
-  .brand-statement {
-    padding: var(--space-20) 0;
-    border-top: 1px solid var(--color-border);
-    border-bottom: 1px solid var(--color-border);
-    text-align: center;
-  }
+.pc__badge {
+  display: inline-block;
+  font-family: var(--font-sans);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-price-green);
+  background: rgba(45, 106, 79, 0.12);
+  border: 1px solid rgba(45, 106, 79, 0.3);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+  margin-bottom: var(--space-3);
+}
 
-  .brand-statement__quote {
-    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
-    font-style: italic;
-    color: var(--color-muted);
-    max-width: 64ch;
-    margin: 0 auto var(--space-4);
-    line-height: var(--leading-loose);
-  }
+.pc__badge--out {
+  color: var(--color-danger);
+  background: rgba(192, 57, 43, 0.1);
+  border-color: rgba(192, 57, 43, 0.3);
+}
 
-  .brand-statement__byline {
-    font-size: var(--text-sm);
-    color: var(--color-faint);
-    font-family: var(--font-mono);
-  }
+.pc__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-parchment-text);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-tight);
+}
 
-  /* ── Lab preview ── */
-  .lab-preview {
-    padding: var(--space-20) 0;
-  }
+.pc__tagline {
+  font-size: var(--text-sm);
+  color: var(--color-parchment-muted);
+  font-style: italic;
+  line-height: var(--leading-base);
+  margin-bottom: var(--space-4);
+  flex: 1;
+}
 
-  .lab-preview__list {
-    display: flex;
-    flex-direction: column;
-  }
+.pc__footer {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-parchment-dark);
+}
 
-  .lab-preview__card {
-    display: grid;
-    grid-template-columns: 80px 1fr auto;
-    gap: var(--space-6);
-    align-items: center;
-    padding: var(--space-5) 0;
-    border-bottom: 1px solid var(--color-border);
-    text-decoration: none;
-    transition: color var(--transition-fast);
-  }
+.pc__price {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-price-green);
+}
 
-  .lab-preview__card:first-child {
-    border-top: 1px solid var(--color-border);
-  }
+.pc__lead {
+  font-size: var(--text-xs);
+  color: var(--color-parchment-muted);
+}
 
-  .lab-preview__date {
-    font-size: var(--text-xs);
-    color: var(--color-muted);
-    font-family: var(--font-mono);
-  }
+.products-cta {
+  text-align: center;
+}
 
-  .lab-preview__title {
-    font-size: var(--text-base);
-    font-weight: var(--weight-medium);
-    color: var(--color-text);
-  }
+/* ══════════════════════
+   BRAND STATEMENT
+══════════════════════ */
+.brand-statement {
+  position: relative;
+  z-index: 1;
+  background: var(--color-bg);
+  padding: var(--space-20) 0;
+  text-align: center;
+  border-top: 1px solid var(--color-border);
+}
 
-  .lab-preview__card:hover .lab-preview__title {
-    color: var(--color-accent);
-  }
+.brand-statement__quote {
+  font-family: var(--font-display);
+  font-size: clamp(1.25rem, 3vw, 1.875rem);
+  font-style: italic;
+  font-weight: 400;
+  color: var(--color-muted);
+  max-width: 56ch;
+  margin: 0 auto var(--space-4);
+  line-height: var(--leading-loose);
+}
 
-  .lab-preview__arrow {
-    color: var(--color-muted);
-    font-size: var(--text-sm);
-  }
+.brand-statement__byline {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-faint);
+  font-style: normal;
+}
 
-  @media (max-width: 480px) {
-    .products-grid { grid-template-columns: 1fr; }
-    .hero__actions { flex-direction: column; }
-    .hero__actions .btn { text-align: center; justify-content: center; }
-  }
+/* ══════════════════════
+   LAB NOTES PREVIEW
+══════════════════════ */
+.lab-preview {
+  position: relative;
+  z-index: 1;
+  background: var(--color-bg);
+  padding: var(--space-16) 0 var(--space-20);
+  border-top: 1px solid var(--color-border);
+}
+
+.lab-preview__header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.lab-preview__title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  color: var(--color-text);
+}
+
+.lab-preview__see-all {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-decoration: none;
+}
+
+.lab-preview__see-all:hover { color: var(--color-accent); }
+
+.lab-preview__list {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Lab note preview row */
+.lnp {
+  display: grid;
+  grid-template-columns: 5rem 1fr auto;
+  gap: var(--space-6);
+  align-items: center;
+  padding: var(--space-5) 0;
+  border-bottom: 1px solid var(--color-border);
+  text-decoration: none;
+}
+
+.lnp:first-child { border-top: 1px solid var(--color-border); }
+
+.lnp__date {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--color-muted);
+}
+
+.lnp__title {
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  color: var(--color-text);
+  transition: color var(--transition-fast);
+}
+
+.lnp:hover .lnp__title { color: var(--color-accent); }
+
+.lnp__arrow {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+/* ══════════════════════
+   RESPONSIVE
+══════════════════════ */
+@media (max-width: 480px) {
+  .products-grid { grid-template-columns: 1fr; }
+  .hero__actions { flex-direction: column; align-items: center; }
+  .hero__actions .btn { width: 100%; max-width: 280px; }
+}
 </style>

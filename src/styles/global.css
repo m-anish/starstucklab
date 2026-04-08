@@ -30,6 +30,7 @@ body {
 
 /* ── Typography base ── */
 h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
   line-height: var(--leading-tight);
   font-weight: var(--weight-bold);
   color: var(--color-text);

@@ -63,6 +63,10 @@ export default config({
           { label: 'Specifications', itemLabel: (props) => props.fields.label || 'Spec' }
         ),
         masterImage: fields.text({ label: 'Master Image Path', description: 'e.g. /assets/product-m42/master.png' }),
+        youtube_url: fields.text({
+          label: 'YouTube Demo URL',
+          description: 'Paste a full YouTube URL or video ID to embed a demo video on the product page.',
+        }),
         content: fields.document({
           label: 'Product Description',
           formatting: true,

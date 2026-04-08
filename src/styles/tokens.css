@@ -5,7 +5,7 @@
    ============================================== */
 
 :root {
-  /* ── Color Palette ── */
+  /* ── Color Palette — Dark base ── */
   --color-bg:        #0c0c0e;
   --color-surface:   #141417;
   --color-surface-2: #1c1c21;
@@ -18,10 +18,22 @@
   --color-danger:    #c0392b;
   --color-success:   #27ae60;
 
+  /* ── Color Palette — Warm parchment (for cards on scene backgrounds) ── */
+  --color-parchment:      #f5e6c8;
+  --color-parchment-dim:  rgba(245, 230, 200, 0.93);
+  --color-parchment-dark: #e8d0a0;
+  --color-parchment-text: #1a1208;    /* near-black warm */
+  --color-parchment-muted:#6b5840;    /* warm brown muted */
+  --color-price-green:    #2d6a4f;    /* forest green price */
+  --color-price-green-light: #40916c;
+  --color-scene-overlay:  rgba(8, 6, 2, 0.45);   /* darkening overlay on scene */
+  --color-scene-overlay-light: rgba(8, 6, 2, 0.25);
+
   /* ── Typography ── */
-  --font-sans:   system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono:   'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
-  --font-serif:  Georgia, 'Times New Roman', serif;
+  --font-sans:    system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-mono:    'JetBrains Mono', 'Fira Code', 'Menlo', monospace;
+  --font-serif:   Georgia, 'Times New Roman', serif;
 
   --text-xs:   0.75rem;   /*  12px */
   --text-sm:   0.875rem;  /*  14px */

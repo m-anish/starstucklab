@@ -28,7 +28,18 @@ const {
   customization,
   specifications = [],
   images,
+  youtube_url,
 } = product.data;
+
+// Derive a clean YouTube embed URL from either a full URL or a bare video ID
+function getYouTubeEmbed(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  const videoId = match ? match[1] : (raw.length === 11 ? raw : null);
+  return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : null;
+}
+
+const embedUrl = getYouTubeEmbed(youtube_url);
 
 const isAvailable = status === 'available';
 const isBuildToOrder = stock_status === 'build_to_order';
@@ -179,6 +190,22 @@ const cartProduct = JSON.stringify({
             ))}
           </tbody>
         </table>
+      </section>
+    )}
+
+    <!-- YouTube demo video -->
+    {embedUrl && (
+      <section class="product-video container">
+        <h2 class="section-title">See it in the Wild</h2>
+        <div class="video-frame">
+          <iframe
+            src={embedUrl}
+            title={`${title} — video demo`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
       </section>
     )}
 
@@ -582,6 +609,31 @@ const cartProduct = JSON.stringify({
     font-size: var(--text-sm);
     padding: var(--space-3) 0;
     color: var(--color-text);
+  }
+
+  /* ── YouTube video ── */
+  .product-video {
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .video-frame {
+    position: relative;
+    width: 100%;
+    max-width: 800px;
+    aspect-ratio: 16/9;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+  }
+
+  .video-frame iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
   }
 
   /* ── Body ── */
