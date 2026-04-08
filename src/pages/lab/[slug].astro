@@ -1,0 +1,141 @@
+---
+import { getCollection, render } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+
+export const prerender = true;
+
+export async function getStaticPaths() {
+  const notes = await getCollection('lab-notes');
+  return notes.map((note) => ({
+    params: { slug: note.slug },
+    props: { note },
+  }));
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+<PageLayout title={`${note.data.title} — Lab Notes`} description={note.data.excerpt}>
+  <main class="note-page container container--narrow">
+    <nav class="note-page__back">
+      <a href="/lab">← Lab Notes</a>
+    </nav>
+
+    <article class="note-page__article">
+      <header class="note-page__header">
+        <div class="note-page__meta">
+          <time class="note-page__date" datetime={note.data.date.toISOString()}>
+            {formatDate(note.data.date)}
+          </time>
+          {note.data.tags.length > 0 && (
+            <ul class="note-page__tags">
+              {note.data.tags.map((tag) => (
+                <li class="note-page__tag">#{tag}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <h1 class="note-page__title">{note.data.title}</h1>
+        <p class="note-page__excerpt">{note.data.excerpt}</p>
+      </header>
+
+      <div class="note-page__body prose">
+        <Content />
+      </div>
+    </article>
+
+    <footer class="note-page__footer">
+      <a href="/lab" class="note-page__back-link">← Back to Lab Notes</a>
+    </footer>
+  </main>
+</PageLayout>
+
+<style>
+  .note-page {
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-20);
+  }
+
+  .note-page__back {
+    margin-bottom: var(--space-10);
+  }
+
+  .note-page__back a {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .note-page__back a:hover {
+    color: var(--color-text);
+  }
+
+  .note-page__meta {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .note-page__date {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
+
+  .note-page__tags {
+    display: flex;
+    gap: var(--space-2);
+  }
+
+  .note-page__tag {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
+
+  .note-page__title {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-4);
+  }
+
+  .note-page__excerpt {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+    margin-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+    padding-bottom: var(--space-8);
+  }
+
+  .note-page__body {
+    /* .prose styles come from global.css */
+  }
+
+  .note-page__footer {
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .note-page__back-link {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .note-page__back-link:hover {
+    color: var(--color-text);
+  }
+</style>

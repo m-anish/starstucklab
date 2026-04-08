@@ -1,0 +1,188 @@
+---
+import { getCollection } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
+
+const allNotes = await getCollection('lab-notes');
+
+const notes = allNotes
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-IN', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+---
+<PageLayout title="Lab Notes — Starstuck Lab" description="Build logs, failed experiments, and the occasional accidental success.">
+  <main class="lab">
+    <header class="lab__header container">
+      <h1 class="lab__title">Lab Notes</h1>
+      <p class="lab__tagline">
+        Build logs, failed experiments, and the occasional accidental success.
+        Written at whatever hour of the night the thing finally worked.
+      </p>
+    </header>
+
+    <section class="lab__list container">
+      {notes.length === 0 && (
+        <p class="lab__empty">Nothing written yet. Probably still in the lab.</p>
+      )}
+
+      {notes.map((note) => (
+        <article class="note-card">
+          <div class="note-card__date">{formatDate(note.data.date)}</div>
+
+          <div class="note-card__body">
+            <h2 class="note-card__title">
+              <a href={`/lab/${note.slug}`}>{note.data.title}</a>
+            </h2>
+            <p class="note-card__excerpt">{note.data.excerpt}</p>
+
+            {note.data.tags.length > 0 && (
+              <ul class="note-card__tags">
+                {note.data.tags.map((tag) => (
+                  <li class="note-card__tag">#{tag}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <a href={`/lab/${note.slug}`} class="note-card__link" aria-label={`Read: ${note.data.title}`}>
+            Read →
+          </a>
+        </article>
+      ))}
+    </section>
+  </main>
+</PageLayout>
+
+<style>
+  .lab__header {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .lab__title {
+    font-size: var(--text-5xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-4);
+  }
+
+  .lab__tagline {
+    max-width: 56ch;
+    color: var(--color-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-base);
+  }
+
+  .lab__list {
+    padding-top: var(--space-8);
+    padding-bottom: var(--space-20);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lab__empty {
+    color: var(--color-muted);
+    padding: var(--space-12) 0;
+  }
+
+  /* ── Note Card ── */
+  .note-card {
+    display: grid;
+    grid-template-columns: 120px 1fr auto;
+    gap: var(--space-8);
+    align-items: start;
+    padding: var(--space-8) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .note-card:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .note-card__date {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    padding-top: var(--space-1);
+    white-space: nowrap;
+  }
+
+  .note-card__body {
+    min-width: 0;
+  }
+
+  .note-card__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-2);
+    line-height: var(--leading-tight);
+  }
+
+  .note-card__title a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .note-card__title a:hover {
+    color: var(--color-accent);
+  }
+
+  .note-card__excerpt {
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+    line-height: var(--leading-base);
+    margin-bottom: var(--space-3);
+  }
+
+  .note-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .note-card__tag {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
+
+  .note-card__link {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-accent);
+    text-decoration: none;
+    white-space: nowrap;
+    padding-top: var(--space-1);
+  }
+
+  .note-card__link:hover {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 640px) {
+    .note-card {
+      grid-template-columns: 1fr auto;
+      grid-template-rows: auto auto;
+    }
+
+    .note-card__date {
+      grid-column: 1;
+      grid-row: 1;
+    }
+
+    .note-card__link {
+      grid-column: 2;
+      grid-row: 1;
+    }
+
+    .note-card__body {
+      grid-column: 1 / -1;
+      grid-row: 2;
+    }
+  }
+</style>

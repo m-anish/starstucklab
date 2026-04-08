@@ -1,0 +1,41 @@
+---
+/**
+ * PageLayout — Standard page with Navbar + Footer
+ * Use this for all regular pages (shop, lab, about, contact, etc.)
+ */
+import BaseLayout from './BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Extra padding at top to clear fixed navbar — true by default */
+  padTop?: boolean;
+}
+
+const {
+  title,
+  description,
+  padTop = true,
+} = Astro.props;
+---
+<BaseLayout title={title} description={description}>
+  <Navbar />
+  <div class:list={['page-body', { 'page-body--pad': padTop }]}>
+    <slot />
+  </div>
+  <Footer />
+</BaseLayout>
+
+<style>
+  .page-body {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100dvh - var(--navbar-height));
+  }
+
+  .page-body--pad {
+    padding-top: var(--navbar-height);
+  }
+</style>

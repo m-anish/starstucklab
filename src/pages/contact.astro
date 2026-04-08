@@ -1,62 +1,240 @@
 ---
-// site/src/pages/contact.astro
-import StandardPageLayout from "../layouts/StandardPageLayout.astro";
-import ContactForm from "../components/ContactForm.astro";
-import "../styles/components/standard-page.css";
-import "../styles/components/contact.css";
+import PageLayout from '../layouts/PageLayout.astro';
 ---
-<StandardPageLayout title="Contact - Starstuck Lab" pageClass="standard-page" backgroundScene="shop">
-  <div class="contact-page">
-    <div class="contact-container">
-      <div class="contact-header">
-        <h1>Get In Touch</h1>
-        <p class="contact-lead">
-          Have a question, project idea, or just want to say hello? 
-          We'd love to hear from you.
-        </p>
+<PageLayout title="Contact — Starstuck Lab" description="Get in touch about orders, custom requests, or existential queries.">
+  <main class="contact-page container container--narrow">
+    <header class="contact-page__header">
+      <h1>Contact</h1>
+      <p class="contact-page__subtitle">
+        For orders, custom requests, questions about shipping, warranty inquiries,
+        or if you just want to tell us what you saw last night.
+      </p>
+    </header>
+
+    <form id="contact-form" class="contact-form" novalidate>
+      <div class="contact-form__field">
+        <label class="contact-form__label" for="name">Name</label>
+        <input
+          id="name"
+          name="name"
+          type="text"
+          class="contact-form__input"
+          required
+          autocomplete="name"
+          placeholder="Your name"
+        />
       </div>
 
-      <div class="contact-grid">
-        <div class="contact-info">
-          <div class="info-card">
-            <h3>📧 Email</h3>
-            <p>
-              <a href="mailto:your-email@domain.com">your-email@domain.com</a>
-            </p>
-          </div>
-
-          <div class="info-card">
-            <h3>⏱️ Response Time</h3>
-            <p>We typically respond within 24-48 hours on business days.</p>
-          </div>
-
-          <div class="info-card">
-            <h3>🌍 Location</h3>
-            <p>Based in India, working with the universe.</p>
-          </div>
-
-          <div class="info-card">
-            <h3>🔗 Connect</h3>
-            <p>
-              <a href="#" target="_blank" rel="noopener">Twitter</a> • 
-              <a href="#" target="_blank" rel="noopener">GitHub</a> • 
-              <a href="#" target="_blank" rel="noopener">Instagram</a>
-            </p>
-          </div>
-        </div>
-
-        <div class="contact-form-section">
-          <ContactForm />
-        </div>
+      <div class="contact-form__field">
+        <label class="contact-form__label" for="email">Email</label>
+        <input
+          id="email"
+          name="email"
+          type="email"
+          class="contact-form__input"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+        />
       </div>
 
-      <div class="contact-footer-note">
-        <p>
-          <strong>Note:</strong> We respect your privacy. Your information is only used to 
-          respond to your inquiry and is never shared with third parties. 
-          See our <a href="/privacy">Privacy Policy</a>.
-        </p>
+      <div class="contact-form__field">
+        <label class="contact-form__label" for="message">Message</label>
+        <textarea
+          id="message"
+          name="message"
+          class="contact-form__textarea"
+          rows={6}
+          required
+          placeholder="What's on your mind?"
+        ></textarea>
       </div>
-    </div>
-  </div>
-</StandardPageLayout>
+
+      <div id="form-status" class="contact-form__status" hidden></div>
+
+      <button type="submit" id="submit-btn" class="btn btn--primary">
+        Send Message
+      </button>
+    </form>
+
+    <aside class="contact-alt">
+      <p>
+        Or email directly at <a href="mailto:hello@starstucklab.com">hello@starstucklab.com</a>.
+        Response time: usually within a day, occasionally within a week,
+        never more than the thermal equilibration time of a planetary atmosphere.
+      </p>
+    </aside>
+  </main>
+</PageLayout>
+
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const statusEl = document.getElementById('form-status') as HTMLElement;
+  const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
+
+  function showStatus(message: string, type: 'success' | 'error') {
+    statusEl.textContent = message;
+    statusEl.className = `contact-form__status contact-form__status--${type}`;
+    statusEl.hidden = false;
+  }
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+    statusEl.hidden = true;
+
+    try {
+      const formData = new FormData(form);
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showStatus('Message sent. We\'ll get back to you shortly.', 'success');
+        form.reset();
+      } else {
+        throw new Error(data.error ?? 'Unknown error');
+      }
+    } catch (err: any) {
+      showStatus(`Failed to send: ${err.message}. Try emailing directly.`, 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Send Message';
+    }
+  });
+</script>
+
+<style>
+  .contact-page {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-24);
+  }
+
+  .contact-page__header {
+    margin-bottom: var(--space-10);
+  }
+
+  .contact-page__header h1 {
+    font-size: var(--text-4xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-4);
+  }
+
+  .contact-page__subtitle {
+    color: var(--color-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-base);
+    max-width: 52ch;
+  }
+
+  /* ── Form ── */
+  .contact-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+
+  .contact-form__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .contact-form__label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-muted);
+    letter-spacing: 0.04em;
+  }
+
+  .contact-form__input,
+  .contact-form__textarea {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-base);
+    transition: border-color var(--transition-fast);
+    resize: vertical;
+  }
+
+  .contact-form__input:focus,
+  .contact-form__textarea:focus {
+    outline: none;
+    border-color: var(--color-accent);
+  }
+
+  .contact-form__input::placeholder,
+  .contact-form__textarea::placeholder {
+    color: var(--color-faint);
+  }
+
+  .contact-form__status {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    font-size: var(--text-sm);
+  }
+
+  .contact-form__status--success {
+    background: rgba(39, 174, 96, 0.1);
+    border: 1px solid rgba(39, 174, 96, 0.3);
+    color: var(--color-success);
+  }
+
+  .contact-form__status--error {
+    background: rgba(192, 57, 43, 0.1);
+    border: 1px solid rgba(192, 57, 43, 0.3);
+    color: var(--color-danger);
+  }
+
+  /* ── Button ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3) var(--space-8);
+    border: 2px solid currentColor;
+    border-radius: var(--radius-md);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
+
+  .btn--primary {
+    background: var(--color-text);
+    color: var(--color-bg);
+    border-color: var(--color-text);
+    align-self: flex-start;
+  }
+
+  .btn--primary:hover:not(:disabled) {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: var(--color-bg);
+  }
+
+  .btn--primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  /* ── Aside ── */
+  .contact-alt {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .contact-alt p {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+  }
+</style>

@@ -1,382 +1,454 @@
 ---
-// site/src/pages/index.astro
-import HeroLayout from "../layouts/HeroLayout.astro";
-import AboutPanel from "../components/aboutpanel.astro";
-import FeaturedSections from "../components/FeaturedSections.astro"; 
-import Footer from "../components/Footer.astro";
-import { getSceneSources } from "../lib/scenes";
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import CartBadge from '../components/CartBadge.astro';
 
-const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
-const hero = getSceneSources("hero", base);
-const workshop = getSceneSources("workshop", base);
-const preloadUrls = [
-  hero.desktop,
-  hero.generated,
-  workshop.desktop,
-  workshop.generated,
-].filter(Boolean);
+const allProducts = await getCollection('products');
+const featuredProducts = allProducts
+  .filter((p) => p.data.status === 'available')
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime())
+  .slice(0, 2);
 
-const MEDIA = {
-  ultra_wide: "(min-width:1400px)",
-  desktop: "(min-width:1000px)",
-  laptop: "(min-width:820px)",
-  tablet: "(min-width:640px)",
-};
+const labNotes = await getCollection('lab-notes')
+  .catch(() => []);
+const latestNotes = labNotes
+  .sort((a, b) => (b.data as any).date?.getTime() - (a.data as any).date?.getTime())
+  .slice(0, 2);
+
+function formatPrice(price: number): string {
+  return '₹' + price.toLocaleString('en-IN');
+}
 ---
+<BaseLayout
+  title="Starstuck Lab — Handmade telescopes for an indifferent universe"
+  description="Handmade 3D-printed telescopes built to order in India. Sardonic by default, optically sound by design."
+>
+  <Navbar />
 
-<HeroLayout title="Starstuck Lab">
-  <Fragment slot="head">
-    {preloadUrls.map((u) => u && <link rel="preload" as="image" href={u} />)}
-    <meta name="base-url" content={base} />
-  </Fragment>
-
-  <script>
-    // Force scroll to top on page load/reload
-    if ("scrollRestoration" in window.history) {
-      window.history.scrollRestoration = "manual";
-    }
-    window.scrollTo(0, 0);
-  </script>
-
-  <script>
-    // Prevent initial transition flicker
-    (function () {
-      try {
-        document.documentElement.classList.add("no-transitions");
-        requestAnimationFrame(function () {
-          requestAnimationFrame(function () {
-            document.documentElement.classList.remove("no-transitions");
-          });
-        });
-      } catch (e) {
-        /* ignore */
-      }
-    })();
-  </script>
-
-  <div class="herozoom-root" id="herozoomRoot">
-    <div
-      class="herozoom-spacer"
-      id="herozoomSpacer"
-      data-zoom-scale="1.9"
-      data-cross-start="0.40"
-      data-cross-end="0.85"
-    >
-    </div>
-
-    <!-- Workshop (back layer) -->
-    <picture>
-      {
-        workshop.desktop ? (
-          <source media={MEDIA.desktop} srcset={workshop.desktop} />
-        ) : null
-      }
-      {
-        workshop.tablet ? (
-          <source media={MEDIA.tablet} srcset={workshop.tablet} />
-        ) : null
-      }
-      <img
-        class="hero-layer layer-interior"
-        id="hzInterior"
-        src={workshop.mobile ??
-          workshop.generated ??
-          workshop.thumb ??
-          workshop.desktop ??
-          `${base}assets/workshop/workshop-master.webp`}
-        alt="Workshop interior"
-        loading="eager"
-      />
-    </picture>
-
-    <!-- Forest hero (front layer) -->
-    <picture>
-      {
-        hero.desktop ? (
-          <source media={MEDIA.desktop} srcset={hero.desktop} />
-        ) : null
-      }
-      {
-        hero.laptop ? (
-          <source media={MEDIA.laptop} srcset={hero.laptop} />
-        ) : null
-      }
-      {
-        hero.tablet ? (
-          <source media={MEDIA.tablet} srcset={hero.tablet} />
-        ) : null
-      }
-      <img
-        class="hero-layer layer-forest"
-        id="hzForest"
-        src={hero.mobile ??
-          hero.generated ??
-          hero.thumb ??
-          hero.desktop ??
-          `${base}assets/hero/hero-master.webp`}
-        alt="Forest hero with cabin and STARSTUCKLAB sign"
-        loading="eager"
-      />
-    </picture>
-
-    <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
-      <img
-        id="hzHeroLogo"
-        src={`${base}assets/icons/starstucklab_logo_black_white.svg`}
-        alt="Starstuck Lab Logo"
-        loading="eager"
-      />
-      <h1 class="hero-title">Starstuck Lab</h1>
-      <p class="hero-lead">
-        Building small machines for an indifferent universe
+  <!-- ── Hero ── -->
+  <section class="hero">
+    <div class="hero__content container">
+      <p class="hero__eyebrow">Handmade in India</p>
+      <h1 class="hero__title">
+        Building small machines<br>for an indifferent universe.
+      </h1>
+      <p class="hero__subtitle">
+        3D-printed telescopes. Hand-assembled. Built to order.
+        Philosophically grounded in the fact that the cosmos doesn't care,
+        but the optics are very good.
       </p>
-      <a href="#workbench" class="cta">Enter the Workshop</a>
+      <div class="hero__actions">
+        <a href="/shop" class="btn btn--primary">Browse the Shop</a>
+        <a href="/lab" class="btn btn--ghost">Read the Lab Notes</a>
+      </div>
     </div>
-
-    <div class="post-zoom" id="postZoomContent" aria-live="polite">
-      <AboutPanel />
-
-      <!-- NEW: Featured sections (projects + shop) -->
-      <FeaturedSections />
-
-      <Footer />
+    <div class="hero__bg" aria-hidden="true">
+      <div class="hero__star hero__star--1">✦</div>
+      <div class="hero__star hero__star--2">✦</div>
+      <div class="hero__star hero__star--3">✦</div>
     </div>
-  </div>
+  </section>
 
-  <!-- Set --stage-vh for mobile 100vh quirks -->
-  <script>
-    (function () {
-      function setVh() {
-        document.documentElement.style.setProperty(
-          "--stage-vh",
-          (window.innerHeight / 100).toFixed(2),
-        );
-      }
-      setVh();
-      window.addEventListener("resize", setVh);
-      window.addEventListener("orientationchange", setVh);
-    })();
-  </script>
+  <!-- ── Products ── -->
+  <section class="featured-products">
+    <div class="container">
+      <header class="section-header">
+        <h2 class="section-header__title">Telescopes</h2>
+        <a href="/shop" class="section-header__link">All products →</a>
+      </header>
 
-  <!-- UNIFIED HERO ZOOM SCRIPT -->
-  <script>
-    (function () {
-      const spacerEl = document.getElementById("herozoomSpacer");
-      const forestEl = document.getElementById("hzForest");
-      const interiorEl = document.getElementById("hzInterior");
-      const overlayEl = document.getElementById("hzOverlay");
-      const navEl = document.getElementById("pageNav");
-      const aboutEl = document.getElementById("aboutPanel");
-      const postZoomEl = document.getElementById("postZoomContent");
+      <div class="products-grid">
+        {featuredProducts.map((product) => {
+          const { title, tagline, price, stock_status, lead_time, images } = product.data;
+          const isBuildToOrder = stock_status === 'build_to_order';
+          return (
+            <a href={`/shop/${product.slug}`} class="fp-card">
+              <div class="fp-card__image-wrap">
+                {images?.master ? (
+                  <img src={images.master} alt={title} class="fp-card__image" loading="lazy" />
+                ) : (
+                  <div class="fp-card__placeholder" aria-hidden="true">✦</div>
+                )}
+              </div>
+              <div class="fp-card__body">
+                <div class="fp-card__meta">
+                  {isBuildToOrder && <span class="fp-card__badge">Build to Order</span>}
+                </div>
+                <h3 class="fp-card__title">{title}</h3>
+                {tagline && <p class="fp-card__tagline">{tagline}</p>}
+                <div class="fp-card__footer">
+                  <span class="fp-card__price">{price ? formatPrice(price) : '—'}</span>
+                  {isBuildToOrder && lead_time && (
+                    <span class="fp-card__lead">Ships in {lead_time}</span>
+                  )}
+                </div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </section>
 
-      if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
+  <!-- ── Brand statement ── -->
+  <section class="brand-statement">
+    <div class="container">
+      <blockquote class="brand-statement__quote">
+        "Every telescope we ship is a small argument against the idea that the universe
+        is too large to be worth looking at carefully."
+      </blockquote>
+      <p class="brand-statement__byline">— Starstuck Lab, probably at 2am</p>
+    </div>
+  </section>
 
-      const ds = spacerEl.dataset;
-      const CROSS_START = parseFloat(ds.crossStart ?? "0.40");
-      const CROSS_END = parseFloat(ds.crossEnd ?? "0.85");
-      const NAV_SHOW_THRESHOLD = 0.75;
-      const ABOUT_SHOW_THRESHOLD = 0.85;
-      const POST_ZOOM_THRESHOLD = 0.9;
-      let ticking = false;
-      let cachedSpacerTop = 0;
-      let cachedSpacerHeight = 0;
-      let measurementsValid = false;
+  <!-- ── Lab Notes preview ── -->
+  {latestNotes.length > 0 && (
+    <section class="lab-preview">
+      <div class="container">
+        <header class="section-header">
+          <h2 class="section-header__title">Lab Notes</h2>
+          <a href="/lab" class="section-header__link">All notes →</a>
+        </header>
+        <div class="lab-preview__list">
+          {latestNotes.map((note) => {
+            const data = note.data as any;
+            return (
+              <a href={`/lab/${note.slug}`} class="lab-preview__card">
+                <span class="lab-preview__date">
+                  {new Date(data.date).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                </span>
+                <span class="lab-preview__title">{data.title}</span>
+                <span class="lab-preview__arrow">→</span>
+              </a>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  )}
 
-      function updateMeasurements() {
-        const rect = spacerEl.getBoundingClientRect();
-        cachedSpacerTop = window.scrollY + rect.top;
-        cachedSpacerHeight = rect.height;
-        measurementsValid = true;
-      }
+  <Footer />
+</BaseLayout>
 
-      function spacerTopAbsolute() {
-        if (!measurementsValid) updateMeasurements();
-        return cachedSpacerTop;
-      }
+<style>
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    min-height: 90dvh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding-top: var(--navbar-height);
+  }
 
-      function spacerHeight() {
-        if (!measurementsValid) updateMeasurements();
-        return cachedSpacerHeight;
-      }
+  .hero__content {
+    position: relative;
+    z-index: var(--z-above);
+    max-width: 720px;
+    padding-top: var(--space-20);
+    padding-bottom: var(--space-24);
+  }
 
-      function computeProgress() {
-        const top = spacerTopAbsolute();
-        const duration = spacerHeight() - window.innerHeight;
-        if (window.scrollY <= top) return 0;
-        if (duration <= 0) return 1;
-        const p = (window.scrollY - top) / duration;
-        return Math.max(0, Math.min(1, p));
-      }
+  .hero__eyebrow {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    margin-bottom: var(--space-4);
+  }
 
-      function applyInitialFrame() {
-        forestEl.style.opacity = "1";
-        interiorEl.style.opacity = "0";
-        overlayEl.style.opacity = "1";
+  .hero__title {
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+    margin-bottom: var(--space-6);
+    color: var(--color-text);
+  }
 
-        if (aboutEl) aboutEl.classList.remove("in");
-        if (postZoomEl) {
-          postZoomEl.classList.remove("in");
-          postZoomEl.setAttribute("aria-hidden", "true");
-        }
-      }
+  .hero__subtitle {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+    max-width: 52ch;
+    margin-bottom: var(--space-10);
+  }
 
-      // Replace the update() function in your index.astro with this version:
+  .hero__actions {
+    display: flex;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
 
-      function update() {
-        const p = computeProgress();
+  .hero__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
 
-        let interiorOpacity = 0;
-        if (p <= CROSS_START) {
-          interiorOpacity = 0;
-        } else if (p >= CROSS_END) {
-          interiorOpacity = 1;
-        } else {
-          interiorOpacity = (p - CROSS_START) / (CROSS_END - CROSS_START);
-        }
+  .hero__star {
+    position: absolute;
+    color: var(--color-accent);
+    opacity: 0.15;
+    animation: twinkle 4s ease-in-out infinite;
+  }
 
-        const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
-        const overlayOpacity = Math.max(0, 1 - p * 1.2);
+  .hero__star--1 { top: 15%; right: 12%; font-size: 2rem; animation-delay: 0s; }
+  .hero__star--2 { top: 55%; right: 25%; font-size: 1rem; animation-delay: 1.5s; }
+  .hero__star--3 { top: 30%; right: 8%;  font-size: 0.75rem; animation-delay: 3s; }
 
-        forestEl.style.opacity = `${forestOpacity}`;
-        interiorEl.style.opacity = `${interiorOpacity}`;
-        overlayEl.style.opacity = `${overlayOpacity}`;
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.08; }
+    50% { opacity: 0.25; }
+  }
 
-        // CRITICAL FIX: Disable pointer events when overlay is faded
-        if (overlayOpacity <= 0.1) {
-          overlayEl.classList.add("faded");
-        } else {
-          overlayEl.classList.remove("faded");
-        }
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--space-3) var(--space-6);
+    border: 2px solid currentColor;
+    border-radius: var(--radius-md);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
+    text-decoration: none;
+    transition: background var(--transition-base), color var(--transition-base);
+  }
 
-        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
-          navEl.classList.add("nav-visible", "nav-sticky");
-          navEl.classList.remove("nav-hidden");
-          navEl.setAttribute("aria-hidden", "false");
-        } else {
-          navEl.classList.remove("nav-visible", "nav-sticky");
-          navEl.classList.add("nav-hidden");
-          navEl.setAttribute("aria-hidden", "true");
-        }
+  .btn--primary {
+    background: var(--color-text);
+    color: var(--color-bg);
+    border-color: var(--color-text);
+  }
 
-        if (aboutEl) {
-          const shouldBeIn = interiorOpacity > ABOUT_SHOW_THRESHOLD;
-          if (shouldBeIn && !aboutEl.classList.contains("in")) {
-            aboutEl.classList.add("in");
-          } else if (!shouldBeIn && aboutEl.classList.contains("in")) {
-            aboutEl.classList.remove("in");
-          }
-        }
+  .btn--primary:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border-color: var(--color-accent);
+  }
 
-        if (postZoomEl) {
-          const shouldBeIn = interiorOpacity > POST_ZOOM_THRESHOLD;
-          if (shouldBeIn && !postZoomEl.classList.contains("in")) {
-            postZoomEl.classList.add("in");
-            postZoomEl.setAttribute("aria-hidden", "false");
-          } else if (!shouldBeIn && postZoomEl.classList.contains("in")) {
-            postZoomEl.classList.remove("in");
-            postZoomEl.setAttribute("aria-hidden", "true");
-          }
-        }
+  .btn--ghost {
+    background: transparent;
+    color: var(--color-muted);
+    border-color: var(--color-border);
+  }
 
-        ticking = false;
-      }
+  .btn--ghost:hover {
+    color: var(--color-text);
+    border-color: var(--color-muted);
+  }
 
-      function requestTick() {
-        if (!ticking) {
-          window.requestAnimationFrame(update);
-          ticking = true;
-        }
-      }
+  /* ── Section header ── */
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: var(--space-8);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid var(--color-border);
+  }
 
-      function onScroll() {
-        requestTick();
-      }
+  .section-header__title {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.01em;
+  }
 
-      requestAnimationFrame(() =>
-        requestAnimationFrame(() => {
-          applyInitialFrame();
-          update();
-        }),
-      );
+  .section-header__link {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    text-decoration: none;
+  }
 
-      window.addEventListener("scroll", onScroll, { passive: true });
-      window.addEventListener(
-        "resize",
-        () => {
-          measurementsValid = false;
-          requestTick();
-        },
-        { passive: true },
-      );
+  .section-header__link:hover {
+    color: var(--color-accent);
+  }
 
-      const cta = document.querySelector(".cta");
-      const aboutPanel = document.getElementById("aboutPanel");
-      if (cta && aboutPanel) {
-        cta.addEventListener("click", (ev) => {
-          ev.preventDefault();
-          const rect = aboutPanel.getBoundingClientRect();
-          const targetY =
-            window.scrollY + rect.top - Math.round(window.innerHeight * 0.4);
-          window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
-          history.replaceState(null, "", "#workbench");
-        });
-      }
+  /* ── Featured products ── */
+  .featured-products {
+    padding: var(--space-20) 0;
+    border-top: 1px solid var(--color-border);
+  }
 
-      function pageIsScrollable() {
-        return document.documentElement.scrollHeight > window.innerHeight + 10;
-      }
+  .products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-6);
+  }
 
-      if (!pageIsScrollable()) {
-        const reveal = () => {
-          forestEl.style.opacity = "0";
-          interiorEl.style.opacity = "1";
-          overlayEl.style.opacity = "0";
-          navEl.classList.add("nav-visible", "nav-sticky");
-          navEl.setAttribute("aria-hidden", "false");
-          if (aboutEl) aboutEl.classList.add("in");
-          if (postZoomEl) {
-            postZoomEl.classList.add("in");
-            postZoomEl.setAttribute("aria-hidden", "false");
-          }
-        };
+  .fp-card {
+    display: block;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    transition: border-color var(--transition-base), transform var(--transition-base), box-shadow var(--transition-base);
+  }
 
-        const onFirstInput = () => {
-          reveal();
-          window.removeEventListener("wheel", onFirstInput);
-          window.removeEventListener("touchstart", onFirstInput);
-          window.removeEventListener("keydown", onFirstInput);
-        };
+  .fp-card:hover {
+    border-color: var(--color-faint);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
 
-        window.addEventListener("wheel", onFirstInput, { passive: true });
-        window.addEventListener("touchstart", onFirstInput, { passive: true });
-        window.addEventListener("keydown", onFirstInput, { passive: true });
-        setTimeout(() => {
-          if (!pageIsScrollable()) reveal();
-        }, 1200);
-      }
-    })();
-  </script>
+  .fp-card__image-wrap {
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: var(--color-surface-2);
+  }
 
-  <script>
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        const baseMeta = document.querySelector('meta[name="base-url"]');
-        const base = baseMeta ? baseMeta.getAttribute('content') || '/' : '/';
-        const res = await fetch(`${base}data/hero.json`);
-        const variants = await res.json();
-        const keys = Object.keys(variants);
-        if (!keys.length) return;
-        const randomKey = keys[Math.floor(Math.random() * keys.length)];
-        const hero = variants[randomKey];
-        const titleEl = document.querySelector(".hero-title");
-        const leadEl = document.querySelector(".hero-lead");
-        const ctaEl = document.querySelector(".cta");
-        if (titleEl) titleEl.textContent = hero.title;
-        if (leadEl) leadEl.textContent = hero.subtitle;
-        if (ctaEl) ctaEl.textContent = hero.cta;
-      } catch (err) {
-        console.error("Hero variant loading failed:", err);
-      }
-    });
-  </script>
-</HeroLayout>
+  .fp-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+  }
+
+  .fp-card:hover .fp-card__image {
+    transform: scale(1.04);
+  }
+
+  .fp-card__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--color-faint);
+  }
+
+  .fp-card__body {
+    padding: var(--space-5) var(--space-5) var(--space-4);
+  }
+
+  .fp-card__meta {
+    min-height: 1.5rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .fp-card__badge {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-accent);
+    background: rgba(201, 185, 122, 0.1);
+    border: 1px solid var(--color-accent-dim);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .fp-card__title {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text);
+    margin-bottom: var(--space-1);
+  }
+
+  .fp-card__tagline {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-style: italic;
+    line-height: var(--leading-base);
+    margin-bottom: var(--space-4);
+  }
+
+  .fp-card__footer {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .fp-card__price {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: var(--color-text);
+  }
+
+  .fp-card__lead {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+  }
+
+  /* ── Brand statement ── */
+  .brand-statement {
+    padding: var(--space-20) 0;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    text-align: center;
+  }
+
+  .brand-statement__quote {
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
+    font-style: italic;
+    color: var(--color-muted);
+    max-width: 64ch;
+    margin: 0 auto var(--space-4);
+    line-height: var(--leading-loose);
+  }
+
+  .brand-statement__byline {
+    font-size: var(--text-sm);
+    color: var(--color-faint);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Lab preview ── */
+  .lab-preview {
+    padding: var(--space-20) 0;
+  }
+
+  .lab-preview__list {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .lab-preview__card {
+    display: grid;
+    grid-template-columns: 80px 1fr auto;
+    gap: var(--space-6);
+    align-items: center;
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--color-border);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .lab-preview__card:first-child {
+    border-top: 1px solid var(--color-border);
+  }
+
+  .lab-preview__date {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+    font-family: var(--font-mono);
+  }
+
+  .lab-preview__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-medium);
+    color: var(--color-text);
+  }
+
+  .lab-preview__card:hover .lab-preview__title {
+    color: var(--color-accent);
+  }
+
+  .lab-preview__arrow {
+    color: var(--color-muted);
+    font-size: var(--text-sm);
+  }
+
+  @media (max-width: 480px) {
+    .products-grid { grid-template-columns: 1fr; }
+    .hero__actions { flex-direction: column; }
+    .hero__actions .btn { text-align: center; justify-content: center; }
+  }
+</style>

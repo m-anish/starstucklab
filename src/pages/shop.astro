@@ -1,56 +1,295 @@
 ---
-/* SPDX-License-Identifier: DWYWBDBM-1.0 */
-/* Licensed under the "Do What You Want But Don't Blame Me" License, Version 1.0. */
-/* See the COPYING file or visit https://starstucklab.com/license for details. */
-// site/src/pages/shop.astro
 import { getCollection } from 'astro:content';
-import StandardPageLayout from "../layouts/StandardPageLayout.astro";
-import ProductCard from "../components/ProductCard.astro";
-import "../styles/components/parchment.css";
-import "../styles/components/shop.css";
+import PageLayout from '../layouts/PageLayout.astro';
 
-// Get all products from content collection
 const allProducts = await getCollection('products');
 
-// Sort by date descending (newest first)
-const sortedProducts = allProducts
-  .sort((a, b) => {
-    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-    return dateB - dateA;
-  });
+// Only show available products, sorted newest first
+const products = allProducts
+  .filter((p) => p.data.status === 'available')
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
 
-// Transform to ProductCard format
-const products = sortedProducts.map(entry => ({
-  id: entry.id,
-  slug: entry.slug,
-  title: entry.data.title,
-  excerpt: entry.data.excerpt,
-  price: entry.data.price,
-  currency: entry.data.currency || 'USD',
-  status: entry.data.status,
-  tags: entry.data.tags || [],
-  date: entry.data.date,
-  images: entry.data.images,
-  url: `/shop/${entry.slug}`
-}));
+function formatPrice(price: number, currency = 'INR'): string {
+  if (currency === 'INR') return `₹${price.toLocaleString('en-IN')}`;
+  return `${currency} ${price.toLocaleString()}`;
+}
 ---
-<!-- Request the shared shop background by setting backgroundScene="shop" -->
-<StandardPageLayout title="Shop — Starstuck Lab" pageClass="shop-page" backgroundScene="shop">
-  <div class="shop-content">
-    <header class="shop-hero">
-      <h1>Shop — Artifacts from the Bench</h1>
-      <p class="lead">Handmade, printed, lightly cursed. Pick something that will outlive your patience.</p>
+<PageLayout title="Shop — Starstuck Lab" description="Handmade telescopes and astronomical instruments. Built to order.">
+  <main class="shop">
+    <header class="shop__header container">
+      <h1 class="shop__title">Shop</h1>
+      <p class="shop__tagline">
+        Two products. Both telescopes. Both hand-built to order in a small workshop
+        somewhere in India, by one person who cares perhaps too much about collimation tolerances.
+      </p>
     </header>
 
-    {products.length === 0 ? (
-      <div class="parchment parchment--centered no-products">
-        <p>No products available yet. Check back soon!</p>
+    <section class="shop__grid container">
+      {products.map((product) => {
+        const { slug } = product;
+        const { title, tagline, price, currency, stock_status, lead_time, images, excerpt } = product.data;
+        const isBuildToOrder = stock_status === 'build_to_order';
+        const isOutOfStock = stock_status === 'out_of_stock';
+
+        return (
+          <article class="product-card">
+            <a href={`/shop/${slug}`} class="product-card__image-link">
+              <div class="product-card__image-wrapper">
+                {images?.master ? (
+                  <img
+                    src={images.master}
+                    alt={title}
+                    class="product-card__image"
+                    loading="lazy"
+                  />
+                ) : (
+                  <div class="product-card__image-placeholder" aria-hidden="true">
+                    <span>✦</span>
+                  </div>
+                )}
+              </div>
+            </a>
+
+            <div class="product-card__body">
+              <div class="product-card__meta">
+                {isBuildToOrder && (
+                  <span class="product-card__badge product-card__badge--build">
+                    Build to Order
+                  </span>
+                )}
+                {isOutOfStock && (
+                  <span class="product-card__badge product-card__badge--out">
+                    Out of Stock
+                  </span>
+                )}
+              </div>
+
+              <h2 class="product-card__title">
+                <a href={`/shop/${slug}`}>{title}</a>
+              </h2>
+
+              {tagline && (
+                <p class="product-card__tagline">{tagline}</p>
+              )}
+
+              <p class="product-card__excerpt">{excerpt}</p>
+
+              <div class="product-card__footer">
+                <div class="product-card__pricing">
+                  {price && (
+                    <span class="product-card__price">{formatPrice(price, currency)}</span>
+                  )}
+                  {isBuildToOrder && lead_time && (
+                    <span class="product-card__lead-time">Ships in {lead_time}</span>
+                  )}
+                </div>
+                <a href={`/shop/${slug}`} class="product-card__cta">
+                  View Details →
+                </a>
+              </div>
+            </div>
+          </article>
+        );
+      })}
+    </section>
+
+    {products.length === 0 && (
+      <div class="shop__empty container">
+        <p>Nothing available right now. Check back shortly — or read the <a href="/lab">Lab Notes</a> while you wait.</p>
       </div>
-    ) : (
-      <section class="product-grid" role="list">
-        {products.map(p => <ProductCard product={p} />)}
-      </section>
     )}
-  </div>
-</StandardPageLayout>
+  </main>
+</PageLayout>
+
+<style>
+  .shop__header {
+    padding-top: var(--space-16);
+    padding-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .shop__title {
+    font-size: var(--text-5xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-4);
+  }
+
+  .shop__tagline {
+    max-width: 56ch;
+    color: var(--color-muted);
+    font-size: var(--text-lg);
+    line-height: var(--leading-base);
+  }
+
+  .shop__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--space-8);
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-20);
+  }
+
+  .shop__empty {
+    padding: var(--space-20) 0;
+    color: var(--color-muted);
+  }
+
+  /* ── Product Card ── */
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface);
+    transition: border-color var(--transition-base), box-shadow var(--transition-base);
+  }
+
+  .product-card:hover {
+    border-color: var(--color-faint);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .product-card__image-link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .product-card__image-wrapper {
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: var(--color-surface-2);
+  }
+
+  .product-card__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform var(--transition-slow);
+  }
+
+  .product-card:hover .product-card__image {
+    transform: scale(1.03);
+  }
+
+  .product-card__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: var(--color-faint);
+  }
+
+  .product-card__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: var(--space-6);
+  }
+
+  .product-card__meta {
+    display: flex;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    min-height: 1.5rem;
+  }
+
+  .product-card__badge {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .product-card__badge--build {
+    background: rgba(201, 185, 122, 0.15);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent-dim);
+  }
+
+  .product-card__badge--out {
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba(192, 57, 43, 0.3);
+  }
+
+  .product-card__title {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-2);
+  }
+
+  .product-card__title a {
+    color: var(--color-text);
+    text-decoration: none;
+  }
+
+  .product-card__title a:hover {
+    color: var(--color-accent);
+  }
+
+  .product-card__tagline {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-style: italic;
+    margin-bottom: var(--space-3);
+    line-height: var(--leading-base);
+  }
+
+  .product-card__excerpt {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+    flex: 1;
+    margin-bottom: var(--space-6);
+  }
+
+  .product-card__footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4);
+    border-top: 1px solid var(--color-border);
+    padding-top: var(--space-4);
+  }
+
+  .product-card__pricing {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .product-card__price {
+    font-size: var(--text-xl);
+    font-weight: var(--weight-bold);
+    color: var(--color-text);
+  }
+
+  .product-card__lead-time {
+    font-size: var(--text-xs);
+    color: var(--color-muted);
+  }
+
+  .product-card__cta {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .product-card__cta:hover {
+    color: var(--color-text);
+  }
+
+  @media (max-width: 480px) {
+    .shop__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

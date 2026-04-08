@@ -1,146 +1,174 @@
-/* global.css - Base HTML element styles
-   Uses tokens.css for all design values
-   NO duplicate CSS variables - all moved to tokens.css
-*/
+/* ==============================================
+   STARSTUCK LAB — V2 GLOBAL STYLES
+   Reset + base typography only.
+   Component styles live in their .astro files.
+   ============================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Merriweather:wght@300;400;700&family=Space+Grotesk:wght@300;400;600&family=JetBrains+Mono:wght@400;600&display=swap');
-@import './tokens.css';
-
-/* ===== BASE RESET ===== */
-* {
+/* ── Reset ── */
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-/* ===== BASE TYPOGRAPHY ===== */
 html {
-  font-family: var(--font-ui);
-  font-size: var(--fs-base);
-  color: var(--color-text);
-  background: var(--color-bg);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
-  position: relative;
-  overflow-x: hidden;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-base);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== HEADINGS ===== */
+/* ── Typography base ── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  color: var(--color-text);
-  letter-spacing: -0.01em;
-  margin: 0 0 0.6em 0;
   line-height: var(--leading-tight);
   font-weight: var(--weight-bold);
-  text-wrap: balance;
+  color: var(--color-text);
 }
 
-h1 {
-  font-size: clamp(2.2rem, 1.6rem + 3.2vw, 4.2rem);
-  line-height: 1.05;
-  letter-spacing: -0.02em;
-}
+h1 { font-size: var(--text-4xl); }
+h2 { font-size: var(--text-3xl); }
+h3 { font-size: var(--text-2xl); }
+h4 { font-size: var(--text-xl); }
+h5 { font-size: var(--text-lg); }
+h6 { font-size: var(--text-base); }
 
-h2 {
-  font-size: clamp(1.45rem, 1.2rem + 1.6vw, 2.6rem);
-  line-height: 1.08;
-}
-
-h3 {
-  font-size: clamp(1.2rem, 1.05rem + 0.9vw, 1.6rem);
-  line-height: 1.12;
-}
-
-h4 {
-  font-size: clamp(1rem, 0.95rem + 0.6vw, 1.15rem);
-  line-height: 1.2;
-}
-
-/* ===== BODY TEXT ===== */
-p, li, dd {
-  font-family: var(--font-body);
-  font-size: var(--fs-base);
+p {
   line-height: var(--leading-base);
-  margin: 0 0 1rem 0;
   color: var(--color-text);
 }
 
 a {
   color: var(--color-accent);
-  text-decoration: none;
+  text-decoration: underline;
+  text-underline-offset: 3px;
   transition: color var(--transition-fast);
 }
 
 a:hover {
-  color: var(--color-accent-2);
-}
-
-/* ===== UTILITY CLASSES ===== */
-.lead {
-  font-size: clamp(1.125rem, 1rem + 0.6vw, 1.375rem);
-  line-height: 1.45;
-  color: var(--muted);
-  margin-bottom: 1.25rem;
-}
-
-.small, .caption {
-  font-size: var(--text-sm);
-  line-height: 1.3;
-  color: var(--muted);
-}
-
-/* ===== CODE ===== */
-code, pre, .console {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-  line-height: var(--leading-base);
-  background: rgba(255, 255, 255, 0.02);
   color: var(--color-text);
-  border-radius: var(--radius-md);
-  padding: 0.15rem 0.4rem;
+}
+
+img, video {
+  display: block;
+  max-width: 100%;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+input, textarea, select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--color-surface-2);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+  color: var(--color-accent);
 }
 
 pre {
-  padding: 1rem;
-  overflow-x: auto;
-  border-radius: var(--radius-xl);
-}
-
-/* ===== ACCESSIBILITY ===== */
-:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--color-accent) 60%, transparent);
-  outline-offset: 3px;
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
+  padding: var(--space-4);
+  overflow-x: auto;
 }
 
-/* ===== UTILITY ===== */
-.article {
-  max-width: 70ch;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
+pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
 }
 
-/* ===== NO TRANSITIONS (initial load) ===== */
-.no-transitions * {
-  transition: none !important;
-  animation: none !important;
+hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: var(--space-8) 0;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 420px) {
-  h1 {
-    font-size: clamp(1.8rem, 1.4rem + 3.4vw, 3.2rem);
-  }
-  
-  .article {
-    padding-left: 0.85rem;
-    padding-right: 0.85rem;
-  }
+/* ── Prose (used in lab notes, product body) ── */
+.prose {
+  max-width: 68ch;
+  line-height: var(--leading-loose);
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  margin-top: var(--space-8);
+  margin-bottom: var(--space-3);
+}
+
+.prose p {
+  margin-bottom: var(--space-5);
+}
+
+.prose ul, .prose ol {
+  margin-bottom: var(--space-5);
+  padding-left: var(--space-6);
+}
+
+.prose ul { list-style: disc; }
+.prose ol { list-style: decimal; }
+
+.prose li {
+  margin-bottom: var(--space-2);
+}
+
+.prose a {
+  color: var(--color-accent);
+}
+
+.prose blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: var(--space-4);
+  margin: var(--space-6) 0;
+  color: var(--color-muted);
+  font-style: italic;
+}
+
+/* ── Utility helpers ── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.container {
+  width: 100%;
+  max-width: var(--container-xl);
+  margin-inline: auto;
+  padding-inline: var(--space-6);
+}
+
+.container--narrow {
+  max-width: var(--container-md);
 }

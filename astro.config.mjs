@@ -1,32 +1,20 @@
-// astro.config.mjs
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
 import react from '@astrojs/react';
+import keystatic from '@keystatic/astro';
 
 export default defineConfig({
-  integrations: [react()],
+  integrations: [react(), keystatic()],
   site: 'https://starstucklab.com',
-  output: 'server', // Enable server-side rendering
+  output: 'server',
   adapter: cloudflare({
-    mode: 'directory', // Use directory mode for Cloudflare Pages
+    mode: 'directory',
   }),
   base: '/',
-  
   vite: {
-    assetsInclude: ['**/*.stl'], // Add this line to treat .stl files as assets
-    server: { 
-      fs: { allow: ['..'] } 
+    assetsInclude: ['**/*.stl'],
+    server: {
+      fs: { allow: ['..'] },
     },
-    build: {
-      rollupOptions: {
-        external: (id) => {
-          // Exclude templates page in production
-          if (process.env.NODE_ENV === 'production') {
-            return id.includes('pages/admin/templates');
-          }
-          return false;
-        }
-      }
-    }
   },
 });

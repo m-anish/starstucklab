@@ -1,500 +1,607 @@
 ---
-// src/pages/shop/[slug].astro
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
+import PageLayout from '../../layouts/PageLayout.astro';
 
 export const prerender = true;
-import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
-import ProductNav from "../../components/ProductNav.astro";
-import AddToCartButton from "../../components/AddToCartButton.astro";
-import CustomizationPanel from "../../components/CustomizationPanel.astro";
-import "../../styles/components/parchment.css";
-import "../../styles/components/product-detail.css";
-import "../../styles/components/customization.css";
 
 export async function getStaticPaths() {
   const products = await getCollection('products');
-  if (products.length === 0) {
-    console.warn('getStaticPaths: no product markdown files found');
-  }
-  return products.map(entry => ({
-    params: { slug: entry.slug },
-    props: { entry }
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
   }));
 }
 
-const { entry } = Astro.props;
+const { product } = Astro.props;
+const { Content } = await render(product);
 
-if (!entry) {
-  return Astro.redirect('/shop');
+const {
+  title,
+  tagline,
+  price,
+  currency = 'INR',
+  status,
+  stock_status,
+  lead_time,
+  excerpt,
+  features = [],
+  customization,
+  specifications = [],
+  images,
+} = product.data;
+
+const isAvailable = status === 'available';
+const isBuildToOrder = stock_status === 'build_to_order';
+const isOutOfStock = stock_status === 'out_of_stock';
+const isPreOrder = stock_status === 'pre_order';
+const canAddToCart = isAvailable && !isOutOfStock;
+
+function formatPrice(p: number, cur: string): string {
+  if (cur === 'INR') return `₹${p.toLocaleString('en-IN')}`;
+  return `${cur} ${p.toLocaleString()}`;
 }
 
-let Content;
-try {
-  const renderResult = await entry.render();
-  Content = renderResult.Content;
-} catch (error) {
-  console.error('Error rendering product content:', error);
-  Content = () => null;
-}
-
-const product = entry.data;
-const slug = entry.slug;
-
-// Check if this is the M42 product
-const isM42 = slug === 'm42';
-
-// Image paths
-const heroImagePath = product.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
-const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
-
-// Icon mapping
-const iconMap: Record<string, string> = {
-  'telescope': '🔭',
-  'palette': '🎨',
-  'alert-triangle': '⚠️',
-  'cog': '⚙️',
-  'zap': '⚡',
-  'box': '📦',
-  'cpu': '🖥️',
-  'settings': '⚙️',
-  'shield': '🛡️',
-  'star': '⭐',
-  'circle-dot': '🎯',
-  'gauge': '📊'
-};
-
-// Stock status display
-const stockStatusMap: Record<string, { label: string; class: string }> = {
-  'in_stock': { label: 'In stock', class: 'in-stock' },
-  'low_stock': { label: 'Low stock', class: 'low-stock' },
-  'out_of_stock': { label: 'Out of stock', class: 'out-of-stock' },
-  'pre_order': { label: 'Pre-order', class: 'pre-order' }
-};
-
-const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] : stockStatusMap['in_stock'];
+// Serialise product data for client-side cart script
+const cartProduct = JSON.stringify({
+  productSlug: product.slug,
+  title,
+  price: price ?? 0,
+  customization: {},
+});
 ---
+<PageLayout title={`${title} — Starstuck Lab`} description={excerpt}>
+  <main class="product-page">
 
-<StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
-  <ProductNav product={{ slug, title: product.title }} />
-
-  <div class="product-detail-v2">
-    <!-- Enhanced Hero for M42 -->
-    {isM42 ? (
-      <section class="product-hero product-hero--customizable">
-        <div class="product-hero-left">
-          <div class="customization-badge">
-            <span class="badge-icon">✨</span>
-            <span class="badge-text">Fully Customizable</span>
-          </div>
-          
-          <h1 class="product-title">{product.title}</h1>
-          {product.tagline && (
-            <p class="product-tagline">{product.tagline}</p>
+    <!-- Hero: image + primary info -->
+    <section class="product-hero container">
+      <div class="product-hero__image-col">
+        <div class="product-hero__image-frame">
+          {images?.master ? (
+            <img
+              src={images.master}
+              alt={title}
+              class="product-hero__image"
+              loading="eager"
+            />
+          ) : (
+            <div class="product-hero__image-placeholder" aria-hidden="true">✦</div>
           )}
-          
-          <div class={`product-stock-above-price ${stockStatus.class}`}>
-            {stockStatus.label}
-          </div>
+        </div>
+      </div>
 
-          {product.price && (
-            <div class="product-price-block">
-              <div class="price-label">Starting at</div>
-              <span class="product-price">
-                {product.currency === 'INR' ? '₹' : (product.currency || '₹')} {product.price.toLocaleString('en-IN')}
-              </span>
-              {/* <div class="price-details">
-                <span class="price-badge">Base Configuration</span>
-                <span class="price-note">Customize to adjust final price</span>
-              </div> */}
-            </div>
+      <div class="product-hero__info-col">
+        <div class="product-hero__badges">
+          {isBuildToOrder && (
+            <span class="badge badge--build">Build to Order</span>
           )}
-          
-          <!-- Primary CTA: Go to Customizer Page -->
-          <a href="/shop/m42-customizer" class="cta-primary cta-customize">
-            <span class="cta-icon">🎨</span>
-            <span class="cta-text">
-              <strong>Customize Your M42</strong>
-              <small>Choose colors, preview in 3D</small>
-            </span>
-            <span class="cta-arrow">→</span>
+          {isOutOfStock && (
+            <span class="badge badge--out">Out of Stock</span>
+          )}
+          {isPreOrder && (
+            <span class="badge badge--pre">Pre-Order</span>
+          )}
+          {!isAvailable && (
+            <span class="badge badge--unavailable">Unavailable</span>
+          )}
+        </div>
+
+        <h1 class="product-hero__title">{title}</h1>
+        {tagline && <p class="product-hero__tagline">{tagline}</p>}
+
+        {price && (
+          <div class="product-hero__price-row">
+            <span class="product-hero__price">{formatPrice(price, currency)}</span>
+            {isBuildToOrder && lead_time && (
+              <span class="product-hero__lead-time">Ships in {lead_time}</span>
+            )}
+          </div>
+        )}
+
+        <!-- Customization panel -->
+        {customization?.enabled && customization.options && customization.options.length > 0 && (
+          <div class="customization" id="customization-panel">
+            {customization.options.map((option) => (
+              <div class="customization__group">
+                <label class="customization__label" for={`opt-${option.label}`}>
+                  {option.label}
+                </label>
+                <div class="customization__swatches" role="group" aria-label={option.label} data-option={option.label}>
+                  {option.values.map((value, i) => (
+                    <button
+                      type="button"
+                      class:list={['customization__swatch', { 'customization__swatch--active': i === 0 }]}
+                      data-value={value}
+                      aria-pressed={i === 0}
+                    >
+                      {value}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <!-- Add to cart -->
+        <div class="product-hero__actions">
+          {canAddToCart ? (
+            <button
+              id="add-to-cart"
+              class="btn btn--primary btn--full"
+              data-product={cartProduct}
+            >
+              Add to Cart
+            </button>
+          ) : (
+            <button class="btn btn--disabled btn--full" disabled>
+              {isOutOfStock ? 'Out of Stock' : 'Unavailable'}
+            </button>
+          )}
+          <a href="/checkout" class="btn btn--outline btn--full" id="checkout-link" hidden>
+            Checkout →
           </a>
-          
-          <!-- Secondary CTA: Quick Add (Standard Config) -->
-          {product.status === 'available' && (
-            <div class="cta-secondary-wrap">
-              <AddToCartButton product={{
-                slug: slug,
-                title: product.title,
-                price: product.price,
-                currency: product.currency,
-                status: product.status
-              }} />
-              <small class="quick-add-note">Add standard configuration without customization</small>
-            </div>
-          )}
-          
         </div>
-        
-        <div class="product-hero-right">
-          <img
-            src={heroImagePath}
-            alt={product.title}
-            class="product-hero-image"
-            onerror={`this.onerror=null;this.src='${masterFallback}'`}
-          />
-        </div>
-      </section>
-    ) : (
-      <!-- Standard Hero for Other Products -->
-      <section class="product-hero">
-        <div class="product-hero-left">
-          <h1 class="product-title">{product.title}</h1>
-          {product.tagline && (
-            <p class="product-tagline">{product.tagline}</p>
-          )}
 
-          <div class={`product-stock-above-price ${stockStatus.class}`}>
-            {stockStatus.label}
-          </div>
+        <p class="product-hero__guarantee">
+          Handmade in India. Ships with full assembly instructions.
+          Not responsible for the existential weight of seeing the Milky Way for the first time.
+        </p>
+      </div>
+    </section>
 
-          {product.price && (
-            <div class="product-price-block">
-              <div class="price-label">Starting at</div>
-              <span class="product-price">
-                {product.currency === 'INR' ? '₹' : (product.currency || '₹')} {product.price.toLocaleString('en-IN')}
-              </span>
-              <div class="price-details">
-                <span class="price-badge">Standard Configuration</span>
-              </div>
-            </div>
-          )}
-
-          {product.customization?.enabled && (
-            <CustomizationPanel product={product} />
-          )}
-
-          {product.status === 'available' && (
-            <div class="product-cta">
-              <AddToCartButton product={{
-                slug: slug,
-                title: product.title,
-                price: product.price,
-                currency: product.currency,
-                status: product.status
-              }} />
-            </div>
-          )}
-        </div>
-        
-        <div class="product-hero-right">
-          <img
-            src={heroImagePath}
-            alt={product.title}
-            class="product-hero-image"
-            onerror={`this.onerror=null;this.src='${masterFallback}'`}
-          />
-        </div>
-      </section>
-    )}
-
-    <!-- Features Section -->
-    {product.features && product.features.length > 0 && (
-      <section class="product-features" id="features">
-        <h2>Features</h2>
-        <div class="features-grid">
-          {product.features.map((feature: any) => (
-            <div class="feature-card">
-              <div class="feature-icon">
-                {iconMap[feature.icon] || '⚙️'}
-              </div>
-              <h3 class="feature-title">{feature.title}</h3>
-              <p class="feature-description">{feature.description}</p>
-            </div>
+    <!-- Features -->
+    {features.length > 0 && (
+      <section class="product-features container">
+        <h2 class="section-title">Features</h2>
+        <ul class="features-grid">
+          {features.map((f) => (
+            <li class="feature-card">
+              <div class="feature-card__icon" aria-hidden="true">✦</div>
+              <h3 class="feature-card__title">{f.title}</h3>
+              <p class="feature-card__desc">{f.description}</p>
+            </li>
           ))}
-        </div>
+        </ul>
       </section>
     )}
 
-    <!-- Specifications -->
-    {product.specifications && product.specifications.length > 0 && (
-      <section class="product-specifications parchment" id="specifications">
-        <h2>Specifications</h2>
+    <!-- Specs -->
+    {specifications.length > 0 && (
+      <section class="product-specs container">
+        <h2 class="section-title">Specifications</h2>
         <table class="specs-table">
-          {product.specifications.map((spec: any) => (
-            <tr>
-              <th>{spec.label}</th>
-              <td>{spec.value}</td>
-            </tr>
-          ))}
+          <tbody>
+            {specifications.map((spec) => (
+              <tr class="specs-table__row">
+                <th class="specs-table__label">{spec.label}</th>
+                <td class="specs-table__value">{spec.value}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </section>
     )}
 
-    <!-- Full Description -->
-    <section class="product-description parchment" id="description">
-      <div class="markdown-content">
+    <!-- Body content -->
+    <section class="product-body container">
+      <div class="prose">
         <Content />
       </div>
     </section>
 
-    <!-- Back Link -->
-    <footer class="product-footer">
-      <a href="/shop" class="back-link">
-        ← Back to Shop
-      </a>
-    </footer>
-  </div>
+  </main>
+</PageLayout>
 
-  <!-- M42 Specific Styles -->
-  {isM42 && (
-    <style>
-      .customization-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background: rgba(78, 197, 122, 0.15);
-        border: 1px solid rgba(78, 197, 122, 0.3);
-        border-radius: 24px;
-        margin-bottom: 16px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--starry-white);
-      }
+<script>
+  // ── Cart logic ──────────────────────────────────────────────
 
-      .badge-icon {
-        font-size: 1.2rem;
-      }
+  interface CartItem {
+    productSlug: string;
+    title: string;
+    price: number;
+    quantity: number;
+    customization?: Record<string, string>;
+  }
 
-      .product-stock-above-price {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        font-family: var(--font-ui);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        margin-bottom: 0.5rem;
-        max-width: 400px;
-        width: 100%;
-      }
+  function getCart(): CartItem[] {
+    try { return JSON.parse(localStorage.getItem('cart') ?? '[]'); }
+    catch { return []; }
+  }
 
-      .product-stock-above-price.in-stock {
-        background: rgba(78, 197, 122, 0.15);
-        color: #4ec57a;
-        border: 1px solid rgba(78, 197, 122, 0.3);
-      }
+  function saveCart(cart: CartItem[]): void {
+    localStorage.setItem('cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('cart:updated'));
+  }
 
-      .product-stock-above-price.low-stock {
-        background: rgba(240, 180, 41, 0.15);
-        color: #f0b429;
-        border: 1px solid rgba(240, 180, 41, 0.3);
-      }
+  function addToCart(item: Omit<CartItem, 'quantity'>): void {
+    const cart = getCart();
+    const key = JSON.stringify({ slug: item.productSlug, custom: item.customization });
+    const existing = cart.find(
+      (c) => JSON.stringify({ slug: c.productSlug, custom: c.customization }) === key
+    );
+    if (existing) {
+      existing.quantity += 1;
+    } else {
+      cart.push({ ...item, quantity: 1 });
+    }
+    saveCart(cart);
+  }
 
-      .product-stock-above-price.out-of-stock {
-        background: rgba(170, 102, 102, 0.15);
-        color: #a66;
-        border: 1px solid rgba(170, 102, 102, 0.3);
-      }
+  // ── Customization swatches ──────────────────────────────────
 
-      .product-stock-above-price.pre-order {
-        background: rgba(139, 157, 195, 0.15);
-        color: #8b9dc3;
-        border: 1px solid rgba(139, 157, 195, 0.3);
-      }
+  const selections: Record<string, string> = {};
 
-      .product-price-block {
-        margin: 0 0;
-        padding-left: 1.5rem;
-        padding-top: 0.5rem;
-        padding-bottom: 0rem;
-        // padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        max-width: 400px;
-        backdrop-filter: blur(10px);
-      }
+  document.querySelectorAll('.customization__swatches').forEach((group) => {
+    const optionName = (group as HTMLElement).dataset.option!;
+    const buttons = group.querySelectorAll<HTMLButtonElement>('.customization__swatch');
 
-      .price-label {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: rgba(248, 244, 232, 0.6);
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        font-family: var(--font-ui);
-      }
+    // Set initial selection
+    if (buttons[0]) {
+      selections[optionName] = buttons[0].dataset.value!;
+    }
 
-      .product-price {
-        font-size: 2.5rem !important;
-        font-weight: 700;
-        display: block;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #f8f4e8 0%, #4ec57a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
-      }
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => {
+          b.classList.remove('customization__swatch--active');
+          b.setAttribute('aria-pressed', 'false');
+        });
+        btn.classList.add('customization__swatch--active');
+        btn.setAttribute('aria-pressed', 'true');
+        selections[optionName] = btn.dataset.value!;
+      });
+    });
+  });
 
-      .price-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
+  // ── Add to Cart button ──────────────────────────────────────
 
-      .price-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        background: rgba(78, 197, 122, 0.15);
-        border: 1px solid rgba(78, 197, 122, 0.3);
-        border-radius: 6px;
-        font-weight: 600;
-        color: #4ec57a;
-        width: fit-content;
-        font-size: 0.85rem;
-        font-family: var(--font-ui);
-      }
+  const addBtn = document.getElementById('add-to-cart') as HTMLButtonElement | null;
+  const checkoutLink = document.getElementById('checkout-link') as HTMLAnchorElement | null;
 
-      .price-note {
-        color: rgba(248, 244, 232, 0.6);
-        font-size: 0.85rem;
-        font-style: italic;
-      }
+  addBtn?.addEventListener('click', () => {
+    const productData = JSON.parse(addBtn.dataset.product!);
+    addToCart({
+      ...productData,
+      customization: Object.keys(selections).length > 0 ? { ...selections } : undefined,
+    });
 
-      @media (max-width: 900px) {
-        .product-price-block {
-          max-width: 100%;
-        }
+    // Feedback
+    addBtn.textContent = 'Added ✓';
+    addBtn.classList.add('btn--added');
+    if (checkoutLink) checkoutLink.hidden = false;
 
-        .product-price {
-          font-size: 2rem !important;
-        }
-      }
+    setTimeout(() => {
+      addBtn.textContent = 'Add to Cart';
+      addBtn.classList.remove('btn--added');
+    }, 2000);
+  });
+</script>
 
-      .cta-primary {
-        width: 100%;
-        max-width: 400px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 20px 28px;
-        background: linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%);
-        border: 2px solid #2a7a4f;
-        border-radius: 12px;
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 0 0 16px 0;
-        box-shadow: 0 4px 16px rgba(42, 122, 79, 0.3);
-        text-decoration: none;
-        position: relative;
-        overflow: hidden;
-      }
+<style>
+  .product-page {
+    padding-bottom: var(--space-24);
+  }
 
-      /* Add shimmer effect */
-      .cta-primary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255,255,255,0.2),
-          transparent
-        );
-        transition: left 0.6s ease;
-      }
+  /* ── Hero ── */
+  .product-hero {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-12);
+    align-items: start;
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-12);
+  }
 
-      .cta-primary:hover::before {
-        left: 100%;
-      }
+  .product-hero__image-frame {
+    aspect-ratio: 1;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: sticky;
+    top: calc(var(--navbar-height) + var(--space-4));
+  }
 
-      .cta-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(42, 122, 79, 0.4);
-        color: white;
-      }
+  .product-hero__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
 
-      .cta-primary:active {
-        transform: scale(0.98);
-      }
+  .product-hero__image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    color: var(--color-faint);
+  }
 
-      .cta-icon {
-        font-size: 1.5rem;
-      }
+  .product-hero__badges {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4);
+    min-height: 1.75rem;
+  }
 
-      .cta-text {
-        flex: 1;
-        text-align: left;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
+  .product-hero__title {
+    font-size: var(--text-5xl);
+    font-weight: var(--weight-bold);
+    letter-spacing: -0.03em;
+    line-height: var(--leading-tight);
+    margin-bottom: var(--space-3);
+  }
 
-      .cta-text strong {
-        font-size: 1.1rem;
-      }
+  .product-hero__tagline {
+    font-size: var(--text-lg);
+    color: var(--color-muted);
+    font-style: italic;
+    line-height: var(--leading-base);
+    margin-bottom: var(--space-6);
+  }
 
-      .cta-text small {
-        font-size: 0.85rem;
-        font-weight: 400;
-        opacity: 0.9;
-      }
+  .product-hero__price-row {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
 
-      .cta-arrow {
-        font-size: 1.5rem;
-        transition: transform 0.2s ease;
-      }
+  .product-hero__price {
+    font-size: var(--text-3xl);
+    font-weight: var(--weight-bold);
+  }
 
-      .cta-primary:hover .cta-arrow {
-        transform: translateX(4px);
-      }
+  .product-hero__lead-time {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+  }
 
-      .cta-secondary-wrap {
-        margin: 0 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        align-items: flex-start;
-      }
+  /* ── Badges ── */
+  .badge {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
 
-      /* Update AddToCartButton appearance in secondary position */
-      .cta-secondary-wrap button {
-        background: transparent;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        color: rgba(248, 244, 232, 0.9);
-        padding: 12px 24px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-      }
+  .badge--build {
+    background: rgba(201, 185, 122, 0.12);
+    color: var(--color-accent);
+    border: 1px solid var(--color-accent-dim);
+  }
 
-      .cta-secondary-wrap button:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.35);
-        transform: translateY(-1px);
-      }
+  .badge--out {
+    background: rgba(192, 57, 43, 0.1);
+    color: var(--color-danger);
+    border: 1px solid rgba(192, 57, 43, 0.3);
+  }
 
-      .quick-add-note {
-        font-size: 0.8rem;
-        color: rgba(248, 244, 232, 0.5);
-        font-style: italic;
-        margin-left: 0;
-      }
+  .badge--pre {
+    background: rgba(100, 149, 237, 0.1);
+    color: cornflowerblue;
+    border: 1px solid rgba(100, 149, 237, 0.3);
+  }
 
-      @media (max-width: 900px) {
-        .cta-primary {
-          max-width: 100%;
-          padding: 18px 24px;
-        }
-      }
-    </style>
-  )}
-</StandardPageLayout>
+  .badge--unavailable {
+    background: rgba(136, 136, 153, 0.1);
+    color: var(--color-muted);
+    border: 1px solid var(--color-border);
+  }
+
+  /* ── Customization ── */
+  .customization {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+    margin-bottom: var(--space-8);
+  }
+
+  .customization__label {
+    display: block;
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: var(--space-2);
+  }
+
+  .customization__swatches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .customization__swatch {
+    font-size: var(--text-sm);
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    color: var(--color-muted);
+    background: transparent;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+  }
+
+  .customization__swatch:hover {
+    border-color: var(--color-muted);
+    color: var(--color-text);
+  }
+
+  .customization__swatch--active {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background: rgba(201, 185, 122, 0.08);
+  }
+
+  /* ── Actions ── */
+  .product-hero__actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+
+  .product-hero__guarantee {
+    font-size: var(--text-xs);
+    color: var(--color-faint);
+    line-height: var(--leading-base);
+  }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-3) var(--space-6);
+    border: 2px solid currentColor;
+    border-radius: var(--radius-md);
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-base);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    font-family: inherit;
+  }
+
+  .btn--full { width: 100%; }
+
+  .btn--primary {
+    background: var(--color-text);
+    color: var(--color-bg);
+    border-color: var(--color-text);
+  }
+
+  .btn--primary:hover {
+    background: var(--color-accent);
+    color: var(--color-bg);
+    border-color: var(--color-accent);
+  }
+
+  .btn--added {
+    background: var(--color-success) !important;
+    border-color: var(--color-success) !important;
+    color: #fff !important;
+  }
+
+  .btn--outline {
+    background: transparent;
+    color: var(--color-text);
+    border-color: var(--color-border);
+  }
+
+  .btn--outline:hover {
+    border-color: var(--color-text);
+  }
+
+  .btn--disabled {
+    background: var(--color-surface-2);
+    color: var(--color-muted);
+    border-color: var(--color-border);
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  /* ── Features ── */
+  .product-features {
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .section-title {
+    font-size: var(--text-2xl);
+    font-weight: var(--weight-bold);
+    margin-bottom: var(--space-8);
+    letter-spacing: -0.01em;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .feature-card {
+    padding: var(--space-6);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+  }
+
+  .feature-card__icon {
+    color: var(--color-accent);
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-3);
+  }
+
+  .feature-card__title {
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
+    margin-bottom: var(--space-2);
+    line-height: var(--leading-tight);
+  }
+
+  .feature-card__desc {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+  }
+
+  /* ── Specs ── */
+  .product-specs {
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .specs-table {
+    width: 100%;
+    max-width: 560px;
+    border-collapse: collapse;
+  }
+
+  .specs-table__row {
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .specs-table__label {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    color: var(--color-muted);
+    text-align: left;
+    padding: var(--space-3) var(--space-4) var(--space-3) 0;
+    width: 40%;
+    vertical-align: top;
+  }
+
+  .specs-table__value {
+    font-size: var(--text-sm);
+    padding: var(--space-3) 0;
+    color: var(--color-text);
+  }
+
+  /* ── Body ── */
+  .product-body {
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .product-hero {
+      grid-template-columns: 1fr;
+    }
+
+    .product-hero__image-frame {
+      position: static;
+    }
+
+    .product-hero__title {
+      font-size: var(--text-4xl);
+    }
+  }
+</style>
