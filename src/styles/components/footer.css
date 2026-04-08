@@ -1,5 +1,11 @@
 /* site/src/styles/components/footer.css */
 
+/* V2 Footer.astro renders <footer class="footer"> — ensure it sits above fixed scene backgrounds */
+.footer {
+  position: relative;
+  z-index: 10;
+}
+
 .site-footer {
   background: rgba(5, 6, 10, 0.95);
   border-top: 1px solid rgba(255, 255, 255, 0.1);

@@ -7,6 +7,8 @@
   position: relative;
   z-index: 52;
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   margin: 2rem auto;
   padding: 0 1rem;
@@ -25,6 +27,19 @@
   transform: translateY(0);
   pointer-events: auto;
   visibility: visible;
+}
+
+/* Eyebrow label above parchment card */
+.about-panel__eyebrow {
+  font-size: 0.65rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  margin: 0 0 0.5rem 0;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 600;
+  align-self: flex-start;
+  padding-left: 0.25rem;
 }
 
 /* Ensure parchment card inside is visible */

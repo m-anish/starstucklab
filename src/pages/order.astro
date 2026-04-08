@@ -1,11 +1,11 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 
 // Retrieve Stripe session details server-side if session_id is present
 const sessionId = Astro.url.searchParams.get('session_id');
 let orderRef = sessionId ? sessionId.slice(-8).toUpperCase() : null;
 ---
-<BaseLayout title="Order Confirmed — Starstuck Lab" description="Your order has been received">
+<StandardPageLayout title="Order Confirmed — Starstuck Lab" description="Your order has been received" backgroundScene="shop">
   <main class="order-page">
     {sessionId ? (
       <div class="order-page__success">
@@ -31,7 +31,7 @@ let orderRef = sessionId ? sessionId.slice(-8).toUpperCase() : null;
       </div>
     )}
   </main>
-</BaseLayout>
+</StandardPageLayout>
 
 <script>
   // Clear cart on successful order

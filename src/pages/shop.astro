@@ -1,6 +1,8 @@
 ---
+// shop.astro — V2: uses StandardPageLayout with workshop background for consistent styling
 import { getCollection } from 'astro:content';
-import PageLayout from '../layouts/PageLayout.astro';
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
+import '../styles/components/standard-page.css';
 
 const allProducts = await getCollection('products');
 const products = allProducts
@@ -12,41 +14,25 @@ function formatPrice(price: number, currency = 'INR'): string {
   return `${currency} ${price.toLocaleString()}`;
 }
 ---
-<PageLayout
+<StandardPageLayout
   title="Shop — Starstuck Lab"
   description="Handmade telescopes built to order in India. Two products. Both very good."
-  padTop={false}
+  backgroundScene="shop"
 >
-  <!-- Scene background -->
-  <div class="shop-bg" aria-hidden="true">
-    <picture>
-      <source srcset="/assets/hero/workshop-wide.webp" />
-      <img
-        src="/assets/hero/hero-master.webp"
-        alt=""
-        class="shop-bg__img"
-        loading="eager"
-      />
-    </picture>
-    <div class="shop-bg__overlay"></div>
-  </div>
-
-  <main class="shop">
+  <main class="shop standard-page">
     <!-- Header -->
-    <header class="shop__header">
-      <div class="container">
-        <p class="shop__eyebrow">Workshop</p>
-        <h1 class="shop__title">Available Now</h1>
-        <p class="shop__subtitle">
-          Two products. Both telescopes. Both hand-built to order in a small
-          workshop somewhere in India, by one person who cares perhaps too much
-          about collimation tolerances.
-        </p>
-      </div>
+    <header class="shop__header standard-page-inner">
+      <p class="shop__eyebrow">Workshop</p>
+      <h1>Available Now</h1>
+      <p class="shop__subtitle">
+        Two products. Both telescopes. Both hand-built to order in a small
+        workshop somewhere in India, by one person who cares perhaps too much
+        about collimation tolerances.
+      </p>
     </header>
 
     <!-- Product grid -->
-    <section class="shop__grid-section container">
+    <section class="shop__grid-section standard-page-inner">
       {products.length === 0 ? (
         <p class="shop__empty">
           Nothing available right now. Check back shortly — or read the{' '}
@@ -97,92 +83,54 @@ function formatPrice(price: number, currency = 'INR'): string {
       )}
     </section>
   </main>
-</PageLayout>
+</StandardPageLayout>
 
 <style>
-  /* ── Scene background (absolutely positioned under content) ── */
-  .shop-bg {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-  }
-
-  .shop-bg__img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
-
-  .shop-bg__overlay {
-    position: absolute;
-    inset: 0;
-    background: rgba(6, 4, 2, 0.78);
-  }
-
-  /* ── Main content above bg ── */
-  .shop {
-    position: relative;
-    z-index: 1;
-    min-height: 100dvh;
-    padding-top: var(--navbar-height);
-    padding-bottom: var(--space-24);
-  }
-
-  /* ── Header ── */
+  /* ── Shop header ── */
   .shop__header {
-    padding-top: var(--space-16);
-    padding-bottom: var(--space-10);
+    padding-top: var(--space-16, 4rem);
+    padding-bottom: var(--space-10, 2.5rem);
     text-align: center;
   }
 
   .shop__eyebrow {
-    font-family: var(--font-mono);
-    font-size: var(--text-xs);
+    font-family: var(--font-mono, monospace);
+    font-size: var(--text-xs, 0.75rem);
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-accent);
-    margin-bottom: var(--space-4);
-  }
-
-  .shop__title {
-    font-family: var(--font-display);
-    font-size: var(--text-5xl);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    color: var(--color-parchment);
-    text-shadow: 0 2px 16px rgba(0,0,0,0.6);
-    margin-bottom: var(--space-4);
+    color: var(--color-accent, #4ec57a);
+    margin-bottom: var(--space-4, 1rem);
   }
 
   .shop__subtitle {
     max-width: 52ch;
     margin-inline: auto;
-    color: rgba(245, 230, 200, 0.6);
-    font-size: var(--text-base);
-    line-height: var(--leading-base);
+    color: rgba(245, 230, 200, 0.65);
+    font-size: var(--text-base, 1rem);
+    line-height: var(--leading-base, 1.6);
     font-style: italic;
   }
 
   /* ── Grid ── */
   .shop__grid-section {
-    padding-top: var(--space-6);
+    padding-top: var(--space-6, 1.5rem);
+    padding-bottom: var(--space-24, 6rem);
   }
 
   .shop__grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
-    gap: var(--space-8);
+    gap: var(--space-8, 2rem);
   }
 
   .shop__empty {
     text-align: center;
     color: rgba(245, 230, 200, 0.6);
-    padding: var(--space-20) 0;
+    padding: var(--space-20, 5rem) 0;
   }
 
   .shop__empty a {
-    color: var(--color-accent);
+    color: var(--color-accent, #4ec57a);
   }
 
   /* ══════════════════════
@@ -192,12 +140,12 @@ function formatPrice(price: number, currency = 'INR'): string {
     display: flex;
     flex-direction: column;
     text-decoration: none;
-    background: var(--color-parchment-dim);
-    border: 1px solid var(--color-parchment-dark);
-    border-radius: var(--radius-lg);
+    background: var(--color-parchment-dim, #f4dab8);
+    border: 1px solid var(--color-parchment-dark, rgba(120,80,30,0.3));
+    border-radius: var(--radius-lg, 12px);
     overflow: hidden;
     box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 1px 0 rgba(255,255,255,0.04) inset;
-    transition: transform var(--transition-base), box-shadow var(--transition-base);
+    transition: transform var(--transition-base, 0.25s ease), box-shadow var(--transition-base, 0.25s ease);
   }
 
   .pc:hover {
@@ -215,7 +163,7 @@ function formatPrice(price: number, currency = 'INR'): string {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform var(--transition-slow);
+    transition: transform var(--transition-slow, 0.4s ease);
   }
 
   .pc:hover .pc__image { transform: scale(1.04); }
@@ -227,98 +175,98 @@ function formatPrice(price: number, currency = 'INR'): string {
     align-items: center;
     justify-content: center;
     font-size: 4rem;
-    color: var(--color-parchment-muted);
+    color: var(--color-parchment-muted, rgba(80,50,20,0.4));
   }
 
   .pc__body {
     display: flex;
     flex-direction: column;
     flex: 1;
-    padding: var(--space-6);
+    padding: var(--space-6, 1.5rem);
   }
 
   .pc__badges {
     display: flex;
-    gap: var(--space-2);
-    margin-bottom: var(--space-3);
+    gap: var(--space-2, 0.5rem);
+    margin-bottom: var(--space-3, 0.75rem);
     min-height: 1.5rem;
   }
 
   .pc__badge {
     display: inline-block;
-    font-family: var(--font-sans);
-    font-size: var(--text-xs);
-    font-weight: var(--weight-semibold);
+    font-family: var(--font-sans, system-ui);
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: var(--weight-semibold, 600);
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--color-price-green);
+    color: var(--color-price-green, #1d5a3d);
     background: rgba(45, 106, 79, 0.12);
     border: 1px solid rgba(45, 106, 79, 0.3);
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-full, 100px);
     padding: 2px 10px;
   }
 
   .pc__badge--out {
-    color: var(--color-danger);
+    color: var(--color-danger, #c0392b);
     background: rgba(192, 57, 43, 0.1);
     border-color: rgba(192, 57, 43, 0.3);
   }
 
   .pc__title {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: var(--text-2xl, 1.5rem);
     font-weight: 700;
-    color: var(--color-parchment-text);
-    margin-bottom: var(--space-2);
-    line-height: var(--leading-tight);
+    color: var(--color-parchment-text, #2a1d12);
+    margin-bottom: var(--space-2, 0.5rem);
+    line-height: var(--leading-tight, 1.25);
   }
 
   .pc__tagline {
-    font-size: var(--text-sm);
-    color: var(--color-parchment-muted);
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--color-parchment-muted, rgba(80,50,20,0.7));
     font-style: italic;
-    line-height: var(--leading-base);
-    margin-bottom: var(--space-3);
+    line-height: var(--leading-base, 1.6);
+    margin-bottom: var(--space-3, 0.75rem);
   }
 
   .pc__excerpt {
-    font-size: var(--text-sm);
-    color: var(--color-parchment-muted);
-    line-height: var(--leading-base);
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--color-parchment-muted, rgba(80,50,20,0.7));
+    line-height: var(--leading-base, 1.6);
     flex: 1;
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-5, 1.25rem);
   }
 
   .pc__footer {
     display: flex;
     align-items: baseline;
-    gap: var(--space-3);
+    gap: var(--space-3, 0.75rem);
     flex-wrap: wrap;
-    padding-top: var(--space-4);
-    border-top: 1px solid var(--color-parchment-dark);
+    padding-top: var(--space-4, 1rem);
+    border-top: 1px solid var(--color-parchment-dark, rgba(120,80,30,0.2));
   }
 
   .pc__price {
-    font-family: var(--font-display);
-    font-size: var(--text-2xl);
+    font-family: var(--font-display, 'Playfair Display', serif);
+    font-size: var(--text-2xl, 1.5rem);
     font-weight: 700;
-    color: var(--color-price-green);
+    color: var(--color-price-green, #1d5a3d);
     flex: 1;
   }
 
   .pc__lead {
-    font-size: var(--text-xs);
-    color: var(--color-parchment-muted);
+    font-size: var(--text-xs, 0.75rem);
+    color: var(--color-parchment-muted, rgba(80,50,20,0.7));
   }
 
   .pc__arrow {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--color-parchment-muted);
-    transition: color var(--transition-fast);
+    font-size: var(--text-sm, 0.875rem);
+    font-weight: var(--weight-semibold, 600);
+    color: var(--color-parchment-muted, rgba(80,50,20,0.7));
+    transition: color var(--transition-fast, 0.15s ease);
   }
 
-  .pc:hover .pc__arrow { color: var(--color-parchment-text); }
+  .pc:hover .pc__arrow { color: var(--color-parchment-text, #2a1d12); }
 
   @media (max-width: 480px) {
     .shop__grid { grid-template-columns: 1fr; }

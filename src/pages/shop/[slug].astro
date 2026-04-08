@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import PageLayout from '../../layouts/PageLayout.astro';
+import StandardPageLayout from '../../layouts/StandardPageLayout.astro';
 
 export const prerender = true;
 
@@ -60,7 +60,7 @@ const cartProduct = JSON.stringify({
   customization: {},
 });
 ---
-<PageLayout title={`${title} — Starstuck Lab`} description={excerpt}>
+<StandardPageLayout title={`${title} — Starstuck Lab`} description={excerpt} backgroundScene="shop">
   <main class="product-page">
 
     <!-- Hero: image + primary info -->
@@ -217,7 +217,7 @@ const cartProduct = JSON.stringify({
     </section>
 
   </main>
-</PageLayout>
+</StandardPageLayout>
 
 <script>
   // ── Cart logic ──────────────────────────────────────────────

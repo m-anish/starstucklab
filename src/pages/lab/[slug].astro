@@ -1,6 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content';
-import PageLayout from '../../layouts/PageLayout.astro';
+import StandardPageLayout from '../../layouts/StandardPageLayout.astro';
 
 export const prerender = true;
 
@@ -23,7 +23,7 @@ function formatDate(date: Date): string {
   });
 }
 ---
-<PageLayout title={`${note.data.title} — Lab Notes`} description={note.data.excerpt}>
+<StandardPageLayout title={`${note.data.title} — Lab Notes`} description={note.data.excerpt} backgroundScene="shop">
   <main class="note-page container container--narrow">
     <nav class="note-page__back">
       <a href="/lab">← Lab Notes</a>
@@ -56,7 +56,7 @@ function formatDate(date: Date): string {
       <a href="/lab" class="note-page__back-link">← Back to Lab Notes</a>
     </footer>
   </main>
-</PageLayout>
+</StandardPageLayout>
 
 <style>
   .note-page {

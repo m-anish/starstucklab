@@ -1,115 +1,93 @@
 ---
-// site/src/components/FeaturedSections.astro
-// Updated to use Astro Content Collections for projects and products (markdown)
+// FeaturedSections.astro — V2 adapted: products only (no projects collection)
+// Shows featured shop products with parchment card styling
 import { getCollection } from 'astro:content';
-import ProjectCard from './ProjectCard.astro';
-import ProductCard from './ProductCard.astro';
 import '../styles/components/featured-sections.css';
+import '../styles/components/parchment.css';
 
-const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+const base = (Astro.site?.pathname || '/').replace(/\/?$/, '/');
 
-// Load featured projects from content collection (newest 3)
-let featuredProjects: any[] = [];
-try {
-  const allProjects = await getCollection('projects');
-
-  // Sort by date descending
-  const sorted = allProjects.sort((a, b) => {
-    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-    return dateB - dateA;
-  });
-
-  // Take 3 most recent, transform to ProjectCard format
-  featuredProjects = sorted.slice(0, 3).map(entry => ({
-    id: entry.id,
-    slug: entry.data.slug || entry.slug,
-    title: entry.data.title,
-    excerpt: entry.data.excerpt,
-    category: entry.data.category,
-    status: entry.data.status,
-    tags: entry.data.tags || [],
-    date: entry.data.date,
-    image: entry.data.image || `${base}assets/projects/${entry.slug}/hero.webp`,
-    image_fallback: `${base}assets/projects/${entry.slug}/master.png`,
-    url: `${base}projects/${entry.data.slug || entry.slug}`
-  }));
-} catch (e) {
-  console.warn('Could not load projects collection:', e);
-}
-
-// Load featured products from content collection (newest 3)
 let featuredProducts: any[] = [];
 try {
   const allProducts = await getCollection('products');
-
-  // Sort by date descending
-  const sorted = allProducts.sort((a, b) => {
-    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-    return dateB - dateA;
-  });
-
-  // Take 3 most recent, transform to ProductCard format
-  featuredProducts = sorted.slice(0, 3).map(entry => ({
-    id: entry.id,
+  const sorted = (allProducts as any[])
+    .filter((p: any) => p.data.status === 'available')
+    .sort((a: any, b: any) => {
+      const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
+      const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
+      return dateB - dateA;
+    });
+  featuredProducts = sorted.slice(0, 3).map((entry: any) => ({
     slug: entry.slug,
     title: entry.data.title,
-    excerpt: entry.data.excerpt,
+    tagline: entry.data.tagline || '',
+    excerpt: entry.data.excerpt || '',
     price: entry.data.price,
-    currency: entry.data.currency || 'INR',
-    status: entry.data.status,
-    tags: entry.data.tags || [],
-    date: entry.data.date,
+    stock_status: entry.data.stock_status,
+    lead_time: entry.data.lead_time,
     images: entry.data.images,
     url: `${base}shop/${entry.slug}`
   }));
 } catch (e) {
   console.warn('Could not load products collection:', e);
 }
+
+function formatPrice(price: number): string {
+  return '₹' + price.toLocaleString('en-IN');
+}
 ---
 
 <div class="featured-sections-wrap">
-  <!-- Projects Section -->
-  {featuredProjects.length > 0 && (
-    <section class="featured-section featured-card featured-card--projects" id="featured-projects">
-      <div class="section-header">
-        <h2>Recent Creations from the Bench</h2>
-        <p class="section-lead">
-          Things built between coffee and cosmic indifference.
-        </p>
-      </div>
-      
-      <div class="featured-grid">
-        {featuredProjects.map(project => (
-          <ProjectCard project={project} />
-        ))}
-      </div>
-      
-      <div class="section-footer">
-        <a href={`${base}projects`} class="section-cta">
-          See All Projects <span aria-hidden="true">→</span>
-        </a>
-      </div>
-    </section>
-  )}
-  
-  <!-- Shop Preview Section -->
   {featuredProducts.length > 0 && (
     <section class="featured-section featured-card featured-card--shop" id="featured-shop">
       <div class="section-header">
         <h2>Available Now</h2>
         <p class="section-lead">
-          Artifacts from the workshop, lightly cursed, ready to ship.
+          Artifacts from the workshop, lightly assembled, ready to ship.
         </p>
       </div>
-      
+
       <div class="featured-grid">
-        {featuredProducts.map(product => (
-          <ProductCard product={product} />
-        ))}
+        {featuredProducts.map((product) => {
+          const isBTO = product.stock_status === 'build_to_order';
+          const isOOS = product.stock_status === 'out_of_stock';
+          return (
+            <a class="fs-product-card" href={product.url} aria-label={`View ${product.title}`}>
+              <article class="parchment parchment--compact fs-polaroid">
+                <div class="fs-thumb">
+                  {product.images?.master ? (
+                    <img
+                      src={product.images.master}
+                      alt={product.title}
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="fs-thumb-placeholder" aria-hidden="true">✦</div>
+                  )}
+                </div>
+                <div class="fs-meta">
+                  <div class="fs-badges">
+                    {isBTO && <span class="fs-badge">Build to Order</span>}
+                    {isOOS && <span class="fs-badge fs-badge--out">Out of Stock</span>}
+                  </div>
+                  <h3 class="fs-title">{product.title}</h3>
+                  {product.tagline && <p class="fs-tagline">{product.tagline}</p>}
+                  {product.price && (
+                    <div class="fs-price">{formatPrice(product.price)}</div>
+                  )}
+                  {product.excerpt && (
+                    <p class="fs-excerpt">{product.excerpt}</p>
+                  )}
+                  {isBTO && product.lead_time && (
+                    <p class="fs-lead-time">Ships in {product.lead_time}</p>
+                  )}
+                </div>
+              </article>
+            </a>
+          );
+        })}
       </div>
-      
+
       <div class="section-footer">
         <a href={`${base}shop`} class="section-cta">
           Browse the Shop <span aria-hidden="true">→</span>
@@ -117,16 +95,152 @@ try {
       </div>
     </section>
   )}
-  
-  <!-- Empty State (if no content) -->
-  {featuredProjects.length === 0 && featuredProducts.length === 0 && (
+
+  {featuredProducts.length === 0 && (
     <section class="featured-section">
       <div class="parchment parchment--centered">
-        <p>The workshop is currently being organized. Check back soon for projects and products.</p>
-        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-          Add a project with: <code>python3 tools/projects_cli.py add "Project Title"</code>
+        <p style="color: var(--parchment-text, #2b160e); text-align: center;">
+          The workshop is currently being restocked. Check back soon.
         </p>
       </div>
     </section>
   )}
 </div>
+
+<style>
+/* ── Featured section product cards ── */
+.fs-product-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  width: 100%;
+  transition: transform 0.25s ease;
+}
+
+.fs-product-card:hover {
+  transform: translateY(-4px);
+}
+
+.fs-polaroid {
+  transition: box-shadow 0.25s ease;
+}
+
+.fs-product-card:hover .fs-polaroid {
+  box-shadow: 0 16px 48px rgba(6, 6, 6, 0.38);
+}
+
+.fs-thumb {
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(248, 244, 232, 0.95);
+  border: 4px solid rgba(120, 85, 40, 0.35);
+  margin-bottom: 0.75rem;
+  aspect-ratio: 4/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fs-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.25s ease;
+}
+
+.fs-product-card:hover .fs-thumb img {
+  transform: scale(1.04);
+}
+
+.fs-thumb-placeholder {
+  font-size: 3rem;
+  color: rgba(120, 85, 40, 0.4);
+}
+
+.fs-meta {
+  padding: 0 0.25rem;
+}
+
+.fs-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+  min-height: 1.4rem;
+}
+
+.fs-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #1d5a3d;
+  background: rgba(29, 90, 61, 0.10);
+  border: 1px solid rgba(29, 90, 61, 0.28);
+  border-radius: 100px;
+  padding: 2px 9px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+}
+
+.fs-badge--out {
+  color: #9b2226;
+  background: rgba(155, 34, 38, 0.08);
+  border-color: rgba(155, 34, 38, 0.25);
+}
+
+.fs-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin: 0 0 0.3rem 0;
+  color: #2a1d12;
+  line-height: 1.3;
+  transition: color 0.2s ease;
+}
+
+.fs-product-card:hover .fs-title {
+  color: #2a7a4f;
+}
+
+.fs-tagline {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 0.82rem;
+  color: #4a3420;
+  font-style: italic;
+  margin: 0 0 0.4rem 0;
+  line-height: 1.4;
+}
+
+.fs-price {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-weight: 700;
+  font-size: 1rem;
+  color: #1d5a3d;
+  margin-bottom: 0.4rem;
+}
+
+.fs-excerpt {
+  font-family: 'Merriweather', Georgia, serif;
+  font-size: 0.82rem;
+  color: #2b1f18;
+  line-height: 1.4;
+  margin: 0 0 0.4rem 0;
+}
+
+.fs-lead-time {
+  font-size: 0.78rem;
+  color: #5a4030;
+  font-style: italic;
+  margin: 0;
+  font-family: 'Merriweather', Georgia, serif;
+}
+
+@media (max-width: 640px) {
+  .fs-thumb {
+    aspect-ratio: 16/9;
+  }
+}
+</style>

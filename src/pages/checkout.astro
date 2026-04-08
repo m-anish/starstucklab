@@ -1,7 +1,7 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 ---
-<BaseLayout title="Checkout — Starstuck Lab" description="Complete your order">
+<StandardPageLayout title="Checkout — Starstuck Lab" description="Complete your order" backgroundScene="shop">
   <main class="checkout-page">
     <header class="checkout-page__header">
       <h1>Checkout</h1>
@@ -30,7 +30,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       </div>
     </div>
   </main>
-</BaseLayout>
+</StandardPageLayout>
 
 <script>
   interface CartItem {

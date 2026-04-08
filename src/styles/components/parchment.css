@@ -477,3 +477,28 @@ body .about-panel-wrap .parchment {
   padding-left: var(--space-8);
   padding-right: var(--space-8);
 }
+
+/* ===== HIGH-SPECIFICITY: Preserve dark parchment text over standard-page.css white styles ===== */
+/* standard-page.css sets white text for dark bg; these high-specificity rules restore
+   legible dark brown text whenever content lives inside a parchment card */
+.standard-page .parchment h1,
+.standard-page .parchment h2,
+.standard-page .parchment h3,
+.standard-page .parchment h4 {
+  color: var(--parchment-heading, #2a1d12) !important;
+  border-bottom-color: rgba(42, 29, 18, 0.15);
+}
+
+.standard-page .parchment p,
+.standard-page .parchment li {
+  color: var(--parchment-text, #2b160e) !important;
+}
+
+.standard-page .parchment .last-updated {
+  color: var(--parchment-italic, #4a3420) !important;
+}
+
+.standard-page .parchment a {
+  color: #1d5a3d !important;
+  border-bottom-color: rgba(29, 90, 61, 0.3);
+}

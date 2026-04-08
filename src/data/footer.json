@@ -21,14 +21,9 @@
           "order": 2
         },
         {
-          "label": "About",
-          "href": "/about",
-          "order": 3
-        },
-        {
           "label": "Contact",
           "href": "/contact",
-          "order": 4
+          "order": 3
         }
       ]
     },
