@@ -9,28 +9,39 @@
 
 /* ===== BASE STYLES ===== */
 
-.herozoom-root { 
-  position: relative; 
-  width: 100%; 
+.herozoom-root {
+  position: relative;
+  width: 100%;
   min-height: 100vh;
 }
 
-.herozoom-spacer { 
-  height: 300vh;
-  width: 100%; 
+.herozoom-spacer {
+  /* 200vh: animation completes at scrollY=100vh (one Space press on desktop),
+     post-zoom enters viewport at exactly that point — no dead zone. */
+  height: 200vh;
+  width: 100%;
   position: relative;
 }
 
+/* Mobile: slightly more scroll room for a comfortable swipe */
+@media (max-width: 640px) {
+  .herozoom-spacer {
+    height: 250vh;
+    height: 250dvh;
+  }
+}
+
 /* Fixed positioning for both layers - stays in viewport, no transforms, just fade */
-.hero-layer { 
+.hero-layer {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100vh;
+  height: 100dvh; /* dvh = dynamic viewport height, accounts for mobile address bar */
   display: block;
   object-fit: cover;
-  object-position: 50% 50%;
+  object-position: 50% 85%;
   pointer-events: none;
   will-change: opacity;
 }
@@ -38,20 +49,24 @@
 .layer-forest {
   z-index: 15;
   opacity: 1;
+  /* Show the bottom portion of the hero image (STARSTUCKLAB sign) */
+  object-position: 50% 85%;
 }
 
-.layer-interior { 
-  z-index: 10; 
-  opacity: 0; 
+.layer-interior {
+  z-index: 10;
+  opacity: 0;
+  object-position: 50% 50%;
 }
 
 /* Hero overlay - also fixed */
-.hero-overlay { 
+.hero-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -86,6 +101,7 @@
   color: var(--starry-white);
   line-height: 1.15;
   font-weight: 700;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.7);
 }
 
 .hero-lead {
@@ -96,6 +112,7 @@
   color: var(--starry-white);
   line-height: 1.5;
   max-width: 90%;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.6);
 }
 
 .cta {
@@ -133,7 +150,7 @@
   z-index: 50; /* Above hero overlay when faded */
   background: transparent;
   color: #ddd;
-  padding: 40px 20px;
+  padding: 40px 0 0;
   min-height: 60vh;
   opacity: 0;
   visibility: hidden;
@@ -160,11 +177,11 @@
   .hero-title {
     font-size: clamp(1.4rem, 8vw, 1.8rem);
   }
-  
+
   .hero-lead {
     font-size: 0.9rem;
   }
-  
+
   .cta {
     padding: 12px 24px;
     font-size: 1rem;
@@ -174,17 +191,19 @@
 @media (max-width: 640px) {
   .hero-overlay {
     justify-content: flex-start;
-    padding-top: 15vh; /* Adjust this value - lower number = higher on screen */
+    padding-top: 15vh;
+    padding-top: 15dvh;
   }
 
   .cta {
     position: absolute;
-    bottom: 10vh; /* Adjust this to align with the STARSTUCKLAB sign */
+    bottom: 10vh;
+    bottom: 10dvh;
     left: 50%;
     transform: translateX(-50%);
     margin: 0;
   }
-  
+
   .hero-lead {
     margin-bottom: 0;
   }
@@ -194,17 +213,17 @@
   .hero-title {
     font-size: clamp(2.2rem, 5.5vw, 3rem);
   }
-  
+
   .hero-lead {
     font-size: clamp(1.05rem, 2.5vw, 1.18rem);
     max-width: 70%;
   }
-  
+
   .cta {
     font-size: 1.15rem;
     padding: 14px 32px;
   }
-  
+
   .cta:hover {
     transform: translateY(-2px) scale(1.02);
     box-shadow: 0 10px 32px rgba(0,0,0,0.3);
@@ -219,21 +238,21 @@
     justify-content: flex-start;
     padding: 0 2rem;
   }
-  
+
   #hzHeroLogo {
     width: clamp(100px, 10vw, 140px);
     margin-bottom: 28px;
   }
-  
+
   .hero-title {
     font-size: clamp(2.6rem, 4.5vw, 3.6rem);
   }
-  
+
   .hero-lead {
     font-size: clamp(1.08rem, 2vw, 1.2rem);
     max-width: 60%;
   }
-  
+
   .cta {
     font-size: 1.2rem;
     padding: 0.7rem 1.8rem;
