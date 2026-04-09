@@ -145,14 +145,18 @@ const navItems = rawItems.map((item) => ({
     flex-shrink: 0;
   }
 
-  /* ── Mobile: collapse nav links at small sizes ── */
+  /* ── Mobile: compact nav links (keep wordmark hidden to save space) ── */
   @media (max-width: 640px) {
-    .navbar__nav {
+    .navbar__wordmark {
       display: none;
     }
 
-    .navbar__wordmark {
-      display: none;
+    .navbar__links {
+      gap: var(--space-2); /* 8px — tight but legible at small font */
+    }
+
+    .navbar__link {
+      font-size: 0.75rem; /* 12px — fits 3 links + cart badge + future icon */
     }
   }
 </style>

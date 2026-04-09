@@ -16,18 +16,18 @@
 }
 
 .herozoom-spacer {
-  /* 200vh: animation completes at scrollY=100vh (one Space press on desktop),
-     post-zoom enters viewport at exactly that point — no dead zone. */
-  height: 200vh;
+  /* 150vh: animation completes well within one Space press on desktop.
+     Reduces the double-press problem. */
+  height: 150vh;
   width: 100%;
   position: relative;
 }
 
-/* Mobile: slightly more scroll room for a comfortable swipe */
+/* Mobile: 175dvh — animation completes in one long swipe */
 @media (max-width: 640px) {
   .herozoom-spacer {
-    height: 250vh;
-    height: 250dvh;
+    height: 175vh;
+    height: 175dvh;
   }
 }
 
@@ -56,7 +56,8 @@
 .layer-interior {
   z-index: 10;
   opacity: 0;
-  object-position: 50% 50%;
+  /* Match forest's object-position to prevent apparent zoom during crossfade */
+  object-position: 50% 70%;
 }
 
 /* Hero overlay - also fixed */
@@ -191,21 +192,34 @@
 @media (max-width: 640px) {
   .hero-overlay {
     justify-content: flex-start;
-    padding-top: 15vh;
-    padding-top: 15dvh;
+    padding-top: 12vh;
+    padding-top: 12dvh;
   }
 
-  .cta {
-    position: absolute;
-    bottom: 10vh;
-    bottom: 10dvh;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
+  /* Smaller fonts so the whole block fits above the STARSTUCKLAB sign */
+  .hero-title {
+    font-size: clamp(1.35rem, 5.5vw, 1.7rem);
+    margin-bottom: 10px;
+  }
+
+  #hzHeroLogo {
+    width: clamp(60px, 12vw, 88px);
+    margin-bottom: 16px;
   }
 
   .hero-lead {
-    margin-bottom: 0;
+    font-size: clamp(0.88rem, 3.2vw, 1rem);
+    margin-bottom: 20px; /* restore spacing so CTA flows below */
+    max-width: 88%;
+  }
+
+  /* CTA flows in normal document order — no absolute pin to bottom */
+  .cta {
+    position: static;
+    transform: none;
+    margin: 0;
+    font-size: 1rem;
+    padding: 12px 24px;
   }
 }
 
