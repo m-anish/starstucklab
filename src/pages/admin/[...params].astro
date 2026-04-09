@@ -1,0 +1,5 @@
+---
+// Redirect /admin to the actual Keystatic UI at /keystatic
+const params = Astro.params.params ?? '';
+return Astro.redirect(`/keystatic/${params}`);
+---

@@ -44,7 +44,7 @@ export default config({
         excerpt: fields.text({ label: 'Excerpt', multiline: true }),
         tags: fields.array(fields.text({ label: 'Tag' }), {
           label: 'Tags',
-          itemLabel: (props) => props.fields.value || 'Tag',
+          itemLabel: (props) => (props as any).value || 'Tag',
         }),
         date: fields.date({ label: 'Date Added' }),
         features: fields.array(
@@ -53,24 +53,27 @@ export default config({
             title: fields.text({ label: 'Feature title' }),
             description: fields.text({ label: 'Description', multiline: true }),
           }),
-          { label: 'Features', itemLabel: (props) => props.fields.title || 'Feature' }
+          { label: 'Features', itemLabel: (props) => (props as any).fields?.title?.value || 'Feature' }
         ),
         specifications: fields.array(
           fields.object({
             label: fields.text({ label: 'Label' }),
             value: fields.text({ label: 'Value' }),
           }),
-          { label: 'Specifications', itemLabel: (props) => props.fields.label || 'Spec' }
+          { label: 'Specifications', itemLabel: (props) => (props as any).fields?.label?.value || 'Spec' }
         ),
         masterImage: fields.text({ label: 'Master Image Path', description: 'e.g. /assets/product-m42/master.png' }),
         youtube_url: fields.text({
           label: 'YouTube Demo URL',
           description: 'Paste a full YouTube URL or video ID to embed a demo video on the product page.',
         }),
-        content: fields.document({
+        // These fields exist in the files but are managed outside Keystatic
+        slug: fields.ignored(),
+        customization: fields.ignored(),
+        images: fields.ignored(),
+        content: fields.markdoc({
           label: 'Product Description',
-          formatting: true,
-          links: true,
+          extension: 'md',
         }),
       },
     }),
@@ -86,15 +89,13 @@ export default config({
         excerpt: fields.text({ label: 'Excerpt', multiline: true }),
         tags: fields.array(fields.text({ label: 'Tag' }), {
           label: 'Tags',
-          itemLabel: (props) => props.fields.value || 'Tag',
+          itemLabel: (props) => (props as any).value || 'Tag',
         }),
         featured: fields.checkbox({ label: 'Featured', defaultValue: false }),
         image: fields.text({ label: 'Cover Image Path (optional)' }),
-        content: fields.document({
+        content: fields.markdoc({
           label: 'Content',
-          formatting: true,
-          links: true,
-          images: { directory: 'public/assets/lab-notes', publicPath: '/assets/lab-notes' },
+          extension: 'md',
         }),
       },
     }),
