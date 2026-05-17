@@ -105,14 +105,17 @@ const MEDIA = {
       />
     </picture>
 
-    <!-- Hero overlay: logo + title + subtitle + CTA -->
+    <!-- Hero overlay: small mark (icon + wordmark) + title + subtitle + CTA -->
     <div class="hero-overlay" id="hzOverlay" role="region" aria-label="Hero">
-      <img
-        id="hzHeroLogo"
-        src={`${base}assets/icons/starstucklab_logo_black_white.svg`}
-        alt="Starstuck Lab Logo"
-        loading="eager"
-      />
+      <div class="hero-mark">
+        <img
+          id="hzHeroLogo"
+          src={`${base}assets/icons/starstucklab_logo_black_white.svg`}
+          alt="Starstuck Lab"
+          loading="eager"
+        />
+        <span class="hero-wordmark">Starstuck Lab</span>
+      </div>
       <h1 class="hero-title">Starstuck Lab</h1>
       <p class="hero-lead">Building small machines for an indifferent universe</p>
       <a href="#workbench" class="cta">
