@@ -1,10 +1,22 @@
-/* index.css – Simplified fade-only transition (no zoom/parallax) */
+/* index.css – Hero crossfade + zoom, shooting stars, vignette, scroll-cue CTA */
 
 :root {
   --page-bg: #05060a;
   --starry-white: #f8f4e8;
   --nav-bg: rgba(6,10,12,0.75);
   --nav-compact-bg: rgba(6,10,12,0.90);
+}
+
+/* Painted vignette laid over the bg layers so they read with a soft
+   center while edges fall off. Numbers tuned to keep the painting bright. */
+.painted-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 16; /* above hero-layer (z-index 10/15), below overlay (z-index 30) */
+  background:
+    radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.32) 100%),
+    linear-gradient(180deg, rgba(0,0,0,0.10), rgba(0,0,0,0.30) 90%);
+  pointer-events: none;
 }
 
 /* ===== BASE STYLES ===== */
@@ -31,7 +43,9 @@
   }
 }
 
-/* Fixed positioning for both layers - stays in viewport, no transforms, just fade */
+/* Fixed positioning for both layers. Crossfade is driven by opacity; an
+   additional scale transform on each layer creates an "entering" sensation:
+   forest scales up as you fly past it, workshop scales down as you arrive. */
 .hero-layer {
   position: fixed;
   top: 0;
@@ -43,7 +57,9 @@
   object-fit: cover;
   object-position: 50% 85%;
   pointer-events: none;
-  will-change: opacity;
+  will-change: opacity, transform;
+  transform-origin: center 55%;
+  transition: opacity 200ms linear, transform 200ms linear;
 }
 
 .layer-forest {
@@ -60,7 +76,8 @@
   object-position: 50% 70%;
 }
 
-/* Hero overlay - also fixed */
+/* Hero overlay. Top-anchored so copy sits above the painted cabin and
+   STARSTUCKLAB sign that occupy the lower band of the hero background. */
 .hero-overlay {
   position: fixed;
   top: 0;
@@ -71,12 +88,12 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   text-align: center;
   z-index: 30;
   pointer-events: auto;
   color: var(--starry-white);
-  padding: 20px;
+  padding: clamp(56px, 9vh, 120px) 20px 0;
   transition: opacity 300ms ease-out;
 }
 
@@ -116,33 +133,68 @@
   text-shadow: 0 1px 8px rgba(0,0,0,0.6);
 }
 
+/* CTA reskinned as a centered, bottom-anchored glowing scroll cue.
+   Replaces the old pill button. The descending line beneath the label is
+   part of the affordance ("step inside"). Clicking it smooth-scrolls into
+   the workbench section. */
 .cta {
-  display: inline-block;
-  background: rgba(78,197,122,0.08);
-  border: 1.5px solid rgba(78,197,122,0.25);
-  padding: 14px 28px;
-  border-radius: 32px;
+  position: absolute;
+  bottom: 38px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
   color: var(--starry-white);
   text-decoration: none;
-  font-size: clamp(1.05rem, 4vw, 1.15rem);
-  font-weight: 500;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.85), 0 2px 12px rgba(0,0,0,0.55);
   pointer-events: auto;
-  position: relative;
   z-index: 100;
   cursor: pointer;
   min-height: 48px;
-  min-width: 160px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  transition: transform 0.25s, color 0.25s, filter 0.25s;
+}
+
+.cta .cta-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cta .cta-arrow {
+  display: inline-block;
+  animation: ctaArrow 2.4s ease-in-out infinite;
+}
+
+.cta::after {
+  content: '';
+  width: 1px;
+  height: 46px;
+  background: linear-gradient(to bottom, rgba(248,244,232,0.7), rgba(248,244,232,0));
+  box-shadow: 0 0 8px rgba(78,197,122,0.35);
+}
+
+.cta:hover {
+  transform: translateX(-50%) translateY(-2px);
+  color: #fff;
+  filter: drop-shadow(0 0 10px rgba(78,197,122,0.55));
 }
 
 .cta:active {
-  transform: scale(0.97);
-  background: rgba(78,197,122,0.12);
+  transform: translateX(-50%) translateY(0);
+}
+
+@keyframes ctaArrow {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50%      { transform: translateY(3px); opacity: 1; }
 }
 
 /* Post-zoom content */
@@ -182,18 +234,11 @@
   .hero-lead {
     font-size: 0.9rem;
   }
-
-  .cta {
-    padding: 12px 24px;
-    font-size: 1rem;
-  }
 }
 
 @media (max-width: 640px) {
   .hero-overlay {
-    justify-content: flex-start;
-    padding-top: 12vh;
-    padding-top: 12dvh;
+    padding-top: clamp(40px, 6vh, 80px);
   }
 
   /* Smaller fonts so the whole block fits above the STARSTUCKLAB sign */
@@ -209,17 +254,18 @@
 
   .hero-lead {
     font-size: clamp(0.88rem, 3.2vw, 1rem);
-    margin-bottom: 20px; /* restore spacing so CTA flows below */
+    margin-bottom: 20px;
     max-width: 88%;
   }
 
-  /* CTA flows in normal document order — no absolute pin to bottom */
   .cta {
-    position: static;
-    transform: none;
-    margin: 0;
-    font-size: 1rem;
-    padding: 12px 24px;
+    bottom: 28px;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+  }
+
+  .cta::after {
+    height: 34px;
   }
 }
 
@@ -232,27 +278,9 @@
     font-size: clamp(1.05rem, 2.5vw, 1.18rem);
     max-width: 70%;
   }
-
-  .cta {
-    font-size: 1.15rem;
-    padding: 14px 32px;
-  }
-
-  .cta:hover {
-    transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 10px 32px rgba(0,0,0,0.3);
-    background: rgba(78,197,122,0.12);
-  }
 }
 
 @media (min-width: 821px) {
-  .hero-overlay {
-    top: 15vh;
-    height: auto;
-    justify-content: flex-start;
-    padding: 0 2rem;
-  }
-
   #hzHeroLogo {
     width: clamp(100px, 10vw, 140px);
     margin-bottom: 28px;
@@ -266,11 +294,35 @@
     font-size: clamp(1.08rem, 2vw, 1.2rem);
     max-width: 60%;
   }
+}
 
-  .cta {
-    font-size: 1.2rem;
-    padding: 0.7rem 1.8rem;
-  }
+/* ===== SHOOTING STARS (hero, Studio-Ghibli flavor) =====
+   Visible only on the hero (before crossfade starts). The SVG sits behind
+   the overlay and above the bg layers; `mix-blend-mode: screen` keeps the
+   streak riding naturally over the painted Milky Way. */
+#shootingStars {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 17; /* above vignette, below overlay */
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transition: opacity 600ms linear;
+}
+
+#starInner, #starInner2 { transform-box: fill-box; }
+
+@keyframes starArc {
+  0%   { opacity: 0; transform: translate(0, 0) scale(0.85); }
+  20%  { opacity: 1; transform: translate(calc(var(--dx, 260px) * 0.25), calc(var(--dy, 80px) * 0.25)) scale(1); }
+  70%  { opacity: 0.85; transform: translate(calc(var(--dx, 260px) * 0.85), calc(var(--dy, 80px) * 0.85)) scale(1); }
+  100% { opacity: 0; transform: translate(var(--dx, 260px), var(--dy, 80px)) scale(1); }
+}
+
+#starGroup.firing,
+#starGroup2.firing {
+  animation: starArc var(--dur, 1400ms) cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
 }
 
 /* ===== ACCESSIBILITY ===== */
@@ -283,6 +335,11 @@
   .hero-overlay {
     transition: none !important;
     animation: none !important;
+  }
+
+  /* Motion-sensitive users get a still painted night sky. */
+  #shootingStars {
+    display: none !important;
   }
 }
 

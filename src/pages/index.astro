@@ -60,7 +60,7 @@ const MEDIA = {
     <div
       class="herozoom-spacer"
       id="herozoomSpacer"
-      data-cross-start="0.40"
+      data-cross-start="0.15"
       data-cross-end="0.85"
     ></div>
 
@@ -115,8 +115,54 @@ const MEDIA = {
       />
       <h1 class="hero-title">Starstuck Lab</h1>
       <p class="hero-lead">Building small machines for an indifferent universe</p>
-      <a href="#workbench" class="cta">Enter the Workshop</a>
+      <a href="#workbench" class="cta">
+        <span class="cta-label">Enter the Workshop <span class="cta-arrow">↓</span></span>
+      </a>
     </div>
+
+    <!-- Painted vignette: soft center, edges fall off. Above bg layers, below overlay. -->
+    <div class="painted-vignette" aria-hidden="true"></div>
+
+    <!-- Shooting stars layer. Visible only on the hero (pre-crossfade), and
+         hidden under prefers-reduced-motion. Two SVG groups so a follow-up
+         streak can render mid-flight without resetting the primary's transform. -->
+    <svg
+      id="shootingStars"
+      viewBox="0 0 1000 1000"
+      preserveAspectRatio="xMidYMid slice"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="starTail" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#fff7e6" stop-opacity="0" />
+          <stop offset="55%" stop-color="#fff7e6" stop-opacity=".55" />
+          <stop offset="92%" stop-color="#fffaf0" stop-opacity=".95" />
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="1" />
+        </linearGradient>
+        <radialGradient id="starHead" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="1" />
+          <stop offset="40%" stop-color="#fff5d8" stop-opacity=".75" />
+          <stop offset="100%" stop-color="#fff5d8" stop-opacity="0" />
+        </radialGradient>
+        <filter id="starGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="1.4" />
+        </filter>
+      </defs>
+      <g id="starGroup" style="opacity:0">
+        <g id="starInner">
+          <rect x="0" y="-0.6" width="180" height="1.2" rx=".6" fill="url(#starTail)" filter="url(#starGlow)" />
+          <circle cx="180" cy="0" r="3.2" fill="url(#starHead)" />
+          <circle cx="180" cy="0" r="1.1" fill="#ffffff" />
+        </g>
+      </g>
+      <g id="starGroup2" style="opacity:0">
+        <g id="starInner2">
+          <rect x="0" y="-0.5" width="150" height="1" rx=".5" fill="url(#starTail)" filter="url(#starGlow)" />
+          <circle cx="150" cy="0" r="2.6" fill="url(#starHead)" />
+          <circle cx="150" cy="0" r=".9" fill="#ffffff" />
+        </g>
+      </g>
+    </svg>
 
     <!-- Post-scroll content: 2/3 shop cards + 1/3 about panel -->
     <div class="post-zoom" id="postZoomContent" aria-live="polite">
@@ -146,9 +192,9 @@ const MEDIA = {
       if (!spacerEl || !forestEl || !interiorEl || !overlayEl || !navEl) return;
 
       const ds = spacerEl.dataset;
-      const CROSS_START = parseFloat(ds.crossStart ?? "0.40");
+      const CROSS_START = parseFloat(ds.crossStart ?? "0.15");
       const CROSS_END = parseFloat(ds.crossEnd ?? "0.85");
-      const NAV_SHOW_THRESHOLD = 0.65;
+      const NAV_SHOW_THRESHOLD = 0.45;
       const ABOUT_SHOW_THRESHOLD = 0.78;
       const POST_ZOOM_THRESHOLD = 0.85;
       let ticking = false;
@@ -184,8 +230,11 @@ const MEDIA = {
 
       function applyInitialFrame() {
         forestEl.style.opacity = "1";
+        forestEl.style.transform = "scale(1)";
         interiorEl.style.opacity = "0";
+        interiorEl.style.transform = "scale(1.20)";
         overlayEl.style.opacity = "1";
+        document.body.classList.add("hero-mode");
         if (aboutEl) aboutEl.classList.remove("in");
         if (postZoomEl) {
           postZoomEl.classList.remove("in");
@@ -208,8 +257,17 @@ const MEDIA = {
         const forestOpacity = Math.max(0, 1 - interiorOpacity * 1.05);
         const overlayOpacity = Math.max(0, 1 - p * 1.2);
 
+        // Smoothstep so the zoom feels less mechanical.
+        const eased = interiorOpacity * interiorOpacity * (3 - 2 * interiorOpacity);
+        // Forest scales 1.0 -> 1.25 as we fly past it.
+        const forestScale = 1 + eased * 0.25;
+        // Workshop scales 1.20 -> 1.0 as we pull into it.
+        const interiorScale = 1.20 - eased * 0.20;
+
         forestEl.style.opacity = `${forestOpacity}`;
+        forestEl.style.transform = `scale(${forestScale.toFixed(4)})`;
         interiorEl.style.opacity = `${interiorOpacity}`;
+        interiorEl.style.transform = `scale(${interiorScale.toFixed(4)})`;
         overlayEl.style.opacity = `${overlayOpacity}`;
 
         if (overlayOpacity <= 0.1) {
@@ -218,7 +276,11 @@ const MEDIA = {
           overlayEl.classList.remove("faded");
         }
 
-        if (interiorOpacity > NAV_SHOW_THRESHOLD) {
+        // Reveal the nav (and drop body.hero-mode) once we're clearly past
+        // the hero, near the crossfade midpoint.
+        const navVisible = interiorOpacity > NAV_SHOW_THRESHOLD;
+        document.body.classList.toggle("hero-mode", !navVisible);
+        if (navVisible) {
           navEl.classList.add("nav-visible", "nav-sticky");
           navEl.classList.remove("nav-hidden");
           navEl.setAttribute("aria-hidden", "false");
@@ -301,9 +363,13 @@ const MEDIA = {
       if (!pageIsScrollable()) {
         const reveal = () => {
           forestEl.style.opacity = "0";
+          forestEl.style.transform = "scale(1.25)";
           interiorEl.style.opacity = "1";
+          interiorEl.style.transform = "scale(1)";
           overlayEl.style.opacity = "0";
+          document.body.classList.remove("hero-mode");
           navEl.classList.add("nav-visible", "nav-sticky");
+          navEl.classList.remove("nav-hidden");
           navEl.setAttribute("aria-hidden", "false");
           if (aboutEl) aboutEl.classList.add("in");
           if (postZoomEl) {
@@ -329,6 +395,92 @@ const MEDIA = {
     })();
   </script>
 
+  <!-- SHOOTING STARS (Studio-Ghibli flavor)
+       Painted streaks across the hero sky. Visible only while the user is
+       still near the top (pre-crossfade). One star every 22-38s, with a
+       1-in-6 chance of a follow-up doubled streak 0.4-1.2s later. The
+       layer is hidden entirely under prefers-reduced-motion. -->
+  <script>
+    (function shootingStars() {
+      const stars = document.getElementById("shootingStars");
+      const group = document.getElementById("starGroup");
+      const group2 = document.getElementById("starGroup2");
+      if (!stars || !group || !group2) return;
+
+      const reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)");
+      if (reduce && reduce.matches) {
+        stars.style.display = "none";
+        return;
+      }
+
+      let timer = null;
+
+      function setVisible() {
+        const vh = window.innerHeight || 800;
+        const progress = window.scrollY / vh;
+        // Hide as soon as the workshop crossfade starts (matches CROSS_START 0.15).
+        stars.style.opacity = progress < 0.18 ? "1" : "0";
+      }
+      window.addEventListener("scroll", setVisible, { passive: true });
+      window.addEventListener("resize", setVisible);
+
+      // Aspect-aware vertical ceiling so star arcs never dip into the
+      // painted cabin / STARSTUCKLAB sign band.
+      function arcCeiling() {
+        const ar = (window.innerWidth || 800) / (window.innerHeight || 800);
+        if (ar < 0.65) return 260;
+        if (ar < 1.00) return 320;
+        if (ar < 1.40) return 380;
+        return 440;
+      }
+
+      function fire(double) {
+        if (stars.style.opacity === "0") {
+          if (!double) schedule();
+          return;
+        }
+        const target = double ? group2 : group;
+        const ceil = arcCeiling();
+        const baseX = 40 + Math.random() * 360;
+        const baseY = 30 + Math.random() * (ceil - 30);
+        const x = double ? baseX + 30 + Math.random() * 40 : baseX;
+        const y = double ? baseY + 18 + Math.random() * 24 : baseY;
+        const angle = 12 + Math.random() * 14;
+        const maxDownward = (ceil + 80) - y;
+        const distByY = maxDownward / Math.sin((angle * Math.PI) / 180);
+        const dist = Math.min(320 + Math.random() * 240, distByY);
+        const dur = 1200 + Math.random() * 700;
+        const dx = Math.cos((angle * Math.PI) / 180) * dist;
+        const dy = Math.sin((angle * Math.PI) / 180) * dist;
+        target.classList.remove("firing");
+        target.setAttribute("transform", `translate(${x},${y}) rotate(${angle})`);
+        target.style.setProperty("--dx", dx + "px");
+        target.style.setProperty("--dy", dy + "px");
+        target.style.setProperty("--dur", dur + "ms");
+        // Force reflow so the animation restarts cleanly.
+        void target.getBoundingClientRect();
+        target.classList.add("firing");
+
+        if (!double) {
+          if (Math.random() < 1 / 6) {
+            setTimeout(() => fire(true), 400 + Math.random() * 800);
+          }
+          schedule();
+        }
+      }
+
+      function schedule() {
+        clearTimeout(timer);
+        const wait = 22000 + Math.random() * 16000; // 22-38s
+        timer = setTimeout(() => fire(false), wait);
+      }
+
+      setVisible();
+      // First star arrives 4-9s after page load.
+      setTimeout(() => fire(false), 4000 + Math.random() * 5000);
+    })();
+  </script>
+
   <!-- AI Hero content: randomly pick variant from /data/hero.json -->
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
@@ -344,10 +496,15 @@ const MEDIA = {
         const hero = variants[randomKey];
         const titleEl = document.querySelector(".hero-title");
         const leadEl = document.querySelector(".hero-lead");
-        const ctaEl = document.querySelector(".cta");
+        const ctaLabel = document.querySelector(".cta .cta-label");
+        const ctaArrow = document.querySelector(".cta .cta-arrow");
         if (titleEl && hero.title) titleEl.textContent = hero.title;
         if (leadEl && hero.subtitle) leadEl.textContent = hero.subtitle;
-        if (ctaEl && hero.cta) ctaEl.textContent = hero.cta;
+        // Preserve the trailing arrow element when swapping CTA copy.
+        if (ctaLabel && hero.cta) {
+          ctaLabel.textContent = hero.cta + " ";
+          if (ctaArrow) ctaLabel.appendChild(ctaArrow);
+        }
       } catch (err) {
         console.error("Hero variant loading failed:", err);
       }
