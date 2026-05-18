@@ -6,27 +6,35 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
   description="A quiet hillside workshop where ideas drift between solder smoke, old wood, and soft starlight."
   backgroundScene="shop"
 >
-  <main class="about-page">
-    <article class="parchment about-parchment" data-surface="parchment">
-      <h1>About the workshop</h1>
-      <p class="motto">Building small machines for an indifferent universe.</p>
+  <main class="about-page" id="aboutPage">
+    <article class="parchment about-parchment" data-surface="parchment" data-variant="1">
+      <div class="about-emblem-wrap" aria-hidden="true">
+        <img
+          class="about-emblem"
+          id="aboutEmblem"
+          src="/data/about-emblem-1.png"
+          alt=""
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </div>
 
-      <p>
-        A quiet hillside workshop where ideas drift between solder smoke,
-        old wood, soft starlight, and dry cosmic humour. Sketches curl at the
-        edges. Machines attempt usefulness, sometimes succeed.
-      </p>
+      <h1 id="aboutTitle">About the workshop</h1>
+      <p class="motto" id="aboutMotto">Building small machines for an indifferent universe.</p>
 
-      <p>
+      <div class="about-body" id="aboutBody">
+        <p>
+          A quiet hillside workshop where ideas drift between solder smoke,
+          old wood, soft starlight, and dry cosmic humour. Sketches curl at the
+          edges. Machines attempt usefulness, sometimes succeed.
+        </p>
+      </div>
+
+      <p class="about-foot">
         Everything here is made one at a time. Each piece resolves with a small
-        note explaining what went wrong on the way to working. Trees have
-        strong opinions about 868 MHz, and the radiation shield warped in the
-        sun, teaching that PLA believes in heat death on a very local scale.
-      </p>
-
-      <p>
-        Lead times depend on weather and mood. There is no roadmap, only a
-        list, and the list is getting shorter, slowly.
+        note explaining what went wrong on the way to working. Lead times
+        depend on weather and mood.
       </p>
 
       <svg class="about-seal" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
@@ -35,6 +43,64 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     </article>
   </main>
 </StandardPageLayout>
+
+<script type="module">
+  // Pick a random variant from /data/about.json on each visit, mirroring
+  // the homepage about panel's behaviour. Variants supply: title, lead,
+  // motto. The emblem file follows /data/about-emblem-<key>.png.
+  async function applyAboutVariant() {
+    try {
+      const res = await fetch('/data/about.json');
+      if (!res.ok) return;
+      const variants = await res.json();
+      const keys = Object.keys(variants || {}).sort((a, b) => {
+        const an = Number(a), bn = Number(b);
+        if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
+        return a.localeCompare(b);
+      });
+      if (!keys.length) return;
+
+      const chosenKey = keys[Math.floor(Math.random() * keys.length)];
+      const variant = variants[chosenKey] || {};
+
+      const article = document.querySelector('.about-parchment');
+      const titleEl = document.getElementById('aboutTitle');
+      const mottoEl = document.getElementById('aboutMotto');
+      const bodyEl = document.getElementById('aboutBody');
+      const emblemEl = document.getElementById('aboutEmblem');
+
+      if (article) article.setAttribute('data-variant', chosenKey);
+      if (titleEl && variant.title) titleEl.textContent = variant.title;
+      if (mottoEl) {
+        if (variant.motto) {
+          mottoEl.textContent = variant.motto;
+          mottoEl.style.display = '';
+        } else {
+          mottoEl.style.display = 'none';
+        }
+      }
+      if (bodyEl && variant.lead) {
+        // Split the lead into paragraphs by double newlines or sentence groups.
+        bodyEl.innerHTML = '';
+        const p = document.createElement('p');
+        p.textContent = variant.lead;
+        bodyEl.appendChild(p);
+      }
+      if (emblemEl) {
+        emblemEl.src = `/data/about-emblem-${chosenKey}.png`;
+        emblemEl.alt = `Starstuck Lab emblem, variant ${chosenKey}`;
+      }
+    } catch (err) {
+      console.error('Failed to load about variant:', err);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAboutVariant);
+  } else {
+    applyAboutVariant();
+  }
+</script>
 
 <style>
   .about-page {
@@ -105,6 +171,23 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     z-index: 2;
   }
 
+  /* Centered emblem at the top of the parchment slab. */
+  .about-emblem-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 28px;
+  }
+
+  .about-emblem {
+    width: clamp(220px, 38vw, 320px);
+    height: auto;
+    display: block;
+    /* Multiply blend so the emblem sits ON the parchment, picking up
+       its warm cream tone instead of looking like a pasted-on PNG. */
+    mix-blend-mode: multiply;
+    filter: drop-shadow(0 4px 16px rgba(80, 50, 25, 0.35));
+  }
+
   .about-parchment h1 {
     font-family: 'Playfair Display', Georgia, serif;
     font-weight: 700;
@@ -113,6 +196,7 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     color: #2a1d12;
     margin: 0 0 6px;
     letter-spacing: -0.01em;
+    text-align: center;
   }
 
   .about-parchment .motto {
@@ -121,6 +205,7 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     color: #4a3420;
     font-size: 18px;
     margin: 0 0 22px;
+    text-align: center;
   }
 
   .about-parchment p {
@@ -128,6 +213,15 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     color: #2b160e;
     line-height: 1.75;
     margin: 0 0 14px;
+  }
+
+  .about-foot {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed rgba(80, 50, 25, 0.25);
+    font-size: 15px;
+    font-style: italic;
+    color: #3d2515;
   }
 
   .about-seal {

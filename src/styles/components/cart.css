@@ -11,7 +11,9 @@
   max-width: 420px;
   height: 100vh;
   height: 100dvh;
-  z-index: var(--z-modal, 3000);
+  /* Must sit above the navbar (.site-nav, z-index 1000) so the drawer
+     covers the nav strip instead of disappearing behind it. */
+  z-index: 1100;
   pointer-events: none;
   opacity: 0;
   transition: opacity 250ms ease;

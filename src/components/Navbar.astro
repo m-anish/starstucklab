@@ -78,18 +78,14 @@ const navItems = rawItems.map((item) => ({
 </script>
 
 <style>
+  /* Layout-only — the parent `.site-nav` wrapper (in BaseLayout /
+     StandardPageLayout / HeroLayout) provides the fixed positioning,
+     translucent background and backdrop-filter. Stacking them both
+     resulted in a double-opaque navbar with no painted bg showing
+     through. */
   .navbar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
     height: var(--navbar-height);
-    /* Translucent so the painted scene shows through, per design system. */
-    background: rgba(0, 0, 0, 0.55);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
-    z-index: var(--z-sticky);
+    width: 100%;
   }
 
   .navbar__inner {
