@@ -17,17 +17,17 @@ function formatPrice(price: number, currency = 'INR'): string {
 <StandardPageLayout
   title="Shop — Starstuck Lab"
   description="Handmade telescopes built to order in India. Two products. Both very good."
-  backgroundScene="shop"
+  backgroundScene="workshop"
 >
   <main class="shop standard-page">
     <!-- Header -->
     <header class="shop__header standard-page-inner">
-      <p class="shop__eyebrow">Workshop</p>
-      <h1>Available Now</h1>
+      <p class="shop__eyebrow">Shop</p>
+      <h1>Hardware that mostly works.</h1>
       <p class="shop__subtitle">
-        Two products. Both telescopes. Both hand-built to order in a small
-        workshop somewhere in India, by one person who cares perhaps too much
-        about collimation tolerances.
+        Two telescopes. Both built to order in a small workshop somewhere in
+        India, where someone cares perhaps too much about collimation tolerances.
+        Lead times depend on weather and mood.
       </p>
     </header>
 
@@ -47,6 +47,7 @@ function formatPrice(price: number, currency = 'INR'): string {
             return (
               <a href={`/shop/${product.slug}`} class="pc">
                 <div class="pc__image-wrap">
+                  <span class="pc__gen-badge" aria-hidden="true">✦ generated</span>
                   {images?.master ? (
                     <img
                       src={images.master}
@@ -94,12 +95,13 @@ function formatPrice(price: number, currency = 'INR'): string {
   }
 
   .shop__eyebrow {
-    font-family: var(--font-mono, monospace);
-    font-size: var(--text-xs, 0.75rem);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    color: var(--color-accent, #4ec57a);
-    margin-bottom: var(--space-4, 1rem);
+    color: rgba(248, 244, 232, 0.55);
+    margin: 0 0 var(--space-4, 1rem);
+    font-weight: 600;
   }
 
   .shop__subtitle {
@@ -157,6 +159,26 @@ function formatPrice(price: number, currency = 'INR'): string {
     aspect-ratio: 4/3;
     overflow: hidden;
     background: rgba(0,0,0,0.06);
+    position: relative;
+  }
+
+  .pc__gen-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.78);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 5px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
   .pc__image {

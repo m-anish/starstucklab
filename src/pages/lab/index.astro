@@ -4,185 +4,276 @@ import StandardPageLayout from '../../layouts/StandardPageLayout.astro';
 
 const allNotes = await getCollection('lab-notes');
 
-const notes = allNotes
-  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+const notes = allNotes.sort(
+  (a, b) => b.data.date.getTime() - a.data.date.getTime()
+);
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+// Lab-note date format: "2026 . 08 . 04" (matches the design system's mono date)
+function formatLabDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y} . ${m} . ${d}`;
+}
+
+function readTimeFromExcerpt(excerpt: string | undefined): string {
+  if (!excerpt) return '2 min read';
+  const words = excerpt.split(/\s+/).length;
+  // Excerpts are short; assume the full piece is 6× the excerpt size at ~220wpm
+  const minutes = Math.max(2, Math.round((words * 6) / 220));
+  return `${minutes} min read`;
 }
 ---
-<StandardPageLayout title="Lab Notes — Starstuck Lab" description="Build logs, failed experiments, and the occasional accidental success." backgroundScene="shop">
-  <main class="lab">
-    <header class="lab__header container">
-      <h1 class="lab__title">Lab Notes</h1>
-      <p class="lab__tagline">
-        Build logs, failed experiments, and the occasional accidental success.
-        Written at whatever hour of the night the thing finally worked.
-      </p>
-    </header>
+<StandardPageLayout
+  title="Lab Notes — Starstuck Lab"
+  description="Build logs, dead ends, and the occasional small triumph from a one-person workshop."
+  backgroundScene="shop"
+>
+  <main class="lab-page">
+    <div class="lab-wrap">
+      <header class="lab-head">
+        <h1>Lab Notes</h1>
+        <p>
+          What went wrong on the way to working. Build logs, dead ends, and the
+          occasional small triumph, written down so the next attempt has somewhere to start.
+        </p>
+      </header>
+      <div class="lab-divider"></div>
 
-    <section class="lab__list container">
       {notes.length === 0 && (
-        <p class="lab__empty">Nothing written yet. Probably still in the lab.</p>
+        <p class="lab-empty-note">Nothing written yet. Probably still in the lab.</p>
       )}
 
-      {notes.map((note) => (
-        <article class="note-card">
-          <div class="note-card__date">{formatDate(note.data.date)}</div>
-
-          <div class="note-card__body">
-            <h2 class="note-card__title">
-              <a href={`/lab/${note.slug}`}>{note.data.title}</a>
-            </h2>
-            <p class="note-card__excerpt">{note.data.excerpt}</p>
-
-            {note.data.tags.length > 0 && (
-              <ul class="note-card__tags">
-                {note.data.tags.map((tag) => (
-                  <li class="note-card__tag">#{tag}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <a href={`/lab/${note.slug}`} class="note-card__link" aria-label={`Read: ${note.data.title}`}>
-            Read →
+      <div class="lab-list">
+        {notes.map((note) => (
+          <a href={`/lab/${note.slug}`} class="lab-card-link">
+            <article class="lab-card">
+              <div class="lab-meta">
+                <span class="date">{formatLabDate(note.data.date)}</span>
+                {note.data.tags && note.data.tags.length > 0 && (
+                  <span class="tag">{note.data.tags[0]}</span>
+                )}
+              </div>
+              <h2>{note.data.title}</h2>
+              <p class="lab-excerpt">{note.data.excerpt}</p>
+              <div class="lab-foot">
+                <span>{readTimeFromExcerpt(note.data.excerpt)}</span>
+                <span class="read-more">Continue reading →</span>
+              </div>
+            </article>
           </a>
-        </article>
-      ))}
-    </section>
+        ))}
+      </div>
+
+      <p class="lab-empty-note">
+        Older entries archived in a paper notebook on the workbench.
+      </p>
+    </div>
   </main>
 </StandardPageLayout>
 
 <style>
-  .lab__header {
-    padding-top: var(--space-16);
-    padding-bottom: var(--space-10);
-    border-bottom: 1px solid var(--color-border);
+  .lab-page {
+    position: relative;
+    z-index: 1;
   }
 
-  .lab__title {
-    font-size: var(--text-5xl);
-    font-weight: var(--weight-bold);
+  .lab-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 90px 24px 80px;
+  }
+
+  /* ── Header ── */
+  .lab-head {
+    margin-bottom: 32px;
+  }
+
+  .lab-head h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 46px;
+    line-height: 1.05;
     letter-spacing: -0.02em;
-    margin-bottom: var(--space-4);
+    color: #f8f4e8;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
   }
 
-  .lab__tagline {
-    max-width: 56ch;
-    color: var(--color-muted);
-    font-size: var(--text-lg);
-    line-height: var(--leading-base);
+  .lab-head p {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.72);
+    font-size: 18px;
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+    max-width: 50ch;
+    line-height: 1.55;
   }
 
-  .lab__list {
-    padding-top: var(--space-8);
-    padding-bottom: var(--space-20);
+  .lab-divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(248, 244, 232, 0.30), transparent);
+    margin: 28px 0 24px;
+  }
+
+  /* ── Card list ── */
+  .lab-list {
     display: flex;
     flex-direction: column;
+    gap: 22px;
   }
 
-  .lab__empty {
-    color: var(--color-muted);
-    padding: var(--space-12) 0;
-  }
-
-  /* ── Note Card ── */
-  .note-card {
-    display: grid;
-    grid-template-columns: 120px 1fr auto;
-    gap: var(--space-8);
-    align-items: start;
-    padding: var(--space-8) 0;
-    border-bottom: 1px solid var(--color-border);
-  }
-
-  .note-card:first-child {
-    border-top: 1px solid var(--color-border);
-  }
-
-  .note-card__date {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    padding-top: var(--space-1);
-    white-space: nowrap;
-  }
-
-  .note-card__body {
-    min-width: 0;
-  }
-
-  .note-card__title {
-    font-size: var(--text-xl);
-    font-weight: var(--weight-bold);
-    margin-bottom: var(--space-2);
-    line-height: var(--leading-tight);
-  }
-
-  .note-card__title a {
-    color: var(--color-text);
+  .lab-card-link {
     text-decoration: none;
+    color: inherit;
+    display: block;
   }
 
-  .note-card__title a:hover {
-    color: var(--color-accent);
+  .lab-card {
+    background: linear-gradient(
+      135deg,
+      #fae5d0 0%,
+      #f4dcc0 25%,
+      #eed7b8 50%,
+      #f4ddbc 75%,
+      #f7dfc0 100%
+    );
+    border-radius: 12px;
+    padding: 30px 34px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
   }
 
-  .note-card__excerpt {
-    color: var(--color-muted);
-    font-size: var(--text-sm);
-    line-height: var(--leading-base);
-    margin-bottom: var(--space-3);
+  .lab-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/assets/textures/paper-grain.webp');
+    background-size: 300px;
+    opacity: 0.18;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    border-radius: 12px;
   }
 
-  .note-card__tags {
+  .lab-card > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .lab-card-link:hover .lab-card {
+    transform: translateY(-3px);
+    box-shadow:
+      0 14px 40px rgba(0, 0, 0, 0.55),
+      0 0 0 1px rgba(0, 0, 0, 0.10);
+  }
+
+  /* ── Meta ── */
+  .lab-meta {
     display: flex;
+    align-items: center;
+    gap: 14px;
     flex-wrap: wrap;
-    gap: var(--space-2);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: #5d3a1e;
+    margin-bottom: 10px;
+    font-weight: 600;
   }
 
-  .note-card__tag {
-    font-size: var(--text-xs);
-    color: var(--color-muted);
-    font-family: var(--font-mono);
+  .lab-meta .date {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: none;
   }
 
-  .note-card__link {
-    font-size: var(--text-sm);
-    font-weight: var(--weight-semibold);
-    color: var(--color-accent);
-    text-decoration: none;
-    white-space: nowrap;
-    padding-top: var(--space-1);
+  .lab-meta .tag {
+    padding: 3px 8px;
+    background: rgba(80, 50, 25, 0.10);
+    border: 1px solid rgba(80, 50, 25, 0.18);
+    border-radius: 9999px;
+    font-size: 10.5px;
+    text-transform: none;
+    letter-spacing: 0.02em;
   }
 
-  .note-card__link:hover {
-    color: var(--color-text);
+  .lab-card h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 26px;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    color: #2a1d12;
+    margin: 0 0 8px;
+    text-wrap: balance;
+  }
+
+  .lab-excerpt {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.65;
+    color: #3d2515;
+    margin: 0 0 14px;
+    text-wrap: pretty;
+  }
+
+  .lab-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 14px;
+    border-top: 1px dashed rgba(80, 50, 25, 0.25);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    color: #5d3a1e;
+  }
+
+  .lab-foot .read-more {
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #2a7a4f;
+    transition: color 0.15s ease;
+  }
+
+  .lab-card-link:hover .read-more {
+    color: #1d5a3d;
+  }
+
+  .lab-empty-note {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.55);
+    font-size: 14px;
+    text-align: center;
+    padding-top: 30px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   }
 
   @media (max-width: 640px) {
-    .note-card {
-      grid-template-columns: 1fr auto;
-      grid-template-rows: auto auto;
+    .lab-wrap {
+      padding: 70px 16px 60px;
     }
 
-    .note-card__date {
-      grid-column: 1;
-      grid-row: 1;
+    .lab-card {
+      padding: 22px 24px;
     }
 
-    .note-card__link {
-      grid-column: 2;
-      grid-row: 1;
+    .lab-head h1 {
+      font-size: 36px;
     }
 
-    .note-card__body {
-      grid-column: 1 / -1;
-      grid-row: 2;
+    .lab-card h2 {
+      font-size: 22px;
     }
   }
 </style>

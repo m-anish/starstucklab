@@ -1,49 +1,52 @@
 ---
 import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 ---
-<StandardPageLayout title="Checkout — Starstuck Lab" description="Complete your order" backgroundScene="shop">
+<StandardPageLayout title="Checkout — Starstuck Lab" description="Review your order and proceed to payment." backgroundScene="workshop">
   <main class="checkout-page">
     <header class="checkout-page__header">
       <h1>Checkout</h1>
       <p class="checkout-page__subtitle">Review your order and proceed to payment.</p>
     </header>
 
-    <div id="checkout-content">
-      <div id="cart-summary" class="cart-summary">
-        <!-- Populated by JS from localStorage -->
-        <p class="cart-summary__empty" id="empty-message" hidden>Your cart is empty.</p>
-      </div>
+    <section class="checkout-card" id="checkout-card">
+      <ul id="cart-summary" class="co-list"></ul>
+      <p class="cart-summary__empty" id="empty-message" hidden>Your cart is empty.</p>
 
       <div class="checkout-actions" id="checkout-actions" hidden>
-        <div class="checkout-total">
-          <span>Total</span>
-          <span id="checkout-total-amount">—</span>
+        <div class="co-total">
+          <span class="lbl">Total</span>
+          <span class="val" id="checkout-total-amount">—</span>
         </div>
-        <p class="checkout-note">
-          You'll be redirected to Stripe's secure payment page.
-          We accept all major cards and UPI.
+        <p class="co-note">
+          You'll be redirected to Stripe's secure payment page. Cards and UPI accepted. Lead times depend on weather and mood.
         </p>
-        <button id="pay-button" class="btn btn--primary btn--large">
+        <button id="pay-button" class="btn-pay">
           Proceed to Payment
         </button>
         <p class="checkout-error" id="checkout-error" hidden></p>
       </div>
-    </div>
+    </section>
   </main>
 </StandardPageLayout>
 
 <script>
   interface CartItem {
-    productSlug: string;
+    productSlug?: string;
+    slug?: string;
     title: string;
-    price: number;
+    price: number | string;
+    currency?: string;
     quantity: number;
     customization?: Record<string, string>;
   }
 
+  // Cart is stored under `starstucklab_cart` as { items, expiry, updated }.
   function loadCart(): CartItem[] {
     try {
-      return JSON.parse(localStorage.getItem('cart') ?? '[]');
+      const stored = localStorage.getItem('starstucklab_cart');
+      if (!stored) return [];
+      const data = JSON.parse(stored);
+      return Array.isArray(data?.items) ? data.items : [];
     } catch {
       return [];
     }
@@ -54,42 +57,45 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
   }
 
   function renderCart(items: CartItem[]) {
-    const container = document.getElementById('cart-summary')!;
+    const list = document.getElementById('cart-summary') as HTMLUListElement;
     const actions = document.getElementById('checkout-actions')!;
     const emptyMsg = document.getElementById('empty-message')!;
     const totalEl = document.getElementById('checkout-total-amount')!;
+
+    list.innerHTML = '';
 
     if (!items.length) {
       emptyMsg.hidden = false;
       return;
     }
 
-    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
+    const total = items.reduce((sum, i) => {
+      const p = typeof i.price === 'number' ? i.price : parseFloat(i.price || '0');
+      return sum + (Number.isFinite(p) ? p : 0) * i.quantity;
+    }, 0);
     totalEl.textContent = formatINR(total);
-
-    const list = document.createElement('ul');
-    list.className = 'cart-summary__list';
 
     items.forEach((item) => {
       const li = document.createElement('li');
-      li.className = 'cart-summary__item';
+      const itemPrice = typeof item.price === 'number'
+        ? item.price
+        : parseFloat(item.price || '0');
 
       const customText = item.customization
-        ? Object.entries(item.customization).map(([k, v]) => `${k}: ${v}`).join(', ')
+        ? Object.entries(item.customization).map(([k, v]) => `${k}: ${v}`).join(' · ')
         : '';
 
       li.innerHTML = `
-        <div class="cart-item__info">
-          <strong class="cart-item__title">${item.title}</strong>
-          ${customText ? `<span class="cart-item__custom">${customText}</span>` : ''}
+        <div>
+          <span class="co-title">${item.title}</span>
+          ${customText ? `<span class="co-custom">${customText}</span>` : ''}
         </div>
-        <div class="cart-item__qty">× ${item.quantity}</div>
-        <div class="cart-item__price">${formatINR(item.price * item.quantity)}</div>
+        <div class="co-qty">× ${item.quantity}</div>
+        <div class="co-price">${formatINR(itemPrice * item.quantity)}</div>
       `;
       list.appendChild(li);
     });
 
-    container.appendChild(list);
     actions.hidden = false;
   }
 
@@ -132,120 +138,187 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 </script>
 
 <style>
+  /* Checkout — glass card on workshop bg */
   .checkout-page {
     max-width: 640px;
     margin: 0 auto;
-    padding: var(--space-16) var(--space-4);
+    padding: 90px 24px 80px;
+    position: relative;
+    z-index: 1;
   }
 
   .checkout-page__header {
-    margin-bottom: var(--space-8);
+    margin-bottom: 22px;
   }
 
   .checkout-page__header h1 {
-    font-size: var(--text-3xl);
+    font-family: 'Playfair Display', Georgia, serif;
     font-weight: 700;
-    margin-bottom: var(--space-2);
+    font-size: 42px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #f8f4e8;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
   }
 
   .checkout-page__subtitle {
-    color: var(--color-muted);
+    font-family: 'Merriweather', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.70);
+    font-size: 16px;
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
   }
 
-  .cart-summary__list {
+  /* Glass card wraps the entire transactional block */
+  .checkout-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(14px) saturate(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(1.05);
+    padding: 32px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .co-list {
     list-style: none;
     padding: 0;
-    margin: 0 0 var(--space-8);
-    border-top: 1px solid var(--color-border);
+    margin: 0;
   }
 
-  .cart-summary__item {
+  .co-list li {
     display: grid;
     grid-template-columns: 1fr auto auto;
-    gap: var(--space-4);
+    gap: 18px;
     align-items: center;
-    padding: var(--space-4) 0;
-    border-bottom: 1px solid var(--color-border);
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
   }
 
-  .cart-item__title {
-    display: block;
+  .co-list li:first-child {
+    padding-top: 0;
+  }
+
+  .co-title {
+    font-family: 'Crimson Pro', Georgia, serif;
     font-weight: 600;
-  }
-
-  .cart-item__custom {
+    font-size: 18px;
+    color: #f8f4e8;
     display: block;
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    margin-top: var(--space-1);
   }
 
-  .cart-item__qty {
-    color: var(--color-muted);
+  .co-custom {
+    display: block;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    color: rgba(248, 244, 232, 0.62);
+    margin-top: 4px;
+  }
+
+  .co-qty {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    color: rgba(248, 244, 232, 0.72);
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .co-price {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #f8f4e8;
     white-space: nowrap;
   }
 
-  .cart-item__price {
-    font-weight: 600;
-    white-space: nowrap;
-  }
-
-  .checkout-total {
+  .co-total {
     display: flex;
     justify-content: space-between;
-    font-size: var(--text-xl);
+    align-items: baseline;
+    padding: 18px 0 6px;
+    border-top: 1px solid rgba(248, 244, 232, 0.40);
+    margin-top: 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
     font-weight: 700;
-    padding: var(--space-4) 0;
-    border-top: 2px solid var(--color-text);
-    margin-bottom: var(--space-4);
+    color: #f8f4e8;
   }
 
-  .checkout-note {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    margin-bottom: var(--space-6);
+  .co-total .lbl {
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
-  .checkout-error {
-    margin-top: var(--space-4);
-    color: #c0392b;
-    font-size: var(--text-sm);
+  .co-total .val {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
   }
 
-  .btn {
-    display: inline-flex;
+  .co-note {
+    font-family: 'Merriweather', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.62);
+    font-size: 13px;
+    margin: 18px 0 22px;
+    line-height: 1.5;
+  }
+
+  /* Pay button — intentionally hard geometry (4px radius) to signal weight */
+  .btn-pay {
+    display: flex;
     align-items: center;
     justify-content: center;
-    gap: var(--space-2);
-    padding: var(--space-3) var(--space-6);
-    border: 2px solid currentColor;
+    width: 100%;
+    padding: 18px 24px;
+    background: #f8f4e8;
+    color: #0c0c0e;
+    border: 2px solid #f8f4e8;
     border-radius: 4px;
-    font-weight: 600;
-    font-size: var(--text-base);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
     cursor: pointer;
-    text-decoration: none;
-    transition: background 0.15s, color 0.15s;
+    transition: background 150ms ease, color 150ms ease;
   }
 
-  .btn--primary {
-    background: var(--color-text);
-    color: var(--color-bg);
-    border-color: var(--color-text);
-  }
-
-  .btn--primary:hover:not(:disabled) {
+  .btn-pay:hover:not(:disabled) {
     background: transparent;
-    color: var(--color-text);
+    color: #f8f4e8;
   }
 
-  .btn--primary:disabled {
+  .btn-pay:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
 
-  .btn--large {
-    padding: var(--space-4) var(--space-8);
-    font-size: var(--text-lg);
-    width: 100%;
+  .cart-summary__empty {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.62);
+    text-align: center;
+    padding: 30px 0;
+  }
+
+  .checkout-error {
+    margin-top: 14px;
+    color: #c0392b;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .checkout-page__header h1 {
+      font-size: 32px;
+    }
+
+    .checkout-card {
+      padding: 22px;
+    }
   }
 </style>

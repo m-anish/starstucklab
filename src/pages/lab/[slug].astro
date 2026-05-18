@@ -15,127 +15,297 @@ export async function getStaticPaths() {
 const { note } = Astro.props;
 const { Content } = await render(note);
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-IN', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
+function formatLabDate(date: Date): string {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y} . ${m} . ${d}`;
 }
 ---
-<StandardPageLayout title={`${note.data.title} — Lab Notes`} description={note.data.excerpt} backgroundScene="shop">
-  <main class="note-page container container--narrow">
-    <nav class="note-page__back">
-      <a href="/lab">← Lab Notes</a>
-    </nav>
+<StandardPageLayout
+  title={`${note.data.title} — Lab Notes`}
+  description={note.data.excerpt}
+  backgroundScene="shop"
+>
+  <main class="note-page">
+    <div class="note-wrap">
+      <nav class="note-back">
+        <a href="/lab">← Lab Notes</a>
+      </nav>
 
-    <article class="note-page__article">
-      <header class="note-page__header">
-        <div class="note-page__meta">
-          <time class="note-page__date" datetime={note.data.date.toISOString()}>
-            {formatDate(note.data.date)}
-          </time>
-          {note.data.tags.length > 0 && (
-            <ul class="note-page__tags">
-              {note.data.tags.map((tag) => (
-                <li class="note-page__tag">#{tag}</li>
-              ))}
-            </ul>
-          )}
+      <article class="note-card-full" data-surface="parchment">
+        <header class="note-head">
+          <div class="note-meta">
+            <time class="date" datetime={note.data.date.toISOString()}>
+              {formatLabDate(note.data.date)}
+            </time>
+            {note.data.tags && note.data.tags.length > 0 && (
+              <ul class="note-tags">
+                {note.data.tags.map((tag) => (
+                  <li class="note-tag">{tag}</li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <h1>{note.data.title}</h1>
+          <p class="note-excerpt">{note.data.excerpt}</p>
+        </header>
+
+        <div class="note-body">
+          <Content />
         </div>
-        <h1 class="note-page__title">{note.data.title}</h1>
-        <p class="note-page__excerpt">{note.data.excerpt}</p>
-      </header>
+      </article>
 
-      <div class="note-page__body prose">
-        <Content />
-      </div>
-    </article>
-
-    <footer class="note-page__footer">
-      <a href="/lab" class="note-page__back-link">← Back to Lab Notes</a>
-    </footer>
+      <footer class="note-foot">
+        <a href="/lab" class="note-back-link">← Back to Lab Notes</a>
+      </footer>
+    </div>
   </main>
 </StandardPageLayout>
 
 <style>
   .note-page {
-    padding-top: var(--space-12);
-    padding-bottom: var(--space-20);
+    position: relative;
+    z-index: 1;
   }
 
-  .note-page__back {
-    margin-bottom: var(--space-10);
+  .note-wrap {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 90px 24px 80px;
   }
 
-  .note-page__back a {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
+  .note-back {
+    margin-bottom: 18px;
+  }
+
+  .note-back a {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    color: rgba(248, 244, 232, 0.7);
     text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    transition: background 0.15s ease;
   }
 
-  .note-page__back a:hover {
-    color: var(--color-text);
+  .note-back a:hover {
+    background: rgba(255, 255, 255, 0.10);
   }
 
-  .note-page__meta {
+  .note-card-full {
+    background: linear-gradient(
+      135deg,
+      #fae5d0 0%,
+      #f4dcc0 25%,
+      #eed7b8 50%,
+      #f4ddbc 75%,
+      #f7dfc0 100%
+    );
+    border-radius: 12px;
+    padding: 48px 52px;
+    color: #2b160e;
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.7;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .note-card-full::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('/assets/textures/paper-grain.webp');
+    background-size: 300px;
+    opacity: 0.18;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    border-radius: 12px;
+  }
+
+  .note-card-full > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .note-head {
+    margin-bottom: 24px;
+    padding-bottom: 22px;
+    border-bottom: 1px dashed rgba(80, 50, 25, 0.25);
+  }
+
+  .note-meta {
     display: flex;
     align-items: center;
-    gap: var(--space-4);
-    margin-bottom: var(--space-4);
+    gap: 14px;
+    flex-wrap: wrap;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    color: #5d3a1e;
+    font-weight: 600;
+    margin-bottom: 14px;
   }
 
-  .note-page__date {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
-    font-family: var(--font-mono);
+  .note-meta .date {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    text-transform: none;
   }
 
-  .note-page__tags {
+  .note-tags {
     display: flex;
-    gap: var(--space-2);
+    flex-wrap: wrap;
+    gap: 6px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
 
-  .note-page__tag {
-    font-size: var(--text-xs);
-    color: var(--color-muted);
-    font-family: var(--font-mono);
+  .note-tag {
+    padding: 3px 8px;
+    background: rgba(80, 50, 25, 0.10);
+    border: 1px solid rgba(80, 50, 25, 0.18);
+    border-radius: 9999px;
+    font-size: 10.5px;
+    text-transform: none;
+    letter-spacing: 0.02em;
   }
 
-  .note-page__title {
-    font-size: var(--text-4xl);
-    font-weight: var(--weight-bold);
+  .note-head h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 38px;
+    line-height: 1.1;
     letter-spacing: -0.02em;
-    line-height: var(--leading-tight);
-    margin-bottom: var(--space-4);
+    color: #2a1d12;
+    margin: 0 0 12px;
+    text-wrap: balance;
   }
 
-  .note-page__excerpt {
-    font-size: var(--text-lg);
-    color: var(--color-muted);
-    line-height: var(--leading-base);
-    margin-bottom: var(--space-10);
-    border-bottom: 1px solid var(--color-border);
-    padding-bottom: var(--space-8);
+  .note-excerpt {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    font-size: 18px;
+    line-height: 1.55;
+    color: #4a3420;
+    margin: 0;
   }
 
-  .note-page__body {
-    /* .prose styles come from global.css */
+  /* ── Body content ── */
+  .note-body {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 17px;
+    line-height: 1.7;
+    color: #2b160e;
   }
 
-  .note-page__footer {
-    margin-top: var(--space-16);
-    padding-top: var(--space-8);
-    border-top: 1px solid var(--color-border);
+  .note-body :global(h2) {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 24px;
+    color: #2a1d12;
+    margin: 28px 0 12px;
+    letter-spacing: -0.01em;
   }
 
-  .note-page__back-link {
-    font-size: var(--text-sm);
-    color: var(--color-muted);
+  .note-body :global(h3) {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 20px;
+    color: #2a1d12;
+    margin: 22px 0 10px;
+  }
+
+  .note-body :global(p) {
+    margin: 0 0 16px;
+  }
+
+  .note-body :global(a) {
+    color: #1d5a3d;
     text-decoration: none;
+    border-bottom: 1px dashed rgba(29, 90, 61, 0.4);
   }
 
-  .note-page__back-link:hover {
-    color: var(--color-text);
+  .note-body :global(a:hover) {
+    color: #2a7a4f;
+    border-bottom-color: #2a7a4f;
+  }
+
+  .note-body :global(code) {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 14px;
+    background: rgba(80, 50, 25, 0.10);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .note-body :global(pre) {
+    background: rgba(40, 22, 11, 0.05);
+    border: 1px solid rgba(80, 50, 25, 0.20);
+    border-radius: 6px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 13.5px;
+    line-height: 1.55;
+  }
+
+  .note-body :global(blockquote) {
+    border-left: 3px solid rgba(80, 50, 25, 0.30);
+    padding-left: 16px;
+    margin: 18px 0;
+    color: #4a3420;
+    font-style: italic;
+  }
+
+  .note-body :global(ul),
+  .note-body :global(ol) {
+    margin: 0 0 16px;
+    padding-left: 22px;
+  }
+
+  .note-body :global(li) {
+    margin: 6px 0;
+  }
+
+  /* ── Footer ── */
+  .note-foot {
+    margin-top: 32px;
+    text-align: center;
+  }
+
+  .note-back-link {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    color: rgba(248, 244, 232, 0.55);
+    text-decoration: none;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  .note-back-link:hover {
+    color: rgba(248, 244, 232, 0.85);
+  }
+
+  @media (max-width: 640px) {
+    .note-wrap {
+      padding: 70px 16px 60px;
+    }
+
+    .note-card-full {
+      padding: 28px 22px;
+    }
+
+    .note-head h1 {
+      font-size: 30px;
+    }
   }
 </style>

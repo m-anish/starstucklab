@@ -20,19 +20,21 @@ const hasCustomization = customization.options.length > 0;
 {hasCustomization && (
   <div class="customization-panel-wrapper" data-product-slug={product.slug}>
     <button type="button" class="customize-toggle" id="customizeToggle">
-      <span class="toggle-icon">✨</span>
+      <span class="toggle-icon" aria-hidden="true">✦</span>
       <span class="toggle-text">
         <strong>Make it yours</strong>
-        <small>Standard build · Customize colors & options</small>
+        <small>Standard build · or customize colours, finish, and an engraved line</small>
       </span>
-      <span class="toggle-arrow">▼</span>
+      <span class="toggle-arrow" aria-hidden="true">▼</span>
     </button>
-    
+
     <div class="customization-panel" id="customizationPanel" data-expanded="false">
       <div class="panel-header">
-        <h3>Customize Your {product.title}</h3>
+        <h3>Customize your {product.title}</h3>
         <button type="button" class="panel-close" id="panelClose" aria-label="Close customization">
-          ✕
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M6 18L18 6M6 6l12 12"/>
+          </svg>
         </button>
       </div>
       

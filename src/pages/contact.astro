@@ -1,107 +1,317 @@
 ---
-// contact.astro — V1 visual restoration: StandardPageLayout with workshop background
+// contact.astro — Parchment correspondence panel on back-room (shop.webp).
+// Matches the design system's contact surface.
 import StandardPageLayout from '../layouts/StandardPageLayout.astro';
-import '../styles/components/standard-page.css';
-import '../styles/components/contact.css';
 ---
 <StandardPageLayout
   title="Contact — Starstuck Lab"
-  description="Get in touch about orders, custom requests, or existential queries."
+  description="A quiet line into the workshop."
   pageClass="standard-page"
   backgroundScene="shop"
 >
-  <div class="contact-page">
-    <div class="contact-container">
-      <div class="contact-header">
-        <h1>Get In Touch</h1>
-        <p class="contact-lead">
-          For orders, custom builds, shipping questions, warranty inquiries,
-          or if you just want to tell us what you saw last night.
-        </p>
-      </div>
+  <main class="contact-page">
+    <article class="parchment contact-parchment" data-surface="parchment">
+      <h1 class="contact-title">Send a quiet note.</h1>
+      <p class="contact-motto">Replies arrive when the workshop is warm.</p>
 
-      <div class="contact-grid">
-        <div class="contact-info">
-          <div class="info-card">
-            <h3>📧 Email</h3>
-            <p>
-              <a href="mailto:hello@starstucklab.com">hello@starstucklab.com</a>
-            </p>
+      <ul class="contact-facts">
+        <li>
+          <span class="contact-facts__label">Direct line</span>
+          <a href="mailto:hello@starstucklab.com" class="contact-facts__value">hello@starstucklab.com</a>
+        </li>
+        <li>
+          <span class="contact-facts__label">Reply time</span>
+          <span class="contact-facts__value">Usually within a day. Occasionally within a week. Never longer than the thermal equilibration of a small atmosphere.</span>
+        </li>
+        <li>
+          <span class="contact-facts__label">Custom orders</span>
+          <span class="contact-facts__value">Every telescope is built to order. Mention any modifications before placing an order, so the workshop can plan around them.</span>
+        </li>
+      </ul>
+
+      <form id="contact-form" class="contact-form" novalidate>
+        <fieldset class="contact-form__fieldset">
+          <legend class="contact-form__legend">Correspondence</legend>
+
+          <div class="contact-form__field">
+            <label for="name">Your name</label>
+            <input id="name" name="name" type="text" required autocomplete="name" placeholder="Whoever you happen to be" />
           </div>
 
-          <div class="info-card">
-            <h3>⏱️ Response Time</h3>
-            <p>
-              Usually within 24 hours, occasionally within a week,
-              never more than the thermal equilibration time of a planetary atmosphere.
-            </p>
+          <div class="contact-form__field">
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required autocomplete="email" placeholder="somewhere@elsewhere" />
           </div>
 
-          <div class="info-card">
-            <h3>🔭 Custom Orders</h3>
-            <p>
-              All telescopes are built to order. Reach out before placing an order
-              if you have specific requirements or modifications in mind.
-            </p>
+          <div class="contact-form__field">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" rows={6} required placeholder="Type quietly."></textarea>
           </div>
-        </div>
 
-        <div class="contact-form-section">
-          <form id="contact-form" novalidate>
-            <div class="form-field">
-              <label for="name">Name</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                autocomplete="name"
-                placeholder="Your name"
-              />
-            </div>
+          <div id="form-status" class="form-status" hidden></div>
 
-            <div class="form-field">
-              <label for="email">Email</label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                autocomplete="email"
-                placeholder="you@example.com"
-              />
-            </div>
+          <button type="submit" id="submit-btn" class="contact-form__submit">
+            Send
+          </button>
+        </fieldset>
+      </form>
 
-            <div class="form-field">
-              <label for="message">Message</label>
-              <textarea
-                id="message"
-                name="message"
-                rows={6}
-                required
-                placeholder="What's on your mind?"
-              ></textarea>
-            </div>
-
-            <div id="form-status" class="form-status" hidden></div>
-
-            <button type="submit" id="submit-btn" class="cta-btn">
-              Send Message
-            </button>
-          </form>
-        </div>
-      </div>
-
-      <div class="contact-footer-note">
-        <p>
-          Alternatively, email directly at
-          <a href="mailto:hello@starstucklab.com">hello@starstucklab.com</a>.
-          We're a one-person workshop — your patience is appreciated.
-        </p>
-      </div>
-    </div>
-  </div>
+      <p class="contact-foot">
+        Or simply write to <a href="mailto:hello@starstucklab.com">hello@starstucklab.com</a>. The workshop is one-person and answers in its own time.
+      </p>
+    </article>
+  </main>
 </StandardPageLayout>
+
+<style>
+  .contact-page {
+    padding: 90px 24px 80px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .contact-parchment {
+    position: relative;
+    background: linear-gradient(135deg, #fae5d0 0%, #f4dcc0 25%, #eed7b8 50%, #f4ddbc 75%, #f7dfc0 100%);
+    border-radius: 12px;
+    padding: 48px 52px;
+    max-width: 640px;
+    width: 100%;
+    color: #2b160e;
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.7;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  }
+
+  .contact-parchment::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: radial-gradient(
+      ellipse 75% 90% at center,
+      transparent 35%,
+      rgba(80, 50, 30, 0.10) 85%,
+      rgba(60, 40, 25, 0.18) 100%
+    );
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .contact-parchment > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  .contact-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 38px;
+    line-height: 1.1;
+    color: #2a1d12;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+  }
+
+  .contact-motto {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: #4a3420;
+    font-size: 18px;
+    margin: 0 0 26px;
+  }
+
+  /* ── Facts strip ── */
+  .contact-facts {
+    list-style: none;
+    margin: 0 0 28px;
+    padding: 18px 22px;
+    background: rgba(255, 250, 240, 0.5);
+    border: 1px solid rgba(80, 50, 25, 0.15);
+    border-radius: 8px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .contact-facts li {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 16px;
+    align-items: baseline;
+  }
+
+  .contact-facts__label {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: #5d3a1e;
+  }
+
+  .contact-facts__value {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 15px;
+    color: #2b160e;
+    line-height: 1.55;
+  }
+
+  .contact-facts a.contact-facts__value {
+    color: #1d5a3d;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(29, 90, 61, 0.4);
+  }
+
+  .contact-facts a.contact-facts__value:hover {
+    color: #2a7a4f;
+    border-bottom-color: #2a7a4f;
+  }
+
+  /* ── Form ── */
+  .contact-form {
+    margin-bottom: 22px;
+  }
+
+  .contact-form__fieldset {
+    border: 2px dashed rgba(80, 50, 25, 0.20);
+    padding: 22px;
+    border-radius: 8px;
+    background: rgba(255, 250, 240, 0.6);
+    box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.04);
+  }
+
+  .contact-form__legend {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 700;
+    color: #2b160e;
+    font-size: 16px;
+    padding: 0 8px;
+  }
+
+  .contact-form__field {
+    margin-bottom: 14px;
+  }
+
+  .contact-form__field label {
+    display: block;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 600;
+    color: #2b160e;
+    font-size: 14px;
+    margin: 0 0 6px;
+  }
+
+  .contact-form__field input,
+  .contact-form__field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid rgba(80, 50, 25, 0.25);
+    border-radius: 6px;
+    background: rgba(255, 250, 240, 0.9);
+    font-family: 'Crimson Pro', Georgia, serif;
+    color: #2b160e;
+    font-size: 15px;
+    box-sizing: border-box;
+  }
+
+  .contact-form__field input:focus,
+  .contact-form__field textarea:focus {
+    outline: none;
+    border-color: #8b6235;
+    box-shadow: 0 0 0 3px rgba(139, 98, 53, 0.15);
+  }
+
+  .contact-form__field textarea {
+    min-height: 140px;
+    resize: vertical;
+  }
+
+  .contact-form__submit {
+    background: linear-gradient(135deg, #ce9a62, #a0744a);
+    color: #fff;
+    border: 2px solid #6b4a28;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 700;
+    font-size: 15px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.25s ease;
+  }
+
+  .contact-form__submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.28);
+  }
+
+  .contact-form__submit:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .form-status {
+    margin: 14px 0 8px;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 14px;
+  }
+
+  .form-status--success {
+    background: rgba(42, 122, 79, 0.12);
+    color: #1d5a3d;
+    border: 1px solid rgba(42, 122, 79, 0.30);
+  }
+
+  .form-status--error {
+    background: rgba(140, 40, 30, 0.10);
+    color: #7a2a1f;
+    border: 1px solid rgba(140, 40, 30, 0.30);
+  }
+
+  .contact-foot {
+    margin: 0;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: #4a3420;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+
+  .contact-foot a {
+    color: #1d5a3d;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(29, 90, 61, 0.4);
+  }
+
+  @media (max-width: 640px) {
+    .contact-page {
+      padding: 80px 16px 60px;
+    }
+
+    .contact-parchment {
+      padding: 32px 24px;
+    }
+
+    .contact-title {
+      font-size: 30px;
+    }
+
+    .contact-facts li {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
+</style>
 
 <script>
   const form = document.getElementById('contact-form') as HTMLFormElement | null;
@@ -119,6 +329,7 @@ import '../styles/components/contact.css';
     e.preventDefault();
     if (!submitBtn || !statusEl) return;
     submitBtn.disabled = true;
+    const originalLabel = submitBtn.textContent;
     submitBtn.textContent = 'Sending…';
     statusEl.hidden = true;
 
@@ -132,7 +343,7 @@ import '../styles/components/contact.css';
       const data = await res.json();
 
       if (res.ok) {
-        showStatus("Message sent. We'll get back to you shortly.", 'success');
+        showStatus('Message sent. A reply will arrive when the workshop is warm.', 'success');
         form.reset();
       } else {
         throw new Error(data.error ?? 'Unknown error');
@@ -142,7 +353,7 @@ import '../styles/components/contact.css';
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send Message';
+        submitBtn.textContent = originalLabel ?? 'Send';
       }
     }
   });
