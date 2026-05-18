@@ -28,7 +28,7 @@ const navItems = rawItems.map((item) => ({
     <!-- Logo / wordmark -->
     <a href={base} class="navbar__brand" aria-label="Starstuck Lab home">
       <img
-        src={`${base}assets/icons/starstucklab_logo_black_white.svg`}
+        src={`${base}assets/icons/starstucklab_logo_light.svg`}
         alt="Starstuck Lab star logo"
         class="navbar__logo-img"
         width="28"
@@ -116,8 +116,7 @@ const navItems = rawItems.map((item) => ({
     width: 28px;
     height: 28px;
     display: block;
-    /* Invert to make it white on dark navbar */
-    filter: invert(1);
+    /* The light variant is already white on transparent, no filter needed. */
   }
 
   .navbar__wordmark {

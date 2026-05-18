@@ -118,9 +118,8 @@
   width: 52px;
   height: 52px;
   display: block;
-  /* SVG ships as black-on-white; invert + brighten to render as a clean
-     starry-white glyph that sits flat on the painted hero. */
-  filter: invert(1) brightness(1.1) drop-shadow(0 2px 6px rgba(0,0,0,0.6));
+  /* Light variant is white on transparent — no invert needed. */
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.6));
 }
 
 .hero-wordmark {

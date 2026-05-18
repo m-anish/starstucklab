@@ -1,9 +1,9 @@
 ---
-// FeaturedSections.astro — V2 adapted: products only (no projects collection)
-// Shows featured shop products with parchment card styling
+// FeaturedSections.astro — V2: products only. Renders the homepage
+// featured grid as glass cards on the workshop background, matching the
+// design system's `.product-card` pattern.
 import { getCollection } from 'astro:content';
 import '../styles/components/featured-sections.css';
-import '../styles/components/parchment.css';
 
 const base = (Astro.site?.pathname || '/').replace(/\/?$/, '/');
 
@@ -39,11 +39,13 @@ function formatPrice(price: number): string {
 
 <div class="featured-sections-wrap">
   {featuredProducts.length > 0 && (
-    <section class="featured-section featured-card featured-card--shop" id="featured-shop">
+    <section class="featured-section" id="featured-shop">
       <div class="section-header">
-        <h2>Available Now</h2>
+        <p class="section-tag">From the bench</p>
+        <h2>Two telescopes, attempting usefulness.</h2>
         <p class="section-lead">
-          Artifacts from the workshop, lightly assembled, ready to ship.
+          Each one started as a sketch on the back of an envelope and ended
+          somewhere between hardware and confession.
         </p>
       </div>
 
@@ -53,8 +55,9 @@ function formatPrice(price: number): string {
           const isOOS = product.stock_status === 'out_of_stock';
           return (
             <a class="fs-product-card" href={product.url} aria-label={`View ${product.title}`}>
-              <article class="parchment parchment--compact fs-polaroid">
+              <article class="fs-glass">
                 <div class="fs-thumb">
+                  <span class="fs-gen-badge" aria-hidden="true">✦ generated</span>
                   {product.images?.master ? (
                     <img
                       src={product.images.master}
@@ -62,24 +65,20 @@ function formatPrice(price: number): string {
                       loading="lazy"
                     />
                   ) : (
-                    <div class="fs-thumb-placeholder" aria-hidden="true">✦</div>
+                    <div class="fs-thumb-placeholder" aria-hidden="true">{product.title.slice(0, 3)}</div>
                   )}
                 </div>
+                <h3 class="fs-title">{product.title}</h3>
+                {product.tagline && <p class="fs-tagline">{product.tagline}</p>}
                 <div class="fs-meta">
-                  <div class="fs-badges">
-                    {isBTO && <span class="fs-badge">Build to Order</span>}
-                    {isOOS && <span class="fs-badge fs-badge--out">Out of Stock</span>}
-                  </div>
-                  <h3 class="fs-title">{product.title}</h3>
-                  {product.tagline && <p class="fs-tagline">{product.tagline}</p>}
                   {product.price && (
-                    <div class="fs-price">{formatPrice(product.price)}</div>
+                    <span class="fs-price">{formatPrice(product.price)}</span>
                   )}
-                  {product.excerpt && (
-                    <p class="fs-excerpt">{product.excerpt}</p>
-                  )}
-                  {isBTO && product.lead_time && (
-                    <p class="fs-lead-time">Ships in {product.lead_time}</p>
+                  {(isBTO || isOOS) && (
+                    <span class={`fs-stock ${isOOS ? 'fs-stock--out' : 'fs-stock--pre'}`}>
+                      <span class="dot" aria-hidden="true">●</span>
+                      {isOOS ? 'Out of stock' : `Build to order${product.lead_time ? ' · ' + product.lead_time : ''}`}
+                    </span>
                   )}
                 </div>
               </article>
@@ -90,7 +89,7 @@ function formatPrice(price: number): string {
 
       <div class="section-footer">
         <a href={`${base}shop`} class="section-cta">
-          Browse the Shop <span aria-hidden="true">→</span>
+          Browse the shop <span aria-hidden="true">→</span>
         </a>
       </div>
     </section>
@@ -98,149 +97,214 @@ function formatPrice(price: number): string {
 
   {featuredProducts.length === 0 && (
     <section class="featured-section">
-      <div class="parchment parchment--centered">
-        <p style="color: var(--parchment-text, #2b160e); text-align: center;">
-          The workshop is currently being restocked. Check back soon.
-        </p>
-      </div>
+      <p class="fs-empty">The workshop is currently being restocked. Check back soon.</p>
     </section>
   )}
 </div>
 
 <style>
-/* ── Featured section product cards ── */
+/* ── Glass product cards (homepage featured grid) ── */
+.section-tag {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(248, 244, 232, 0.55);
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.section-lead {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 300;
+  color: rgba(248, 244, 232, 0.78);
+  max-width: 52ch;
+  margin-inline: auto;
+  font-size: 17px;
+  line-height: 1.55;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
 .fs-product-card {
   display: block;
   text-decoration: none;
   color: inherit;
   width: 100%;
-  transition: transform 0.25s ease;
 }
 
-.fs-product-card:hover {
-  transform: translateY(-4px);
+.fs-glass {
+  position: relative;
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 22px;
+  overflow: hidden;
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+              border-color 0.25s ease,
+              background 0.25s ease;
 }
 
-.fs-polaroid {
-  transition: box-shadow 0.25s ease;
+/* Shimmer sweep on hover */
+.fs-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.10) 50%,
+    transparent 65%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+  pointer-events: none;
 }
 
-.fs-product-card:hover .fs-polaroid {
-  box-shadow: 0 16px 48px rgba(6, 6, 6, 0.38);
+.fs-product-card:hover .fs-glass {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(78, 197, 122, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.fs-product-card:hover .fs-glass::before {
+  transform: translateX(100%);
 }
 
 .fs-thumb {
-  width: 100%;
-  border-radius: 12px;
+  position: relative;
+  aspect-ratio: 4 / 3;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111 center / cover no-repeat;
   overflow: hidden;
-  background: rgba(248, 244, 232, 0.95);
-  border: 4px solid rgba(120, 85, 40, 0.35);
-  margin-bottom: 0.75rem;
-  aspect-ratio: 4/3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+
+/* Soft green radial glow over the thumb */
+.fs-thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle,
+    rgba(78, 197, 122, 0.10) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
 }
 
 .fs-thumb img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  border-radius: 8px;
-  transition: transform 0.25s ease;
-}
-
-.fs-product-card:hover .fs-thumb img {
-  transform: scale(1.04);
+  display: block;
 }
 
 .fs-thumb-placeholder {
-  font-size: 3rem;
-  color: rgba(120, 85, 40, 0.4);
-}
-
-.fs-meta {
-  padding: 0 0.25rem;
-}
-
-.fs-badges {
+  position: absolute;
+  inset: 0;
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-  flex-wrap: wrap;
-  min-height: 1.4rem;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 72px;
+  color: rgba(255, 255, 255, 0.20);
+  letter-spacing: -0.05em;
 }
 
-.fs-badge {
-  display: inline-block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #1d5a3d;
-  background: rgba(29, 90, 61, 0.10);
-  border: 1px solid rgba(29, 90, 61, 0.28);
-  border-radius: 100px;
-  padding: 2px 9px;
+.fs-gen-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.75);
   font-family: 'Space Grotesk', system-ui, sans-serif;
-}
-
-.fs-badge--out {
-  color: #9b2226;
-  background: rgba(155, 34, 38, 0.08);
-  border-color: rgba(155, 34, 38, 0.25);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
 }
 
 .fs-title {
   font-family: 'Playfair Display', Georgia, serif;
   font-weight: 700;
-  font-size: 1.1rem;
-  margin: 0 0 0.3rem 0;
-  color: #2a1d12;
-  line-height: 1.3;
-  transition: color 0.2s ease;
-}
-
-.fs-product-card:hover .fs-title {
-  color: #2a7a4f;
+  font-size: 22px;
+  color: #f8f4e8;
+  margin: 0 0 6px;
+  letter-spacing: -0.01em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
 }
 
 .fs-tagline {
-  font-family: 'Merriweather', Georgia, serif;
-  font-size: 0.82rem;
-  color: #4a3420;
+  font-family: 'Crimson Pro', Georgia, serif;
   font-style: italic;
-  margin: 0 0 0.4rem 0;
-  line-height: 1.4;
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(248, 244, 232, 0.75);
+  margin: 0 0 14px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+.fs-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .fs-price {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #1d5a3d;
-  margin-bottom: 0.4rem;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-weight: 600;
+  color: #f8f4e8;
+  font-size: 16px;
 }
 
-.fs-excerpt {
-  font-family: 'Merriweather', Georgia, serif;
-  font-size: 0.82rem;
-  color: #2b1f18;
-  line-height: 1.4;
-  margin: 0 0 0.4rem 0;
+.fs-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  border: 1px solid;
 }
 
-.fs-lead-time {
-  font-size: 0.78rem;
-  color: #5a4030;
+.fs-stock .dot {
+  font-size: 8px;
+  line-height: 1;
+}
+
+.fs-stock--pre {
+  background: rgba(139, 157, 195, 0.14);
+  color: #a6b3cf;
+  border-color: rgba(139, 157, 195, 0.30);
+}
+
+.fs-stock--out {
+  background: rgba(170, 102, 102, 0.12);
+  color: #d4a89c;
+  border-color: rgba(170, 102, 102, 0.30);
+}
+
+.fs-empty {
+  font-family: 'Crimson Pro', Georgia, serif;
   font-style: italic;
-  margin: 0;
-  font-family: 'Merriweather', Georgia, serif;
-}
-
-@media (max-width: 640px) {
-  .fs-thumb {
-    aspect-ratio: 16/9;
-  }
+  color: rgba(248, 244, 232, 0.55);
+  text-align: center;
+  padding: 60px 20px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
 }
 </style>

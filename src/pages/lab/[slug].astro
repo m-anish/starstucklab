@@ -134,6 +134,15 @@ function formatLabDate(date: Date): string {
     z-index: 1;
   }
 
+  /* Force every descendant inside the parchment slab to inherit the
+     dark-brown body colour. Specific selectors below (h2, code, a, etc.)
+     override individual elements with their own colours. Otherwise body's
+     --color-text bleeds through and turns paragraphs white. */
+  .note-card-full,
+  .note-card-full :global(*) {
+    color: #2b160e;
+  }
+
   .note-head {
     margin-bottom: 24px;
     padding-bottom: 22px;

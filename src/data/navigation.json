@@ -11,9 +11,14 @@
       "priority": 2
     },
     {
+      "label": "About",
+      "href": "/about",
+      "priority": 3
+    },
+    {
       "label": "Contact",
       "href": "/contact",
-      "priority": 3
+      "priority": 4
     }
   ],
   "settings": {
