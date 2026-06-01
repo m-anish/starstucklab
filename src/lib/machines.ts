@@ -31,6 +31,8 @@ export interface Machine {
   repo: string | null;
   /** The product's signature accent (hex), for a subtle per-card tint. */
   accent: string;
+  /** Optional card image (web path), e.g. populated by tools/gen_machine_cards.py. */
+  image?: string | null;
   order: number;
   featured: boolean;
 }
