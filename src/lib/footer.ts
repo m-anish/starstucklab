@@ -36,8 +36,8 @@ const defaultFooter: FooterData = {
       id: "workbench",
       title: "Quick Links",
       links: [
-        { label: "Projects", href: "/projects", order: 1 },
-        { label: "Shop", href: "/shop", order: 2 },
+        { label: "Machines", href: "/machines", order: 1 },
+        { label: "Lab Notes", href: "/lab", order: 2 },
         { label: "Contact", href: "/contact", order: 3 }
       ]
     },

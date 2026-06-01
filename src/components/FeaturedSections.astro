@@ -1,109 +1,52 @@
 ---
-// FeaturedSections.astro — V2: products only. Renders the homepage
-// featured grid as glass cards on the workshop background, matching the
-// design system's `.product-card` pattern.
-import { getCollection } from 'astro:content';
+// FeaturedSections.astro — homepage below-hero "constellation preview".
+// Sources from the machines registry (not the shop) and reuses MachineCard so
+// it stays consistent with /machines. Shows one machine per kind to tell the
+// breadth story (a telescope, a machine, a piece of software).
+import { getMachines } from '../lib/machines';
+import MachineCard from './MachineCard.astro';
 import '../styles/components/featured-sections.css';
 
-const base = (Astro.site?.pathname || '/').replace(/\/?$/, '/');
-
-let featuredProducts: any[] = [];
-try {
-  const allProducts = await getCollection('products');
-  const sorted = (allProducts as any[])
-    .filter((p: any) => p.data.status === 'available')
-    .sort((a: any, b: any) => {
-      const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-      const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-      return dateB - dateA;
-    });
-  featuredProducts = sorted.slice(0, 3).map((entry: any) => ({
-    slug: entry.slug,
-    title: entry.data.title,
-    tagline: entry.data.tagline || '',
-    excerpt: entry.data.excerpt || '',
-    price: entry.data.price,
-    stock_status: entry.data.stock_status,
-    lead_time: entry.data.lead_time,
-    images: entry.data.images,
-    url: `${base}shop/${entry.slug}`
-  }));
-} catch (e) {
-  console.warn('Could not load products collection:', e);
-}
-
-function formatPrice(price: number): string {
-  return '₹' + price.toLocaleString('en-IN');
-}
+const machines = getMachines();
+const kinds = ['telescope', 'hardware', 'software'] as const;
+const preview = kinds
+  .map((k) => machines.find((m) => m.kind === k && m.access !== 'soon'))
+  .filter((m): m is NonNullable<typeof m> => Boolean(m));
 ---
 
 <div class="featured-sections-wrap">
-  {featuredProducts.length > 0 && (
-    <section class="featured-section" id="featured-shop">
+  {preview.length > 0 ? (
+    <section class="featured-section" id="featured-machines">
       <div class="section-header">
         <p class="section-tag">From the bench</p>
-        <h2>Two telescopes, attempting usefulness.</h2>
+        <h2>Small machines, attempting usefulness.</h2>
         <p class="section-lead">
           Each one started as a sketch on the back of an envelope and ended
-          somewhere between hardware and confession.
+          somewhere between hardware and confession — a telescope, a box that
+          argues with lightning, an almanac for the night sky.
         </p>
       </div>
 
       <div class="featured-grid">
-        {featuredProducts.map((product) => {
-          const isBTO = product.stock_status === 'build_to_order';
-          const isOOS = product.stock_status === 'out_of_stock';
-          return (
-            <a class="fs-product-card" href={product.url} aria-label={`View ${product.title}`}>
-              <article class="fs-glass">
-                <div class="fs-thumb">
-                  <span class="fs-gen-badge" aria-hidden="true">✦ generated</span>
-                  {product.images?.master ? (
-                    <img
-                      src={product.images.master}
-                      alt={product.title}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div class="fs-thumb-placeholder" aria-hidden="true">{product.title.slice(0, 3)}</div>
-                  )}
-                </div>
-                <h3 class="fs-title">{product.title}</h3>
-                {product.tagline && <p class="fs-tagline">{product.tagline}</p>}
-                <div class="fs-meta">
-                  {product.price && (
-                    <span class="fs-price">{formatPrice(product.price)}</span>
-                  )}
-                  {(isBTO || isOOS) && (
-                    <span class={`fs-stock ${isOOS ? 'fs-stock--out' : 'fs-stock--pre'}`}>
-                      <span class="dot" aria-hidden="true">●</span>
-                      {isOOS ? 'Out of stock' : `Build to order${product.lead_time ? ' · ' + product.lead_time : ''}`}
-                    </span>
-                  )}
-                </div>
-              </article>
-            </a>
-          );
-        })}
+        {preview.map((machine) => <MachineCard machine={machine} />)}
       </div>
 
       <div class="section-footer">
-        <a href={`${base}shop`} class="section-cta">
-          Browse the shop <span aria-hidden="true">→</span>
+        <a href="/machines" class="section-cta">
+          See all the machines <span aria-hidden="true">→</span>
         </a>
       </div>
     </section>
-  )}
-
-  {featuredProducts.length === 0 && (
+  ) : (
     <section class="featured-section">
-      <p class="fs-empty">The workshop is currently being restocked. Check back soon.</p>
+      <p class="fs-empty">The workshop is currently between projects. Check back soon.</p>
     </section>
   )}
 </div>
 
 <style>
-/* ── Glass product cards (homepage featured grid) ── */
+/* Header copy for the constellation preview. The grid/section/cta layout comes
+   from featured-sections.css; the cards style themselves (MachineCard). */
 .section-tag {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 11px;
@@ -123,180 +66,6 @@ function formatPrice(price: number): string {
   font-size: 17px;
   line-height: 1.55;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-}
-
-.fs-product-card {
-  display: block;
-  text-decoration: none;
-  color: inherit;
-  width: 100%;
-}
-
-.fs-glass {
-  position: relative;
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 22px;
-  overflow: hidden;
-  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1),
-              border-color 0.25s ease,
-              background 0.25s ease;
-}
-
-/* Shimmer sweep on hover */
-.fs-glass::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    115deg,
-    transparent 35%,
-    rgba(255, 255, 255, 0.10) 50%,
-    transparent 65%
-  );
-  transform: translateX(-100%);
-  transition: transform 0.6s ease;
-  pointer-events: none;
-}
-
-.fs-product-card:hover .fs-glass {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(78, 197, 122, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-}
-
-.fs-product-card:hover .fs-glass::before {
-  transform: translateX(100%);
-}
-
-.fs-thumb {
-  position: relative;
-  aspect-ratio: 4 / 3;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: #111 center / cover no-repeat;
-  overflow: hidden;
-}
-
-/* Soft green radial glow over the thumb */
-.fs-thumb::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(
-    circle,
-    rgba(78, 197, 122, 0.10) 0%,
-    transparent 70%
-  );
-  pointer-events: none;
-}
-
-.fs-thumb img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.fs-thumb-placeholder {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 72px;
-  color: rgba(255, 255, 255, 0.20);
-  letter-spacing: -0.05em;
-}
-
-.fs-gen-badge {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 2;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: rgba(255, 255, 255, 0.75);
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.10em;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 4px;
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-}
-
-.fs-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-weight: 700;
-  font-size: 22px;
-  color: #f8f4e8;
-  margin: 0 0 6px;
-  letter-spacing: -0.01em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
-}
-
-.fs-tagline {
-  font-family: 'Crimson Pro', Georgia, serif;
-  font-style: italic;
-  font-size: 14px;
-  line-height: 1.5;
-  color: rgba(248, 244, 232, 0.75);
-  margin: 0 0 14px;
-  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
-}
-
-.fs-meta {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: 12px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.fs-price {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-weight: 600;
-  color: #f8f4e8;
-  font-size: 16px;
-}
-
-.fs-stock {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  border: 1px solid;
-}
-
-.fs-stock .dot {
-  font-size: 8px;
-  line-height: 1;
-}
-
-.fs-stock--pre {
-  background: rgba(139, 157, 195, 0.14);
-  color: #a6b3cf;
-  border-color: rgba(139, 157, 195, 0.30);
-}
-
-.fs-stock--out {
-  background: rgba(170, 102, 102, 0.12);
-  color: #d4a89c;
-  border-color: rgba(170, 102, 102, 0.30);
 }
 
 .fs-empty {

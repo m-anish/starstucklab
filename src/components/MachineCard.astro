@@ -1,0 +1,215 @@
+---
+import type { Machine } from '../lib/machines';
+import { machineCta, kindLabel } from '../lib/machines';
+
+interface Props {
+  machine: Machine;
+}
+
+const { machine } = Astro.props;
+const cta = machineCta(machine.access);
+---
+
+<article class="mc" style={`--card-accent: ${machine.accent}`}>
+  <!-- Top badge row -->
+  <div class="mc__badges">
+    <span class="mc__badge mc__badge--kind">{kindLabel(machine.kind)}</span>
+    <span class="mc__badge mc__badge--status">{machine.status}</span>
+  </div>
+
+  <h3 class="mc__name">{machine.name}</h3>
+  <p class="mc__tagline">{machine.tagline}</p>
+  <p class="mc__blurb">{machine.blurb}</p>
+
+  <!-- Footer row: CTA + optional repo link -->
+  <div class="mc__footer">
+    {cta.isLink && machine.url ? (
+      machine.external ? (
+        <a class="mc__cta" href={machine.url} target="_blank" rel="noopener">
+          {cta.label} ↗
+        </a>
+      ) : (
+        <a class="mc__cta" href={machine.url}>
+          {cta.label} →
+        </a>
+      )
+    ) : (
+      <span class="mc__cta mc__cta--muted">{cta.label}</span>
+    )}
+
+    {machine.repo && (
+      <a class="mc__repo" href={machine.repo} target="_blank" rel="noopener">
+        source ↗
+      </a>
+    )}
+  </div>
+</article>
+
+<style>
+  /* ══════════════════════════
+     GLASS MACHINE CARD
+  ══════════════════════════ */
+  .mc {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: var(--radius-lg, 12px);
+    overflow: hidden;
+    padding: var(--space-6, 1.5rem);
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+      border-color 0.25s ease,
+      background 0.25s ease,
+      box-shadow 0.25s ease;
+  }
+
+  /* Sheen sweep on hover */
+  .mc::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.10) 50%,
+      transparent 65%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .mc:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: var(--card-accent, rgba(201, 185, 122, 0.35));
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.55),
+      0 0 24px color-mix(in srgb, var(--card-accent, #c9b97a) 18%, transparent);
+  }
+
+  .mc:hover::before {
+    transform: translateX(100%);
+  }
+
+  /* ── Badges ── */
+  .mc__badges {
+    display: flex;
+    gap: var(--space-2, 0.5rem);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-4, 1rem);
+  }
+
+  .mc__badge {
+    display: inline-block;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border-radius: var(--radius-md, 6px);
+    padding: 4px 10px;
+  }
+
+  .mc__badge--kind {
+    color: #a6b3cf;
+    background: rgba(139, 157, 195, 0.14);
+    border: 1px solid rgba(139, 157, 195, 0.30);
+  }
+
+  .mc__badge--status {
+    color: rgba(248, 244, 232, 0.60);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  /* ── Name ── */
+  .mc__name {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: var(--text-2xl, 1.5rem);
+    font-weight: var(--weight-bold, 700);
+    color: #f8f4e8;
+    margin: 0 0 var(--space-2, 0.5rem);
+    line-height: var(--leading-tight, 1.2);
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  /* ── Tagline ── */
+  .mc__tagline {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    font-size: var(--text-sm, 0.875rem);
+    color: rgba(248, 244, 232, 0.75);
+    line-height: 1.5;
+    margin: 0 0 var(--space-4, 1rem);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  }
+
+  /* ── Blurb ── */
+  .mc__blurb {
+    font-family: 'Merriweather', Georgia, serif;
+    font-weight: 300;
+    font-size: var(--text-sm, 0.875rem);
+    color: rgba(248, 244, 232, 0.72);
+    line-height: 1.55;
+    flex: 1;
+    margin: 0 0 var(--space-5, 1.25rem);
+  }
+
+  /* ── Footer ── */
+  .mc__footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4, 1rem);
+    flex-wrap: wrap;
+    padding-top: var(--space-4, 1rem);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin-top: auto;
+  }
+
+  /* ── CTA link ── */
+  .mc__cta {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: var(--text-xs, 0.75rem);
+    font-weight: var(--weight-semibold, 600);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--card-accent, #c9b97a);
+    text-decoration: none;
+    border-bottom: none;
+    transition: color 0.15s ease, opacity 0.15s ease;
+  }
+
+  .mc__cta:hover {
+    color: #f8f4e8;
+    border-bottom: none;
+  }
+
+  /* "coming soon" muted variant */
+  .mc__cta--muted {
+    color: rgba(248, 244, 232, 0.35);
+    cursor: default;
+  }
+
+  /* ── Repo secondary link ── */
+  .mc__repo {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: var(--text-xs, 0.75rem);
+    color: rgba(248, 244, 232, 0.45);
+    text-decoration: none;
+    border-bottom: none;
+    transition: color 0.15s ease;
+    margin-left: auto;
+  }
+
+  .mc__repo:hover {
+    color: rgba(248, 244, 232, 0.80);
+    border-bottom: none;
+  }
+</style>

@@ -11,8 +11,8 @@
       "title": "Quick Links",
       "links": [
         {
-          "label": "Shop",
-          "href": "/shop",
+          "label": "Machines",
+          "href": "/machines",
           "order": 1
         },
         {

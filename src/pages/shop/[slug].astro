@@ -41,13 +41,11 @@ function getYouTubeEmbed(raw: string | undefined): string | null {
 
 const embedUrl = getYouTubeEmbed(youtube_url);
 
-const isAvailable = status === 'available';
 const isBuildToOrder = stock_status === 'build_to_order';
 const isOutOfStock = stock_status === 'out_of_stock';
 const isPreOrder = stock_status === 'pre_order';
 const isInStock = stock_status === 'in_stock';
 const isLowStock = stock_status === 'low_stock';
-const canAddToCart = isAvailable && !isOutOfStock;
 
 function formatPrice(p: number, cur: string): string {
   if (cur === 'INR') return `₹${p.toLocaleString('en-IN')}`;
@@ -70,18 +68,11 @@ function stockLabel() {
   if (isPreOrder) return 'Pre-order';
   return '';
 }
-
-const cartProduct = JSON.stringify({
-  slug: product.slug,
-  title,
-  price: price ?? 0,
-  currency,
-});
 ---
 <StandardPageLayout title={`${title} — Starstuck Lab`} description={excerpt} backgroundScene="workshop">
   <main class="product-detail-v2">
 
-    <a href="/shop" class="back-link">← Back to shop</a>
+    <a href="/machines" class="back-link">← Back to the machines</a>
 
     <!-- Hero: two-column layout matching design system -->
     <section class="product-hero">
@@ -102,44 +93,28 @@ const cartProduct = JSON.stringify({
           </div>
         )}
 
-        <!-- Customization (selects rendered per product schema) -->
+        <!-- Customization options shown as info (built to order) -->
         {customization?.enabled && customization.options && customization.options.length > 0 && (
-          <div class="product-customization" id="customization-panel">
-            {customization.options.map((option) => (
-              <div class="customization__group">
-                <label for={`opt-${option.label}`}>{option.label}</label>
-                <select
-                  id={`opt-${option.label}`}
-                  data-option={option.label}
-                  class="customization__select"
-                >
-                  {option.values.map((value) => (
-                    <option value={value}>{value}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
+          <div class="product-options-info">
+            <div class="options-info-label">Made to order in</div>
+            <ul class="options-info-list">
+              {customization.options.map((option) => (
+                <li>
+                  <span class="oi-k">{option.label}</span>
+                  <span class="oi-v">{option.values.join(' · ')}</span>
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
-        <!-- Add to cart -->
+        <!-- Built to order — enquire rather than buy directly -->
         <div class="product-cta">
-          {canAddToCart ? (
-            <button
-              id="add-to-cart"
-              class="add-to-cart-btn"
-              data-product={cartProduct}
-            >
-              Add to cart
-            </button>
-          ) : (
-            <button class="add-to-cart-btn" disabled aria-disabled="true">
-              {isOutOfStock ? 'Out of stock' : 'Unavailable'}
-            </button>
-          )}
-          <a href="/checkout" class="checkout-link" id="checkout-link" hidden>
-            Proceed to checkout →
-          </a>
+          <a href="/contact" class="enquire-btn">Enquire to order →</a>
+          <p class="enquire-note">
+            Built to order in a small workshop. Tell me what you'd like — colour,
+            finish, timing — and I'll get back to you.
+          </p>
         </div>
       </div>
 
@@ -222,50 +197,6 @@ const cartProduct = JSON.stringify({
   </main>
 </StandardPageLayout>
 
-<script>
-  import { addToCart as addToCartStorage } from '../../lib/cart.ts';
-
-  const selections: Record<string, string> = {};
-
-  document.querySelectorAll<HTMLSelectElement>('.customization__select').forEach((sel) => {
-    const optionName = sel.dataset.option || sel.id;
-    selections[optionName] = sel.value;
-    sel.addEventListener('change', () => {
-      selections[optionName] = sel.value;
-    });
-  });
-
-  const addBtn = document.getElementById('add-to-cart') as HTMLButtonElement | null;
-  const checkoutLink = document.getElementById('checkout-link') as HTMLAnchorElement | null;
-
-  addBtn?.addEventListener('click', () => {
-    if (!addBtn.dataset.product) return;
-    const p = JSON.parse(addBtn.dataset.product);
-    addToCartStorage({
-      slug: p.slug,
-      title: p.title,
-      price: String(p.price),
-      currency: p.currency || 'INR',
-    });
-
-    const originalText = addBtn.textContent;
-    addBtn.textContent = 'Added!';
-    addBtn.disabled = true;
-    if (checkoutLink) checkoutLink.hidden = false;
-
-    // Auto-open the cart drawer 300ms after the click.
-    setTimeout(() => {
-      const openCart = (window as any).openCart;
-      if (typeof openCart === 'function') openCart();
-    }, 300);
-
-    setTimeout(() => {
-      addBtn.textContent = originalText || 'Add to cart';
-      addBtn.disabled = false;
-    }, 2000);
-  });
-</script>
-
 <style>
   /* Page-level tweaks that complement product-detail.css */
 
@@ -330,23 +261,83 @@ const cartProduct = JSON.stringify({
     border: 1px solid rgba(255, 255, 255, 0.10);
   }
 
-  .checkout-link {
+  .enquire-btn {
     display: inline-block;
-    margin-top: 12px;
-    padding: 10px 18px;
+    margin-top: 4px;
+    padding: 13px 26px;
     font-family: 'Space Grotesk', system-ui, sans-serif;
     font-size: 14px;
-    color: rgba(248, 244, 232, 0.85);
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #0c0c0e;
+    background: #f8f4e8;
+    border: 1px solid #f8f4e8;
     border-radius: 6px;
     text-decoration: none;
-    transition: background 0.15s ease;
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
-  .checkout-link:hover {
-    background: rgba(255, 255, 255, 0.10);
-    color: #fff;
+  .enquire-btn:hover {
+    background: transparent;
+    color: #f8f4e8;
+  }
+
+  .enquire-note {
+    margin: 14px 0 0;
+    max-width: 42ch;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(248, 244, 232, 0.62);
+  }
+
+  /* Customization shown as read-only info */
+  .product-options-info {
+    margin: 4px 0 8px;
+  }
+
+  .options-info-label {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.50);
+    margin-bottom: 10px;
+  }
+
+  .options-info-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .options-info-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.10);
+  }
+
+  .oi-k {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.55);
+    min-width: 110px;
+  }
+
+  .oi-v {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 15px;
+    color: rgba(248, 244, 232, 0.85);
   }
 
   /* YouTube video frame */

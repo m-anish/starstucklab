@@ -19,14 +19,14 @@ let orderRef = sessionId ? sessionId.slice(-8).toUpperCase() : null;
           Most orders ship within 2–3 weeks. Any change in plan will be mentioned in good time.
         </p>
         <div class="order-actions">
-          <a href="/shop" class="btn-ord btn-ord-fill">Back to Shop</a>
+          <a href="/machines" class="btn-ord btn-ord-fill">Back to the machines</a>
           <a href="/lab" class="btn-ord btn-ord-ghost">Read the Lab Notes</a>
         </div>
       </article>
     ) : (
       <article class="order-card order-card--empty">
         <h1>Nothing to confirm here.</h1>
-        <p>This page is reached after a completed checkout. To buy something, head to the <a href="/shop">shop</a>.</p>
+        <p>This page is reached after a completed checkout. To see what the lab makes, head to the <a href="/machines">machines</a>.</p>
       </article>
     )}
   </main>

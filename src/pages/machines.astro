@@ -1,0 +1,79 @@
+---
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
+import '../styles/components/standard-page.css';
+import { getMachines } from '../lib/machines';
+import MachineCard from '../components/MachineCard.astro';
+
+const machines = getMachines();
+---
+
+<StandardPageLayout
+  title="Machines — Starstuck Lab"
+  description="The whole constellation of Starstuck Lab — telescopes, machines, and software for an indifferent universe."
+  backgroundScene="workshop"
+>
+  <main class="machines standard-page">
+    <!-- Header -->
+    <header class="machines__header standard-page-inner">
+      <p class="machines__eyebrow">The Lab</p>
+      <h1>The whole constellation.</h1>
+      <p class="machines__subtitle">
+        Every machine the lab has made, or is still making. Some you can take
+        home. Some simply exist, doing one small thing against an indifferent sky.
+      </p>
+    </header>
+
+    <!-- Machine grid -->
+    <section class="machines__grid-section standard-page-inner">
+      <div class="machines__grid">
+        {machines.map((machine) => (
+          <MachineCard machine={machine} />
+        ))}
+      </div>
+    </section>
+  </main>
+</StandardPageLayout>
+
+<style>
+  /* ── Machines header ── */
+  .machines__header {
+    padding-top: var(--space-16, 4rem);
+    padding-bottom: var(--space-10, 2.5rem);
+    text-align: center;
+  }
+
+  .machines__eyebrow {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.55);
+    margin: 0 0 var(--space-4, 1rem);
+    font-weight: 600;
+  }
+
+  .machines__subtitle {
+    max-width: 52ch;
+    margin-inline: auto;
+    color: rgba(245, 230, 200, 0.65);
+    font-size: var(--text-base, 1rem);
+    line-height: var(--leading-base, 1.6);
+    font-style: italic;
+  }
+
+  /* ── Grid ── */
+  .machines__grid-section {
+    padding-top: var(--space-6, 1.5rem);
+    padding-bottom: var(--space-24, 6rem);
+  }
+
+  .machines__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--space-8, 2rem);
+  }
+
+  @media (max-width: 480px) {
+    .machines__grid { grid-template-columns: 1fr; }
+  }
+</style>

@@ -11,6 +11,13 @@ export default defineConfig({
     mode: 'directory',
   }),
   base: '/',
+  // Shop is hidden for now (too few items to warrant a separate listing) — the
+  // /machines index is the catalog. Old /shop links land there. Product detail
+  // pages (/shop/[slug]) stay live as info-only. To restore the shop: remove
+  // this redirect and rename src/pages/_shop.astro back to shop.astro.
+  redirects: {
+    '/shop': '/machines',
+  },
   vite: {
     assetsInclude: ['**/*.stl'],
     server: {

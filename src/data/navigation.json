@@ -1,8 +1,8 @@
 {
   "primary": [
     {
-      "label": "Shop",
-      "href": "/shop",
+      "label": "Machines",
+      "href": "/machines",
       "priority": 1
     },
     {
