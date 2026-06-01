@@ -1,6 +1,6 @@
 ---
-// site/src/components/Navbar.astro
-// Dynamic navigation component that reads from navigation.json
+// src/components/Navbar.astro
+// Slim black navbar: star logo + wordmark left, nav links right, cart badge
 import { getNavigation } from '../lib/navigation';
 import CartBadge from './CartBadge.astro';
 
@@ -8,17 +8,11 @@ const navData = getNavigation();
 const rawItems = navData.primary;
 const settings = navData.settings;
 
-// Compute base path for static hosting / GitHub Pages
-const base =
-  (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
 
 function resolveHref(href: string): string {
   if (!href) return base;
-  // External / absolute URLs and mailto: should pass through untouched
-  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:')) {
-    return href;
-  }
-  // Normalize relative paths against base; strip leading slash to avoid //
+  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:')) return href;
   const trimmed = href.startsWith('/') ? href.slice(1) : href;
   return base + trimmed;
 }
@@ -29,200 +23,182 @@ const navItems = rawItems.map((item) => ({
 }));
 ---
 
-<div class="nav-inner">
-  <a href={base} class="nav-logo">
-    <img src={`${base}assets/icons/starstucklab_logo_black_white.svg`} alt="Starstuck Lab logo">
-    <span class="nav-logo-text">{settings.logoText}</span>
-  </a>
-  
-  <nav class="nav-right">
-    <ul class="nav-links" id="navLinks">
-      {navItems.map((item) => (
-        <li data-priority={item.priority}>
-          <a href={item.resolvedHref}>{item.label}</a>
-        </li>
-      ))}
-    </ul>
-    
-    <!-- More dropdown for overflow items -->
-    <div class="nav-more" id="navMore" style="display: none;">
-      <button class="nav-more-toggle" aria-label="More menu" aria-expanded="false">
-        More
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+<header class="navbar" role="banner">
+  <div class="navbar__inner">
+    <!-- Logo / wordmark -->
+    <a href={base} class="navbar__brand" aria-label="Starstuck Lab home">
+      <img
+        src={`${base}assets/icons/starstucklab_logo_light.svg`}
+        alt="Starstuck Lab star logo"
+        class="navbar__logo-img"
+        width="28"
+        height="28"
+      />
+      <span class="navbar__wordmark">{settings.logoText}</span>
+    </a>
+
+    <!-- Primary nav links -->
+    <nav class="navbar__nav" aria-label="Primary navigation">
+      <ul class="navbar__links">
+        {navItems.map((item) => (
+          <li>
+            <a href={item.resolvedHref} class="navbar__link">
+              {item.label}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+
+    <!-- Right actions: cart trigger with badge overlay -->
+    <div class="navbar__actions">
+      <button class="navbar__cart" id="navbarCart" aria-label="Open cart" type="button">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true">
+          <path d="M3 4h2l2.4 11.4a2 2 0 0 0 2 1.6h7.8a2 2 0 0 0 2-1.5L21 8H6"/>
+          <circle cx="9" cy="20" r="1.4"/>
+          <circle cx="18" cy="20" r="1.4"/>
         </svg>
+        <CartBadge />
       </button>
-      <div class="nav-more-dropdown"></div>
     </div>
-  </nav>
-  
-  <div class="nav-actions">
-    <!-- Cart button (hidden by default, shown via settings) -->
-    <button 
-      class="nav-cart" 
-      aria-label="Shopping cart"
-      style={settings.showCart ? 'display: flex;' : 'display: none;'}
-      id="navCartBtn"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-      </svg>
-      <CartBadge />
-    </button>
   </div>
-</div>
+</header>
 
-<!-- Smart collapse script -->
 <script>
-  if (typeof window !== 'undefined') {
-    const navRoot = document.querySelector('.nav-inner');
-    if (!navRoot) {
-      // No navbar rendered
-    } else {
-      const moreMenu = navRoot.querySelector('#navMore');
-      const moreBtn = moreMenu?.querySelector('.nav-more-toggle');
+  // Wire the navbar cart icon to open the global cart drawer.
+  (function () {
+    if (typeof window === 'undefined') return;
+    const btn = document.getElementById('navbarCart');
+    if (!btn) return;
+    btn.addEventListener('click', () => {
+      const openCart = (window as any).openCart;
+      if (typeof openCart === 'function') openCart();
+    });
+  })();
+</script>
 
-      // More menu toggle functionality
-      if (moreBtn && moreMenu) {
-        moreBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const isOpen = moreMenu.classList.toggle('open');
-          moreBtn.setAttribute('aria-expanded', isOpen.toString());
-        });
+<style>
+  /* Layout-only — the parent `.site-nav` wrapper (in BaseLayout /
+     StandardPageLayout / HeroLayout) provides the fixed positioning,
+     translucent background and backdrop-filter. Stacking them both
+     resulted in a double-opaque navbar with no painted bg showing
+     through. */
+  .navbar {
+    height: var(--navbar-height);
+    width: 100%;
+  }
 
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-          if (moreMenu && !moreMenu.contains(e.target)) {
-            moreMenu.classList.remove('open');
-            if (moreBtn) moreBtn.setAttribute('aria-expanded', 'false');
-          }
-        });
+  .navbar__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    max-width: var(--container-xl);
+    margin-inline: auto;
+    padding-inline: var(--space-6);
+    gap: var(--space-4);
+  }
 
-        // Close dropdown on Escape
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && moreMenu && moreMenu.classList.contains('open')) {
-            moreMenu.classList.remove('open');
-            if (moreBtn) {
-              moreBtn.setAttribute('aria-expanded', 'false');
-              moreBtn.focus();
-            }
-          }
-        });
-      }
+  /* ── Brand ── */
+  .navbar__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
 
-      // Smart collapse: measure actual space and adjust dynamically
-      function smartCollapse() {
-        const navRight = navRoot.querySelector('.nav-right');
-        const navLinks = navRoot.querySelector('#navLinks');
-        const navMore = navRoot.querySelector('#navMore');
-        const moreDropdown = navMore?.querySelector('.nav-more-dropdown');
-        const navCart = navRoot.querySelector('.nav-cart');
+  .navbar__logo-img {
+    width: 28px;
+    height: 28px;
+    display: block;
+    /* The light variant is already white on transparent, no filter needed. */
+  }
 
-        if (!navRight || !navLinks || !navMore || !moreDropdown) return;
+  .navbar__wordmark {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    white-space: nowrap;
+  }
 
-        // Get all nav items sorted by priority
-        // Lower numeric priority = more important = should stay visible longer
-        const allItems = Array.from(navLinks.querySelectorAll('li'));
-        if (!allItems.length) {
-          navMore.style.display = 'none';
-          moreDropdown.innerHTML = '';
-          return;
-        }
+  /* ── Nav links ── */
+  .navbar__nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
 
-        const sortedItems = allItems.slice().sort((a, b) => {
-          const aPriority = parseInt(a.dataset.priority || '999', 10);
-          const bPriority = parseInt(b.dataset.priority || '999', 10);
-          return aPriority - bPriority; // 1,2,3,...
-        });
+  .navbar__links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+  }
 
-        // Calculate available space using real measurements
-        const navRightWidth = navRight.offsetWidth;
-        const moreButtonEl = navMore.querySelector('.nav-more-toggle');
-        const moreButtonWidth = moreButtonEl ? moreButtonEl.offsetWidth : 0;
-        const cartWidth = navCart && (navCart as HTMLElement).style.display !== 'none'
-          ? navCart.offsetWidth
-          : 0;
-        const padding = 24; // safety padding
-        const availableWidth = Math.max(
-          0,
-          navRightWidth - moreButtonWidth - cartWidth - padding
-        );
+  .navbar__link {
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    letter-spacing: 0.03em;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background var(--transition-fast), color var(--transition-fast);
+    white-space: nowrap;
+  }
 
-        let currentWidth = 0;
-        const visibleItems = [];
-        const overflowItems = [];
+  .navbar__link:hover,
+  .navbar__link.active {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
 
-        // Walk from most important (lowest priority number) to least,
-        // keeping earlier items visible and overflowing the later ones.
-        for (const item of sortedItems) {
-          const itemWidth = item.offsetWidth;
+  /* ── Actions ── */
+  .navbar__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-shrink: 0;
+  }
 
-          if (currentWidth + itemWidth <= availableWidth || !visibleItems.length) {
-            visibleItems.push(item);
-            currentWidth += itemWidth;
-          } else {
-            overflowItems.push(item);
-          }
-        }
+  /* Cart trigger: icon button with badge overlay */
+  .navbar__cart {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.85);
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+    transition: background var(--transition-fast), color var(--transition-fast);
+  }
 
-        // Reset all items to visible, then hide overflowed ones
-        allItems.forEach((item) => {
-          item.style.display = '';
-        });
-        overflowItems.forEach((item) => {
-          item.style.display = 'none';
-        });
+  .navbar__cart:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
 
-        // Show/hide More button based on overflow
-        if (overflowItems.length > 0) {
-          navMore.style.display = 'block';
+  /* ── Mobile: compact nav links (keep wordmark hidden to save space) ── */
+  @media (max-width: 640px) {
+    .navbar__wordmark {
+      display: none;
+    }
 
-          // Populate dropdown with overflow links
-          moreDropdown.innerHTML = '';
-          // Keep dropdown order consistent with original document order
-          overflowItems
-            .slice()
-            .sort((a, b) => allItems.indexOf(a) - allItems.indexOf(b))
-            .forEach((item) => {
-              const link = item.querySelector('a');
-              if (link) {
-                const clone = link.cloneNode(true);
-                moreDropdown.appendChild(clone);
-              }
-            });
-        } else {
-          navMore.style.display = 'none';
-          moreDropdown.innerHTML = '';
-        }
-      }
+    .navbar__links {
+      gap: var(--space-2); /* 8px — tight but legible at small font */
+    }
 
-      // Run on load (after layout) and on resize (debounced)
-      const runInitial = () => {
-        smartCollapse();
-      };
-
-      window.addEventListener('load', runInitial);
-
-      // Fallback if load fires before fonts/layout settle
-      setTimeout(runInitial, 150);
-
-      let resizeTimeout;
-      window.addEventListener('resize', () => {
-        if (resizeTimeout) {
-          window.clearTimeout(resizeTimeout);
-        }
-        resizeTimeout = window.setTimeout(() => {
-          smartCollapse();
-        }, 150);
-      });
-      
-      // Cart button click handler
-      const navCartBtn = document.getElementById('navCartBtn');
-      navCartBtn?.addEventListener('click', () => {
-        if ((window as any).openCart) {
-          (window as any).openCart();
-        }
-      });
+    .navbar__link {
+      font-size: 0.75rem; /* 12px — fits 3 links + cart badge + future icon */
     }
   }
-</script>
+</style>

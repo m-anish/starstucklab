@@ -1,54 +1,139 @@
 ---
-// site/src/components/Footer.astro
-// Dynamic footer that reads from footer.json
+// src/components/Footer.astro
 import { getFooterData } from '../lib/footer';
-import "../styles/components/footer.css";
 
 const footerData = getFooterData();
 const sections = footerData.sections;
 const settings = footerData.settings;
 
-// Compute base path for links
-const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
+const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
 
 function resolveHref(href: string): string {
   if (!href) return base;
-  // External / absolute URLs and mailto: should pass through untouched
-  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('#')) {
-    return href;
-  }
-  // Normalize relative paths against base; strip leading slash to avoid //
+  if (/^(https?:)?\/\//.test(href) || href.startsWith('mailto:') || href.startsWith('#')) return href;
   const trimmed = href.startsWith('/') ? href.slice(1) : href;
   return base + trimmed;
 }
 ---
 
-<footer class="site-footer">
-  <div class="footer-content">
-    {sections.map((section) => (
-      <div class="footer-section">
-        <h4>{section.title}</h4>
-        
-        {section.description && (
-          <p>{section.description}</p>
-        )}
-        
-        {section.links && section.links.length > 0 && (
-          <ul>
-            {section.links
-              .sort((a, b) => (a.order || 999) - (b.order || 999))
-              .map((link) => (
-                <li>
-                  <a href={resolveHref(link.href)}>{link.label}</a>
-                </li>
-              ))}
-          </ul>
-        )}
-      </div>
-    ))}
-  </div>
+<footer class="footer">
+  <div class="footer__inner container">
+    <div class="footer__grid">
+      {sections.map((section) => (
+        <div class="footer__section">
+          <h4 class="footer__heading">{section.title}</h4>
 
-  <div class="footer-bottom">
-    <p>&copy; {new Date().getFullYear()} {settings.copyrightText}</p>
+          {section.description && (
+            <p class="footer__description">{section.description}</p>
+          )}
+
+          {section.links && section.links.length > 0 && (
+            <ul class="footer__links">
+              {section.links
+                .sort((a, b) => (a.order || 999) - (b.order || 999))
+                .map((link) => (
+                  <li>
+                    <a href={resolveHref(link.href)} class="footer__link">{link.label}</a>
+                  </li>
+                ))}
+            </ul>
+          )}
+        </div>
+      ))}
+    </div>
+
+    <div class="footer__bottom">
+      <p class="footer__copy">&copy; {new Date().getFullYear()} {settings.copyrightText}</p>
+      <p class="footer__tagline">Built in a small workshop. Aimed at an indifferent sky.</p>
+    </div>
   </div>
 </footer>
+
+<style>
+  .footer {
+    background: rgba(6, 5, 3, 0.98);
+    border-top: 1px solid rgba(201, 185, 122, 0.12);
+    padding-top: var(--space-12);
+    padding-bottom: var(--space-8);
+    margin-top: auto;
+  }
+
+  .footer__grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: var(--space-10);
+    padding-bottom: var(--space-10);
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .footer__heading {
+    font-family: var(--font-sans);
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .footer__description {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    line-height: var(--leading-base);
+    max-width: 32ch;
+  }
+
+  .footer__links {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .footer__link {
+    font-size: var(--text-sm);
+    color: rgba(237, 237, 238, 0.55);
+    text-decoration: none;
+    transition: color var(--transition-fast);
+  }
+
+  .footer__link:hover {
+    color: var(--color-accent);
+  }
+
+  .footer__bottom {
+    padding-top: var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .footer__copy {
+    font-size: var(--text-xs);
+    color: var(--color-faint);
+  }
+
+  .footer__tagline {
+    font-size: var(--text-xs);
+    color: var(--color-faint);
+    font-style: italic;
+  }
+
+  @media (max-width: 640px) {
+    .footer__grid {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .footer__bottom {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  @media (max-width: 400px) {
+    .footer__grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

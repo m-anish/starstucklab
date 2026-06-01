@@ -1,500 +1,637 @@
 ---
-// src/pages/shop/[slug].astro
-import { getCollection } from 'astro:content';
+import { getCollection, render } from 'astro:content';
+import StandardPageLayout from '../../layouts/StandardPageLayout.astro';
+import '../../styles/components/product-detail.css';
 
 export const prerender = true;
-import StandardPageLayout from "../../layouts/StandardPageLayout.astro";
-import ProductNav from "../../components/ProductNav.astro";
-import AddToCartButton from "../../components/AddToCartButton.astro";
-import CustomizationPanel from "../../components/CustomizationPanel.astro";
-import "../../styles/components/parchment.css";
-import "../../styles/components/product-detail.css";
-import "../../styles/components/customization.css";
 
 export async function getStaticPaths() {
   const products = await getCollection('products');
-  if (products.length === 0) {
-    console.warn('getStaticPaths: no product markdown files found');
-  }
-  return products.map(entry => ({
-    params: { slug: entry.slug },
-    props: { entry }
+  return products.map((product) => ({
+    params: { slug: product.slug },
+    props: { product },
   }));
 }
 
-const { entry } = Astro.props;
+const { product } = Astro.props;
+const { Content } = await render(product);
 
-if (!entry) {
-  return Astro.redirect('/shop');
+const {
+  title,
+  tagline,
+  price,
+  currency = 'INR',
+  status,
+  stock_status,
+  lead_time,
+  excerpt,
+  features = [],
+  customization,
+  specifications = [],
+  images,
+  youtube_url,
+} = product.data;
+
+function getYouTubeEmbed(raw: string | undefined): string | null {
+  if (!raw) return null;
+  const match = raw.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+  const videoId = match ? match[1] : (raw.length === 11 ? raw : null);
+  return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1` : null;
 }
 
-let Content;
-try {
-  const renderResult = await entry.render();
-  Content = renderResult.Content;
-} catch (error) {
-  console.error('Error rendering product content:', error);
-  Content = () => null;
+const embedUrl = getYouTubeEmbed(youtube_url);
+
+const isBuildToOrder = stock_status === 'build_to_order';
+const isOutOfStock = stock_status === 'out_of_stock';
+const isPreOrder = stock_status === 'pre_order';
+const isInStock = stock_status === 'in_stock';
+const isLowStock = stock_status === 'low_stock';
+
+function formatPrice(p: number, cur: string): string {
+  if (cur === 'INR') return `₹${p.toLocaleString('en-IN')}`;
+  return `${cur} ${p.toLocaleString()}`;
 }
 
-const product = entry.data;
-const slug = entry.slug;
+function stockClass() {
+  if (isInStock) return 'in-stock';
+  if (isLowStock) return 'low-stock';
+  if (isOutOfStock) return 'out-of-stock';
+  if (isBuildToOrder || isPreOrder) return 'pre-order';
+  return '';
+}
 
-// Check if this is the M42 product
-const isM42 = slug === 'm42';
-
-// Image paths
-const heroImagePath = product.images?.master?.replace('public/', '/') || `/assets/product-${slug}/product-${slug}-hero.webp`;
-const masterFallback = `/assets/product-${slug}/product-${slug}-master.png`;
-
-// Icon mapping
-const iconMap: Record<string, string> = {
-  'telescope': '🔭',
-  'palette': '🎨',
-  'alert-triangle': '⚠️',
-  'cog': '⚙️',
-  'zap': '⚡',
-  'box': '📦',
-  'cpu': '🖥️',
-  'settings': '⚙️',
-  'shield': '🛡️',
-  'star': '⭐',
-  'circle-dot': '🎯',
-  'gauge': '📊'
-};
-
-// Stock status display
-const stockStatusMap: Record<string, { label: string; class: string }> = {
-  'in_stock': { label: 'In stock', class: 'in-stock' },
-  'low_stock': { label: 'Low stock', class: 'low-stock' },
-  'out_of_stock': { label: 'Out of stock', class: 'out-of-stock' },
-  'pre_order': { label: 'Pre-order', class: 'pre-order' }
-};
-
-const stockStatus = product.stock_status ? stockStatusMap[product.stock_status] : stockStatusMap['in_stock'];
+function stockLabel() {
+  if (isInStock) return 'In stock — ships in 3 days';
+  if (isLowStock) return `Low stock — ships in ${lead_time ?? 'a few days'}`;
+  if (isOutOfStock) return 'Out of stock';
+  if (isBuildToOrder) return `Build to order — ships in ${lead_time ?? '2–3 weeks'}`;
+  if (isPreOrder) return 'Pre-order';
+  return '';
+}
 ---
+<StandardPageLayout title={`${title} — Starstuck Lab`} description={excerpt} backgroundScene="workshop">
+  <main class="product-detail-v2">
 
-<StandardPageLayout title={`${product.title} — Starstuck Lab`} backgroundScene="shop">
-  <ProductNav product={{ slug, title: product.title }} />
+    <a href="/machines" class="back-link">← Back to the machines</a>
 
-  <div class="product-detail-v2">
-    <!-- Enhanced Hero for M42 -->
-    {isM42 ? (
-      <section class="product-hero product-hero--customizable">
-        <div class="product-hero-left">
-          <div class="customization-badge">
-            <span class="badge-icon">✨</span>
-            <span class="badge-text">Fully Customizable</span>
-          </div>
-          
-          <h1 class="product-title">{product.title}</h1>
-          {product.tagline && (
-            <p class="product-tagline">{product.tagline}</p>
-          )}
-          
-          <div class={`product-stock-above-price ${stockStatus.class}`}>
-            {stockStatus.label}
-          </div>
+    <!-- Hero: two-column layout matching design system -->
+    <section class="product-hero">
+      <div class="product-hero-left">
+        <h1 class="product-title">{title}</h1>
+        {tagline && <p class="product-tagline">{tagline}</p>}
 
-          {product.price && (
-            <div class="product-price-block">
-              <div class="price-label">Starting at</div>
-              <span class="product-price">
-                {product.currency === 'INR' ? '₹' : (product.currency || '₹')} {product.price.toLocaleString('en-IN')}
+        {price && (
+          <div class="product-price-block">
+            <div class="price-label">Price</div>
+            <div class="price-details">
+              <span class="product-price">{formatPrice(price, currency)}</span>
+              <span class={`product-stock-above-price ${stockClass()}`}>
+                <span class="dot" aria-hidden="true">●</span>
+                {stockLabel()}
               </span>
-              {/* <div class="price-details">
-                <span class="price-badge">Base Configuration</span>
-                <span class="price-note">Customize to adjust final price</span>
-              </div> */}
             </div>
-          )}
-          
-          <!-- Primary CTA: Go to Customizer Page -->
-          <a href="/shop/m42-customizer" class="cta-primary cta-customize">
-            <span class="cta-icon">🎨</span>
-            <span class="cta-text">
-              <strong>Customize Your M42</strong>
-              <small>Choose colors, preview in 3D</small>
-            </span>
-            <span class="cta-arrow">→</span>
-          </a>
-          
-          <!-- Secondary CTA: Quick Add (Standard Config) -->
-          {product.status === 'available' && (
-            <div class="cta-secondary-wrap">
-              <AddToCartButton product={{
-                slug: slug,
-                title: product.title,
-                price: product.price,
-                currency: product.currency,
-                status: product.status
-              }} />
-              <small class="quick-add-note">Add standard configuration without customization</small>
-            </div>
-          )}
-          
-        </div>
-        
-        <div class="product-hero-right">
-          <img
-            src={heroImagePath}
-            alt={product.title}
-            class="product-hero-image"
-            onerror={`this.onerror=null;this.src='${masterFallback}'`}
-          />
-        </div>
-      </section>
-    ) : (
-      <!-- Standard Hero for Other Products -->
-      <section class="product-hero">
-        <div class="product-hero-left">
-          <h1 class="product-title">{product.title}</h1>
-          {product.tagline && (
-            <p class="product-tagline">{product.tagline}</p>
-          )}
-
-          <div class={`product-stock-above-price ${stockStatus.class}`}>
-            {stockStatus.label}
           </div>
+        )}
 
-          {product.price && (
-            <div class="product-price-block">
-              <div class="price-label">Starting at</div>
-              <span class="product-price">
-                {product.currency === 'INR' ? '₹' : (product.currency || '₹')} {product.price.toLocaleString('en-IN')}
-              </span>
-              <div class="price-details">
-                <span class="price-badge">Standard Configuration</span>
-              </div>
-            </div>
-          )}
+        <!-- Customization options shown as info (built to order) -->
+        {customization?.enabled && customization.options && customization.options.length > 0 && (
+          <div class="product-options-info">
+            <div class="options-info-label">Made to order in</div>
+            <ul class="options-info-list">
+              {customization.options.map((option) => (
+                <li>
+                  <span class="oi-k">{option.label}</span>
+                  <span class="oi-v">{option.values.join(' · ')}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
-          {product.customization?.enabled && (
-            <CustomizationPanel product={product} />
-          )}
-
-          {product.status === 'available' && (
-            <div class="product-cta">
-              <AddToCartButton product={{
-                slug: slug,
-                title: product.title,
-                price: product.price,
-                currency: product.currency,
-                status: product.status
-              }} />
-            </div>
-          )}
+        <!-- Built to order — enquire rather than buy directly -->
+        <div class="product-cta">
+          <a href="/contact" class="enquire-btn">Enquire to order →</a>
+          <p class="enquire-note">
+            Built to order in a small workshop. Tell me what you'd like — colour,
+            finish, timing — and I'll get back to you.
+          </p>
         </div>
-        
-        <div class="product-hero-right">
+      </div>
+
+      <div class="product-hero-right">
+        {images?.master ? (
           <img
-            src={heroImagePath}
-            alt={product.title}
+            src={images.master}
+            alt={title}
             class="product-hero-image"
-            onerror={`this.onerror=null;this.src='${masterFallback}'`}
+            loading="eager"
           />
-        </div>
-      </section>
-    )}
-
-    <!-- Features Section -->
-    {product.features && product.features.length > 0 && (
-      <section class="product-features" id="features">
-        <h2>Features</h2>
-        <div class="features-grid">
-          {product.features.map((feature: any) => (
-            <div class="feature-card">
-              <div class="feature-icon">
-                {iconMap[feature.icon] || '⚙️'}
-              </div>
-              <h3 class="feature-title">{feature.title}</h3>
-              <p class="feature-description">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-    )}
-
-    <!-- Specifications -->
-    {product.specifications && product.specifications.length > 0 && (
-      <section class="product-specifications parchment" id="specifications">
-        <h2>Specifications</h2>
-        <table class="specs-table">
-          {product.specifications.map((spec: any) => (
-            <tr>
-              <th>{spec.label}</th>
-              <td>{spec.value}</td>
-            </tr>
-          ))}
-        </table>
-      </section>
-    )}
-
-    <!-- Full Description -->
-    <section class="product-description parchment" id="description">
-      <div class="markdown-content">
-        <Content />
+        ) : (
+          <div class="product-hero-image-placeholder" aria-hidden="true">✦</div>
+        )}
       </div>
     </section>
 
-    <!-- Back Link -->
-    <footer class="product-footer">
-      <a href="/shop" class="back-link">
-        ← Back to Shop
-      </a>
-    </footer>
-  </div>
+    <!-- Features + Specs inside a single parchment slab (matches design) -->
+    {(features.length > 0 || specifications.length > 0) && (
+      <section class="specs-wrap">
+        <article class="parchment specs-parchment" data-surface="parchment">
+          <h2>What it does, more or less.</h2>
+          {tagline && <p class="specs-lead">{tagline}</p>}
 
-  <!-- M42 Specific Styles -->
-  {isM42 && (
-    <style>
-      .customization-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background: rgba(78, 197, 122, 0.15);
-        border: 1px solid rgba(78, 197, 122, 0.3);
-        border-radius: 24px;
-        margin-bottom: 16px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        color: var(--starry-white);
-      }
+          {features.length > 0 && (
+            <div class="feature-row">
+              {features.map((f) => (
+                <div class="feature-block">
+                  <h3>{f.title}</h3>
+                  <p>{f.description}</p>
+                </div>
+              ))}
+            </div>
+          )}
 
-      .badge-icon {
-        font-size: 1.2rem;
-      }
+          {specifications.length > 0 && (
+            <div class="specs-list">
+              {specifications.map((spec) => (
+                <div class="specs-row">
+                  <span class="k">{spec.label}</span>
+                  <span class="v">{spec.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
-      .product-stock-above-price {
-        display: inline-block;
-        padding: 8px 16px;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 0.9rem;
-        font-family: var(--font-ui);
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-        margin-bottom: 0.5rem;
-        max-width: 400px;
-        width: 100%;
-      }
+          <svg class="specs-seal" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+            <path d="M50 4l11 32 33 1-27 19 10 32L50 70 23 88l10-32L6 37l33-1z" />
+          </svg>
+        </article>
+      </section>
+    )}
 
-      .product-stock-above-price.in-stock {
-        background: rgba(78, 197, 122, 0.15);
-        color: #4ec57a;
-        border: 1px solid rgba(78, 197, 122, 0.3);
-      }
+    <!-- YouTube demo -->
+    {embedUrl && (
+      <section class="product-video-section">
+        <h2>See it in the wild</h2>
+        <div class="video-frame">
+          <iframe
+            src={embedUrl}
+            title={`${title} — video demo`}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+            loading="lazy"
+          ></iframe>
+        </div>
+      </section>
+    )}
 
-      .product-stock-above-price.low-stock {
-        background: rgba(240, 180, 41, 0.15);
-        color: #f0b429;
-        border: 1px solid rgba(240, 180, 41, 0.3);
-      }
+    <!-- Markdown body inside its own parchment slab — long-form text reads
+         far better on parchment than directly on the painted bg. -->
+    <section class="product-body-wrap">
+      <article class="parchment product-body-parchment" data-surface="parchment">
+        <div class="product-body-content">
+          <Content />
+        </div>
+      </article>
+    </section>
 
-      .product-stock-above-price.out-of-stock {
-        background: rgba(170, 102, 102, 0.15);
-        color: #a66;
-        border: 1px solid rgba(170, 102, 102, 0.3);
-      }
-
-      .product-stock-above-price.pre-order {
-        background: rgba(139, 157, 195, 0.15);
-        color: #8b9dc3;
-        border: 1px solid rgba(139, 157, 195, 0.3);
-      }
-
-      .product-price-block {
-        margin: 0 0;
-        padding-left: 1.5rem;
-        padding-top: 0.5rem;
-        padding-bottom: 0rem;
-        // padding: 1.5rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        max-width: 400px;
-        backdrop-filter: blur(10px);
-      }
-
-      .price-label {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: rgba(248, 244, 232, 0.6);
-        margin-bottom: 0.5rem;
-        font-weight: 600;
-        font-family: var(--font-ui);
-      }
-
-      .product-price {
-        font-size: 2.5rem !important;
-        font-weight: 700;
-        display: block;
-        margin-bottom: 0.5rem;
-        background: linear-gradient(135deg, #f8f4e8 0%, #4ec57a 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        line-height: 1;
-      }
-
-      .price-details {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-
-      .price-badge {
-        display: inline-block;
-        padding: 6px 14px;
-        background: rgba(78, 197, 122, 0.15);
-        border: 1px solid rgba(78, 197, 122, 0.3);
-        border-radius: 6px;
-        font-weight: 600;
-        color: #4ec57a;
-        width: fit-content;
-        font-size: 0.85rem;
-        font-family: var(--font-ui);
-      }
-
-      .price-note {
-        color: rgba(248, 244, 232, 0.6);
-        font-size: 0.85rem;
-        font-style: italic;
-      }
-
-      @media (max-width: 900px) {
-        .product-price-block {
-          max-width: 100%;
-        }
-
-        .product-price {
-          font-size: 2rem !important;
-        }
-      }
-
-      .cta-primary {
-        width: 100%;
-        max-width: 400px;
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        padding: 20px 28px;
-        background: linear-gradient(135deg, #2a7a4f 0%, #1d5a3d 100%);
-        border: 2px solid #2a7a4f;
-        border-radius: 12px;
-        color: white;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin: 0 0 16px 0;
-        box-shadow: 0 4px 16px rgba(42, 122, 79, 0.3);
-        text-decoration: none;
-        position: relative;
-        overflow: hidden;
-      }
-
-      /* Add shimmer effect */
-      .cta-primary::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(
-          90deg,
-          transparent,
-          rgba(255,255,255,0.2),
-          transparent
-        );
-        transition: left 0.6s ease;
-      }
-
-      .cta-primary:hover::before {
-        left: 100%;
-      }
-
-      .cta-primary:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 24px rgba(42, 122, 79, 0.4);
-        color: white;
-      }
-
-      .cta-primary:active {
-        transform: scale(0.98);
-      }
-
-      .cta-icon {
-        font-size: 1.5rem;
-      }
-
-      .cta-text {
-        flex: 1;
-        text-align: left;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .cta-text strong {
-        font-size: 1.1rem;
-      }
-
-      .cta-text small {
-        font-size: 0.85rem;
-        font-weight: 400;
-        opacity: 0.9;
-      }
-
-      .cta-arrow {
-        font-size: 1.5rem;
-        transition: transform 0.2s ease;
-      }
-
-      .cta-primary:hover .cta-arrow {
-        transform: translateX(4px);
-      }
-
-      .cta-secondary-wrap {
-        margin: 0 0;
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-        align-items: flex-start;
-      }
-
-      /* Update AddToCartButton appearance in secondary position */
-      .cta-secondary-wrap button {
-        background: transparent;
-        border: 1.5px solid rgba(255, 255, 255, 0.2);
-        color: rgba(248, 244, 232, 0.9);
-        padding: 12px 24px;
-        font-size: 0.95rem;
-        font-weight: 500;
-        transition: all 0.2s ease;
-      }
-
-      .cta-secondary-wrap button:hover {
-        background: rgba(255, 255, 255, 0.05);
-        border-color: rgba(255, 255, 255, 0.35);
-        transform: translateY(-1px);
-      }
-
-      .quick-add-note {
-        font-size: 0.8rem;
-        color: rgba(248, 244, 232, 0.5);
-        font-style: italic;
-        margin-left: 0;
-      }
-
-      @media (max-width: 900px) {
-        .cta-primary {
-          max-width: 100%;
-          padding: 18px 24px;
-        }
-      }
-    </style>
-  )}
+  </main>
 </StandardPageLayout>
+
+<style>
+  /* Page-level tweaks that complement product-detail.css */
+
+  .back-link {
+    display: inline-block;
+    margin: 8px 0 18px;
+    padding: 8px 14px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    color: rgba(248, 244, 232, 0.65);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .back-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+
+  /* Stock pill — uses .product-stock-above-price colors from product-detail.css.
+     The dot is a small visual decoration. */
+  .product-stock-above-price {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.04em;
+  }
+
+  .product-stock-above-price .dot {
+    font-size: 8px;
+    line-height: 1;
+  }
+
+  /* Customization group spacing */
+  .customization__group {
+    margin-bottom: 14px;
+  }
+
+  /* Image fallback placeholder */
+  .product-hero-image-placeholder {
+    width: 100%;
+    aspect-ratio: 1;
+    max-width: 550px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 200px;
+    color: rgba(255, 255, 255, 0.10);
+    background: radial-gradient(
+      circle at 50% 55%,
+      rgba(78, 197, 122, 0.18),
+      transparent 60%
+    );
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .enquire-btn {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 13px 26px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: #0c0c0e;
+    background: #f8f4e8;
+    border: 1px solid #f8f4e8;
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .enquire-btn:hover {
+    background: transparent;
+    color: #f8f4e8;
+  }
+
+  .enquire-note {
+    margin: 14px 0 0;
+    max-width: 42ch;
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    line-height: 1.55;
+    color: rgba(248, 244, 232, 0.62);
+  }
+
+  /* Customization shown as read-only info */
+  .product-options-info {
+    margin: 4px 0 8px;
+  }
+
+  .options-info-label {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.50);
+    margin-bottom: 10px;
+  }
+
+  .options-info-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .options-info-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    align-items: baseline;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed rgba(255, 255, 255, 0.10);
+  }
+
+  .oi-k {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.55);
+    min-width: 110px;
+  }
+
+  .oi-v {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-size: 15px;
+    color: rgba(248, 244, 232, 0.85);
+  }
+
+  /* YouTube video frame */
+  .product-video-section {
+    margin: var(--space-12) 0;
+    padding: var(--space-12) 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .product-video-section h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: var(--text-3xl);
+    color: var(--starry-white);
+    text-align: center;
+    margin: 0 0 var(--space-8);
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .video-frame {
+    max-width: 800px;
+    margin: 0 auto;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .video-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* ─── Parchment slab containing features + specs ─── */
+  .specs-wrap {
+    margin: var(--space-12) 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .specs-parchment {
+    position: relative;
+    background: linear-gradient(
+      135deg,
+      #fae5d0 0%,
+      #f4dcc0 25%,
+      #eed7b8 50%,
+      #f4ddbc 75%,
+      #f7dfc0 100%
+    );
+    border-radius: 12px;
+    padding: 40px 44px;
+    max-width: 820px;
+    width: 100%;
+    color: #2b160e;
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.7;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+
+  .specs-parchment::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: radial-gradient(
+      ellipse 75% 90% at center,
+      transparent 35%,
+      rgba(80, 50, 30, 0.10) 85%,
+      rgba(60, 40, 25, 0.18) 100%
+    );
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .specs-parchment > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Force every descendant to inherit parchment ink — the global body
+     colour (--color-text, near-white) otherwise bleeds through. */
+  .specs-parchment :global(*) {
+    color: inherit;
+  }
+
+  .specs-parchment h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 30px;
+    color: #2a1d12;
+    margin: 0 0 8px;
+    letter-spacing: 0.01em;
+    text-align: left;
+    text-shadow: none;
+    border: none;
+  }
+
+  .specs-lead {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: #4a3420;
+    font-size: 18px;
+    margin: 0 0 22px;
+  }
+
+  .feature-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 36px;
+    margin-top: 18px;
+  }
+
+  .feature-block h3 {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 700;
+    font-size: 18px;
+    color: #2a1d12;
+    margin: 0 0 4px;
+  }
+
+  .feature-block p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: #2b160e;
+    margin: 0;
+  }
+
+  .specs-list {
+    margin-top: 30px;
+    border-top: 1px dashed rgba(80, 50, 25, 0.30);
+  }
+
+  .specs-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px dashed rgba(80, 50, 25, 0.18);
+    font-size: 14.5px;
+  }
+
+  .specs-row .k {
+    color: #5d3a1e;
+    font-weight: 600;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .specs-row .v {
+    color: #2b160e;
+    font-weight: 500;
+  }
+
+  .specs-seal {
+    position: absolute;
+    right: 30px;
+    bottom: 30px;
+    width: 46px;
+    height: 46px;
+    opacity: 0.30;
+    color: #8b6235;
+    z-index: 2;
+  }
+
+  /* ─── Parchment slab containing the markdown body ─── */
+  .product-body-wrap {
+    margin: var(--space-12) 0;
+    display: flex;
+    justify-content: center;
+  }
+
+  .product-body-parchment {
+    position: relative;
+    background: linear-gradient(
+      135deg,
+      #fae5d0 0%,
+      #f4dcc0 25%,
+      #eed7b8 50%,
+      #f4ddbc 75%,
+      #f7dfc0 100%
+    );
+    border-radius: 12px;
+    padding: 40px 44px;
+    max-width: 820px;
+    width: 100%;
+    color: #2b160e;
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.75;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+
+  .product-body-parchment::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: url('/assets/textures/paper-grain.webp');
+    background-size: 300px;
+    opacity: 0.18;
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .product-body-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .product-body-parchment,
+  .product-body-parchment :global(*) {
+    color: #2b160e;
+  }
+
+  .product-body-content :global(h1),
+  .product-body-content :global(h2),
+  .product-body-content :global(h3) {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    color: #2a1d12;
+    letter-spacing: -0.01em;
+  }
+
+  .product-body-content :global(h2) {
+    font-size: 26px;
+    margin: 22px 0 10px;
+  }
+
+  .product-body-content :global(h3) {
+    font-size: 20px;
+    margin: 18px 0 8px;
+  }
+
+  .product-body-content :global(p) {
+    font-size: 17px;
+    line-height: 1.7;
+    margin: 0 0 14px;
+  }
+
+  .product-body-content :global(a) {
+    color: #1d5a3d;
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(29, 90, 61, 0.4);
+  }
+
+  .product-body-content :global(a:hover) {
+    color: #2a7a4f;
+    border-bottom-color: #2a7a4f;
+  }
+
+  .product-body-content :global(code) {
+    font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: 14px;
+    background: rgba(80, 50, 25, 0.10);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+
+  .product-body-content :global(blockquote) {
+    border-left: 3px solid rgba(80, 50, 25, 0.30);
+    padding-left: 16px;
+    margin: 18px 0;
+    color: #4a3420;
+    font-style: italic;
+  }
+
+  .product-body-content :global(ul),
+  .product-body-content :global(ol) {
+    margin: 0 0 14px 22px;
+    padding: 0;
+  }
+
+  .product-body-content :global(li) {
+    margin: 6px 0;
+  }
+
+  @media (max-width: 720px) {
+    .specs-parchment,
+    .product-body-parchment {
+      padding: 28px 22px;
+    }
+
+    .feature-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

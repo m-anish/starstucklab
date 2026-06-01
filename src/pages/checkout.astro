@@ -1,488 +1,324 @@
 ---
-// site/src/pages/checkout.astro
-import StandardPageLayout from "../layouts/StandardPageLayout.astro";
-import "../styles/components/parchment.css";
-import "../styles/components/checkout.css";
-
-// Indian states list
-const indianStates = [
-  "Andhra Pradesh",
-  "Arunachal Pradesh",
-  "Assam",
-  "Bihar",
-  "Chhattisgarh",
-  "Goa",
-  "Gujarat",
-  "Haryana",
-  "Himachal Pradesh",
-  "Jharkhand",
-  "Karnataka",
-  "Kerala",
-  "Madhya Pradesh",
-  "Maharashtra",
-  "Manipur",
-  "Meghalaya",
-  "Mizoram",
-  "Nagaland",
-  "Odisha",
-  "Punjab",
-  "Rajasthan",
-  "Sikkim",
-  "Tamil Nadu",
-  "Telangana",
-  "Tripura",
-  "Uttar Pradesh",
-  "Uttarakhand",
-  "West Bengal",
-  "Andaman and Nicobar Islands",
-  "Chandigarh",
-  "Dadra and Nagar Haveli",
-  "Daman and Diu",
-  "Delhi",
-  "Jammu and Kashmir",
-  "Ladakh",
-  "Lakshadweep",
-  "Puducherry",
-];
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 ---
+<StandardPageLayout title="Checkout — Starstuck Lab" description="Review your order and proceed to payment." backgroundScene="workshop">
+  <main class="checkout-page">
+    <header class="checkout-page__header">
+      <h1>Checkout</h1>
+      <p class="checkout-page__subtitle">Review your order and proceed to payment.</p>
+    </header>
 
-<StandardPageLayout
-  title="Checkout — Starstuck Lab"
-  pageClass="checkout-page"
-  backgroundScene="shop"
->
-  <div class="checkout-container">
-    <h1>Checkout</h1>
+    <section class="checkout-card" id="checkout-card">
+      <ul id="cart-summary" class="co-list"></ul>
+      <p class="cart-summary__empty" id="empty-message" hidden>Your cart is empty.</p>
 
-    <div class="checkout-grid">
-      <!-- Order Summary -->
-      <div class="checkout-summary parchment parchment--large">
-        <h2>Order Summary</h2>
-        <div id="checkoutItems" class="checkout-items">
-          <!-- Items will be populated by script -->
+      <div class="checkout-actions" id="checkout-actions" hidden>
+        <div class="co-total">
+          <span class="lbl">Total</span>
+          <span class="val" id="checkout-total-amount">—</span>
         </div>
-        <div class="checkout-total">
-          <strong>Total: <span id="checkoutTotal">₹0</span></strong>
-        </div>
+        <p class="co-note">
+          You'll be redirected to Stripe's secure payment page. Cards and UPI accepted. Lead times depend on weather and mood.
+        </p>
+        <button id="pay-button" class="btn-pay">
+          Proceed to Payment
+        </button>
+        <p class="checkout-error" id="checkout-error" hidden></p>
       </div>
-
-      <!-- Shipping Form -->
-      <div class="checkout-form-section parchment parchment--large">
-        <h2>Shipping Information</h2>
-        <form
-          id="checkoutForm"
-          class="checkout-form"
-          action="https://getform.io/f/aolqmrdb"
-          method="POST"
-          enctype="multipart/form-data"
-        >
-          <!-- Hidden fields for cart data -->
-          <input
-            type="hidden"
-            name="_subject"
-            value="New Order - Starstuck Lab"
-          />
-          <input type="hidden" name="_replyto" id="formEmail" />
-          <input type="hidden" name="cart_items" id="formCartItems" />
-          <input type="hidden" name="total_amount" id="formTotal" />
-          <input type="text" name="_gotcha" style="display:none" />
-
-          <div class="form-group">
-            <label for="name"><b>Full Name</b> *</label>
-            <input
-              type="text"
-              id="name"
-              name="name"
-              required
-              minlength="2"
-              placeholder="Your full name"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="email"><b>Email</b> *</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              required
-              placeholder="your.email@example.com"
-            />
-          </div>
-
-          <div class="form-group">
-            <label for="phone"><b>Phone Number</b> *</label>
-            <input
-              type="tel"
-              id="phone"
-              name="phone"
-              required
-              pattern="[0-9]{10}"
-              placeholder="10-digit mobile number"
-            />
-            <small>10-digit Indian mobile number</small>
-          </div>
-
-          <div class="form-group">
-            <label for="address"><b>Street Address</b> *</label>
-            <textarea
-              id="address"
-              name="address"
-              required
-              minlength="10"
-              rows="3"
-              placeholder="House/Flat number, Street, Area"></textarea>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="city"><b>City</b> *</label>
-              <input
-                type="text"
-                id="city"
-                name="city"
-                required
-                minlength="2"
-                placeholder="City"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="state"><b>State</b> *</label>
-              <select id="state" name="state" required>
-                <option value="">Select State</option>
-                {
-                  indianStates.map((state) => (
-                    <option value={state}>{state}</option>
-                  ))
-                }
-              </select>
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="pincode"><b>PIN Code</b> *</label>
-            <input
-              type="text"
-              id="pincode"
-              name="pincode"
-              required
-              pattern="[0-9]{6}"
-              placeholder="6-digit PIN code"
-            />
-            <small>6-digit Indian PIN code</small>
-          </div>
-
-          <div class="form-group">
-            <label for="comments"><b>Additional Comments</b></label>
-            <textarea
-              id="comments"
-              name="comments"
-              rows="4"
-              placeholder="Special instructions, delivery preferences, etc."
-            ></textarea>
-          </div>
-
-          <button type="submit" class="submit-btn" id="submitBtn">
-            Place Order
-          </button>
-
-          <div class="form-status" id="formStatus" style="display: none;"></div>
-        </form>
-      </div>
-    </div>
-  </div>
+    </section>
+  </main>
 </StandardPageLayout>
 
 <script>
-  if (typeof window !== "undefined") {
-    const checkoutItems = document.getElementById("checkoutItems");
-    const checkoutTotal = document.getElementById("checkoutTotal");
-    const form = document.getElementById("checkoutForm") as HTMLFormElement;
-    const formEmail = document.getElementById("formEmail") as HTMLInputElement;
-    const formCartItems = document.getElementById(
-      "formCartItems",
-    ) as HTMLInputElement;
-    const formTotal = document.getElementById("formTotal") as HTMLInputElement;
-    const submitBtn = document.getElementById("submitBtn") as HTMLButtonElement;
-    const formStatus = document.getElementById("formStatus") as HTMLElement;
-
-    function loadCart() {
-      try {
-        const stored = localStorage.getItem("starstucklab_cart");
-        if (!stored) {
-          checkoutItems!.innerHTML =
-            '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
-          return;
-        }
-
-        const data = JSON.parse(stored);
-        const items = data.items || [];
-
-        if (items.length === 0) {
-          checkoutItems!.innerHTML =
-            '<p>Your cart is empty. <a href="/shop">Continue shopping</a></p>';
-          return;
-        }
-
-        const currency = items[0]?.currency || "INR";
-        const currencySymbol = currency === "₹" ? "₹" : currency;
-        const total = items.reduce((sum: number, item: any) => {
-          return sum + (parseFloat(item.price) || 0) * item.quantity;
-        }, 0);
-
-        checkoutTotal!.textContent = `${currencySymbol} ${total.toFixed(2)}`;
-
-        checkoutItems!.innerHTML = items
-          .map((item: any) => {
-            let customizationHtml = "";
-
-            if (item.customization) {
-              const c = item.customization;
-              customizationHtml = `
-      <div class="checkout-customization">
-        <strong>Customization:</strong>
-        <div class="custom-colors">
-          ${c.tubeAColor ? `<span class="color-dot" style="background: ${c.tubeAColor}" title="Tube A"></span>` : ""}
-          ${c.tubeBColor ? `<span class="color-dot" style="background: ${c.tubeBColor}" title="Tube B"></span>` : ""}
-          ${c.baseColor ? `<span class="color-dot" style="background: ${c.baseColor}" title="Base"></span>` : ""}
-        </div>
-        ${c.engraving ? `<div class="custom-detail">Engraving: "${c.engraving}"</div>` : ""}
-        ${c.graphicName ? `<div class="custom-detail">Graphic: ${c.graphicName}</div>` : ""}
-      </div>
-    `;
-            }
-
-            return `
-    <div class="checkout-item" data-id="${item.id}" data-slug="${item.slug}">
-      <div class="checkout-item-info">
-        <strong>${item.title}</strong>
-        ${customizationHtml}
-      </div>
-      <div class="checkout-item-controls">
-        <button class="checkout-qty-btn" data-action="decrease" data-id="${item.id}">➖</button>
-        <span class="checkout-item-qty">${item.quantity}</span>
-        <button class="checkout-qty-btn" data-action="increase" data-id="${item.id}">➕</button>
-        <button class="checkout-remove-btn" data-id="${item.id}" aria-label="Remove">❌</button>
-      </div>
-      <div class="checkout-item-price">${item.currency} ${(parseFloat(item.price) * item.quantity).toFixed(2)}</div>
-    </div>
-  `;
-          })
-          .join("");
-
-        // Set hidden form fields
-        formCartItems!.value = JSON.stringify(items);
-        formTotal!.value = total.toFixed(2);
-
-        // Attach event listeners for cart controls
-        attachCartEventListeners(items);
-      } catch (e) {
-        console.error("Error loading cart:", e);
-        checkoutItems!.innerHTML =
-          "<p>Error loading cart. Please try again.</p>";
-      }
-    }
-
-    function attachCartEventListeners(items: any[]) {
-      // Quantity control buttons
-      checkoutItems!.querySelectorAll(".checkout-qty-btn").forEach((btn) => {
-        btn.addEventListener("click", (e) => {
-          const target = e.target as HTMLElement;
-          const action = target.dataset.action;
-          const itemId = target.dataset.id;
-          if (itemId) {
-            const item = items.find((i: any) => i.id === itemId);
-            if (item) {
-              const newQty =
-                action === "increase" ? item.quantity + 1 : item.quantity - 1;
-              updateCartQuantity(itemId, newQty);
-            }
-          }
-        });
-      });
-
-      // Remove buttons
-      checkoutItems!.querySelectorAll(".checkout-remove-btn").forEach((btn) => {
-        btn.addEventListener("click", () => {
-          const itemId = (btn as HTMLElement).dataset.id;
-          if (itemId) {
-            removeFromCart(itemId);
-          }
-        });
-      });
-    }
-
-    function updateCartQuantity(itemId: string, quantity: number) {
-      try {
-        const stored = localStorage.getItem("starstucklab_cart");
-        if (!stored) return;
-
-        const data = JSON.parse(stored);
-        const items = data.items || [];
-
-        if (quantity <= 0) {
-          data.items = items.filter((i: any) => i.id !== itemId);
-        } else {
-          const item = items.find((i: any) => i.id === itemId);
-          if (item) item.quantity = quantity;
-        }
-
-        localStorage.setItem("starstucklab_cart", JSON.stringify(data));
-        window.dispatchEvent(
-          new CustomEvent("cart:updated", { detail: { items: data.items } }),
-        );
-        loadCart(); // Reload cart to update UI
-      } catch (e) {
-        console.error("Error updating cart:", e);
-      }
-    }
-
-    function removeFromCart(itemId: string) {
-      updateCartQuantity(itemId, 0);
-    }
-
-    // PIN code validation
-    const pincodeInput = document.getElementById("pincode") as HTMLInputElement;
-    pincodeInput?.addEventListener("input", (e) => {
-      const value = (e.target as HTMLInputElement).value.replace(/\D/g, "");
-      (e.target as HTMLInputElement).value = value.slice(0, 6);
-    });
-
-    // Phone validation
-    const phoneInput = document.getElementById("phone") as HTMLInputElement;
-    phoneInput?.addEventListener("input", (e) => {
-      const value = (e.target as HTMLInputElement).value.replace(/\D/g, "");
-      (e.target as HTMLInputElement).value = value.slice(0, 10);
-    });
-
-    form?.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const cart = JSON.parse(
-        localStorage.getItem("starstucklab_cart") || "{}",
-      );
-
-      // Create clean cart items without graphicData for JSON payload
-      const cleanCartItems = cart.items.map((item: any) => ({
-        ...item,
-        customization: item.customization ? {
-          ...item.customization,
-          graphicData: undefined // Remove base64 data from JSON
-        } : undefined
-      }));
-
-      // Get email for reply-to
-      const emailInput = document.getElementById("email") as HTMLInputElement;
-      if (emailInput && formEmail) {
-        formEmail.value = emailInput.value;
-      }
-
-      // Set clean cart items (without base64 data)
-      formCartItems!.value = JSON.stringify(cleanCartItems);
-
-      // Calculate and set total
-      const total = cleanCartItems.reduce((sum: number, item: any) => {
-        return sum + (parseFloat(item.price) || 0) * item.quantity;
-      }, 0);
-      formTotal!.value = total.toFixed(2);
-
-      let customizationText = "";
-
-      cart.items.forEach((item: any, index: number) => {
-        if (item.customization) {
-          customizationText += `\n\n=== ${item.title} ===\n`;
-          if (item.customization.tubeAColor)
-            customizationText += `Tube A Color: ${item.customization.tubeAColor}\n`;
-          if (item.customization.tubeBColor)
-            customizationText += `Tube B Color: ${item.customization.tubeBColor}\n`;
-          if (item.customization.baseColor)
-            customizationText += `Base Color: ${item.customization.baseColor}\n`;
-          if (item.customization.engraving)
-            customizationText += `Engraving: "${item.customization.engraving}"\n`;
-          if (item.customization.graphicName)
-            customizationText += `Graphic: ${item.customization.graphicName}\n`;
-        }
-      });
-
-      // Disable form
-      submitBtn!.disabled = true;
-      submitBtn!.textContent = "Placing Order...";
-      formStatus!.style.display = "none";
-
-      try {
-        const formData = new FormData(form);
-
-        // Add customization details
-        formData.set("customization_details", customizationText);
-
-        // Add graphic files directly to FormData
-        cart.items.forEach((item: any, index: number) => {
-          if (item.customization?.graphicData && item.customization?.graphicName) {
-            try {
-              // Convert base64 to blob
-              const base64Data = item.customization.graphicData.split(',')[1];
-              const mimeType = item.customization.graphicData.split(',')[0].split(':')[1].split(';')[0];
-              const byteCharacters = atob(base64Data);
-              const byteNumbers = new Array(byteCharacters.length);
-              for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-              }
-              const byteArray = new Uint8Array(byteNumbers);
-              const blob = new Blob([byteArray], { type: mimeType });
-
-              // Create file and append to FormData
-              const file = new File([blob], item.customization.graphicName, { type: mimeType });
-              formData.append(`graphic_${index}`, file);
-            } catch (error) {
-              console.error("Error converting graphic to file:", error);
-            }
-          }
-        });
-
-        const response = await fetch(form.action, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (response.ok) {
-          formStatus!.textContent =
-            "✓ Order placed successfully! We'll contact you soon to confirm.";
-          formStatus!.className = "form-status success";
-          formStatus!.style.display = "block";
-
-          // Clear cart
-          localStorage.removeItem("starstucklab_cart");
-          window.dispatchEvent(
-            new CustomEvent("cart:updated", { detail: { items: [] } }),
-          );
-
-          // Reset form
-          form.reset();
-
-          // Redirect after delay
-          setTimeout(() => {
-            window.location.href = "/shop";
-          }, 3000);
-        } else {
-          formStatus!.textContent =
-            "✗ Something went wrong. Please try again or email us at contact@starstucklab.com";
-          formStatus!.className = "form-status error";
-          formStatus!.style.display = "block";
-        }
-      } catch (error) {
-        console.error("Form submission error:", error);
-        formStatus!.textContent =
-          "✗ Network error. Please check your connection and try again.";
-        formStatus!.className = "form-status error";
-        formStatus!.style.display = "block";
-      } finally {
-        submitBtn!.disabled = false;
-        submitBtn!.textContent = "Place Order";
-      }
-    });
-
-    // Load cart on page load
-    loadCart();
+  interface CartItem {
+    productSlug?: string;
+    slug?: string;
+    title: string;
+    price: number | string;
+    currency?: string;
+    quantity: number;
+    customization?: Record<string, string>;
   }
+
+  // Cart is stored under `starstucklab_cart` as { items, expiry, updated }.
+  function loadCart(): CartItem[] {
+    try {
+      const stored = localStorage.getItem('starstucklab_cart');
+      if (!stored) return [];
+      const data = JSON.parse(stored);
+      return Array.isArray(data?.items) ? data.items : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function formatINR(amount: number): string {
+    return '₹' + amount.toLocaleString('en-IN');
+  }
+
+  function renderCart(items: CartItem[]) {
+    const list = document.getElementById('cart-summary') as HTMLUListElement;
+    const actions = document.getElementById('checkout-actions')!;
+    const emptyMsg = document.getElementById('empty-message')!;
+    const totalEl = document.getElementById('checkout-total-amount')!;
+
+    list.innerHTML = '';
+
+    if (!items.length) {
+      emptyMsg.hidden = false;
+      return;
+    }
+
+    const total = items.reduce((sum, i) => {
+      const p = typeof i.price === 'number' ? i.price : parseFloat(i.price || '0');
+      return sum + (Number.isFinite(p) ? p : 0) * i.quantity;
+    }, 0);
+    totalEl.textContent = formatINR(total);
+
+    items.forEach((item) => {
+      const li = document.createElement('li');
+      const itemPrice = typeof item.price === 'number'
+        ? item.price
+        : parseFloat(item.price || '0');
+
+      const customText = item.customization
+        ? Object.entries(item.customization).map(([k, v]) => `${k}: ${v}`).join(' · ')
+        : '';
+
+      li.innerHTML = `
+        <div>
+          <span class="co-title">${item.title}</span>
+          ${customText ? `<span class="co-custom">${customText}</span>` : ''}
+        </div>
+        <div class="co-qty">× ${item.quantity}</div>
+        <div class="co-price">${formatINR(itemPrice * item.quantity)}</div>
+      `;
+      list.appendChild(li);
+    });
+
+    actions.hidden = false;
+  }
+
+  async function startCheckout(items: CartItem[]) {
+    const button = document.getElementById('pay-button') as HTMLButtonElement;
+    const errorEl = document.getElementById('checkout-error') as HTMLElement;
+
+    button.disabled = true;
+    button.textContent = 'Preparing payment…';
+    errorEl.hidden = true;
+
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.url) {
+        throw new Error(data.error ?? 'Unknown error');
+      }
+
+      window.location.href = data.url;
+    } catch (err: any) {
+      errorEl.textContent = `Payment failed to start: ${err.message}. Please try again.`;
+      errorEl.hidden = false;
+      button.disabled = false;
+      button.textContent = 'Proceed to Payment';
+    }
+  }
+
+  const cart = loadCart();
+  renderCart(cart);
+
+  document.getElementById('pay-button')?.addEventListener('click', () => {
+    startCheckout(cart);
+  });
 </script>
+
+<style>
+  /* Checkout — glass card on workshop bg */
+  .checkout-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 90px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .checkout-page__header {
+    margin-bottom: 22px;
+  }
+
+  .checkout-page__header h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 42px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: #f8f4e8;
+    margin: 0 0 8px;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  }
+
+  .checkout-page__subtitle {
+    font-family: 'Merriweather', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.70);
+    font-size: 16px;
+    margin: 0;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Glass card wraps the entire transactional block */
+  .checkout-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    backdrop-filter: blur(14px) saturate(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(1.05);
+    padding: 32px;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  .co-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .co-list li {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: 18px;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  }
+
+  .co-list li:first-child {
+    padding-top: 0;
+  }
+
+  .co-title {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-weight: 600;
+    font-size: 18px;
+    color: #f8f4e8;
+    display: block;
+  }
+
+  .co-custom {
+    display: block;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    color: rgba(248, 244, 232, 0.62);
+    margin-top: 4px;
+  }
+
+  .co-qty {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    color: rgba(248, 244, 232, 0.72);
+    white-space: nowrap;
+    font-size: 14px;
+  }
+
+  .co-price {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    color: #f8f4e8;
+    white-space: nowrap;
+  }
+
+  .co-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 18px 0 6px;
+    border-top: 1px solid rgba(248, 244, 232, 0.40);
+    margin-top: 0;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    color: #f8f4e8;
+  }
+
+  .co-total .lbl {
+    font-size: 18px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .co-total .val {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 30px;
+  }
+
+  .co-note {
+    font-family: 'Merriweather', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.62);
+    font-size: 13px;
+    margin: 18px 0 22px;
+    line-height: 1.5;
+  }
+
+  /* Pay button — intentionally hard geometry (4px radius) to signal weight */
+  .btn-pay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 18px 24px;
+    background: #f8f4e8;
+    color: #0c0c0e;
+    border: 2px solid #f8f4e8;
+    border-radius: 4px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-weight: 700;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .btn-pay:hover:not(:disabled) {
+    background: transparent;
+    color: #f8f4e8;
+  }
+
+  .btn-pay:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  .cart-summary__empty {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: rgba(248, 244, 232, 0.62);
+    text-align: center;
+    padding: 30px 0;
+  }
+
+  .checkout-error {
+    margin-top: 14px;
+    color: #c0392b;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px) {
+    .checkout-page__header h1 {
+      font-size: 32px;
+    }
+
+    .checkout-card {
+      padding: 22px;
+    }
+  }
+</style>

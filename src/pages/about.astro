@@ -1,102 +1,251 @@
 ---
-import Layout from "../layouts/Layout.astro";
-import "../styles/global.css";
-import markdownIt from "markdown-it";
-
-const md = markdownIt({ breaks: true, html: true });
-const render = (content) => (content ? md.render(content) : "");
-
-const pageTitle = "About | Starstuck Lab";
-const pageDescription = "A single human and a weary AI build curious things under indifferent stars.";
-
-import allVariants from "../../public/data/about.json";
-
-// Pick a random variant between 1 and 5
-const variantKeys = Object.keys(allVariants);
-const randomKey = variantKeys[Math.floor(Math.random() * variantKeys.length)];
-const data = allVariants[randomKey];
-
-const {
-  hero_title,
-  hero_subtitle,
-  lead_intro,
-  philosophy,
-  projects_list,
-  motto,
-  footer_poem
-} = data;
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
 ---
+<StandardPageLayout
+  title="About — Starstuck Lab"
+  description="A quiet hillside workshop where ideas drift between solder smoke, old wood, and soft starlight."
+  backgroundScene="shop"
+>
+  <main class="about-page" id="aboutPage">
+    <article class="parchment about-parchment" data-surface="parchment" data-variant="1">
+      <div class="about-emblem-wrap" aria-hidden="true">
+        <img
+          class="about-emblem"
+          id="aboutEmblem"
+          src="/data/about-emblem-1.png"
+          alt=""
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+        />
+      </div>
 
-<Layout title={pageTitle} description={pageDescription}>
-  <main
-    id="about-page"
-    class="container mx-auto px-6 py-16 text-left space-y-16"
-  >
-    <!-- HERO -->
-    <section id="about-hero" class="text-center space-y-4">
-      <h1 class="text-5xl md:text-6xl font-semibold tracking-tight text-primary">
-        {hero_title || "I build machines that question my own existence."}
-      </h1>
-      <p class="text-lg text-muted-foreground italic">
-        {hero_subtitle ||
-          "Exploring the quiet intersections of code and contemplation, one line of thought at a time."}
+      <h1 id="aboutTitle">About the workshop</h1>
+      <p class="motto" id="aboutMotto">Building small machines for an indifferent universe.</p>
+
+      <div class="about-body" id="aboutBody">
+        <p>
+          A quiet hillside workshop where ideas drift between solder smoke,
+          old wood, soft starlight, and dry cosmic humour. Sketches curl at the
+          edges. Machines attempt usefulness, sometimes succeed.
+        </p>
+      </div>
+
+      <p class="about-foot">
+        Everything here is made one at a time. Each piece resolves with a small
+        note explaining what went wrong on the way to working. Lead times
+        depend on weather and mood.
       </p>
-    </section>
 
-    <!-- LEAD INTRO -->
-    <section
-      id="about-lead"
-      class="max-w-3xl mx-auto leading-relaxed text-lg space-y-4 prose prose-invert"
-    >
-      <Fragment
-        set:html={render(
-          lead_intro || "_Still waiting for the robot to introduce itself._"
-        )}
-      />
-    </section>
-
-    <!-- PHILOSOPHY -->
-    <section
-      id="about-philosophy"
-      class="max-w-3xl mx-auto space-y-6 prose prose-invert"
-    >
-      <Fragment
-        set:html={render(
-          philosophy || "### The Philosophy\n\nEverything decays. I build anyway."
-        )}
-      />
-    </section>
-
-    <!-- MOTTO -->
-    <section id="about-motto" class="text-center py-8">
-      <blockquote class="italic text-lg text-muted-foreground">
-        “{motto || "In the quiet hum of circuits, we dream, then fade."}”
-      </blockquote>
-    </section>
-
-    <!-- PROJECTS -->
-    <section
-      id="about-projects"
-      class="max-w-3xl mx-auto space-y-4 prose prose-invert"
-    >
-      <h2 class="text-2xl font-semibold text-primary">Things I Build</h2>
-      <Fragment
-        set:html={render(
-          projects_list || "- Circuits that hum softly to themselves."
-        )}
-      />
-    </section>
-
-    <!-- FOOTER POEM -->
-    <section
-      id="about-footer"
-      class="text-center text-sm text-muted-foreground pt-16 border-t border-border prose prose-invert"
-    >
-      <Fragment
-        set:html={render(
-          footer_poem || "_I sketch a galaxy in quiet code..._"
-        )}
-      />
-    </section>
+      <svg class="about-seal" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
+        <path d="M50 4l11 32 33 1-27 19 10 32L50 70 23 88l10-32L6 37l33-1z" />
+      </svg>
+    </article>
   </main>
-</Layout>
+</StandardPageLayout>
+
+<script type="module">
+  // Pick a random variant from /data/about.json on each visit, mirroring
+  // the homepage about panel's behaviour. Variants supply: title, lead,
+  // motto. The emblem file follows /data/about-emblem-<key>.png.
+  async function applyAboutVariant() {
+    try {
+      const res = await fetch('/data/about.json');
+      if (!res.ok) return;
+      const variants = await res.json();
+      const keys = Object.keys(variants || {}).sort((a, b) => {
+        const an = Number(a), bn = Number(b);
+        if (!Number.isNaN(an) && !Number.isNaN(bn)) return an - bn;
+        return a.localeCompare(b);
+      });
+      if (!keys.length) return;
+
+      const chosenKey = keys[Math.floor(Math.random() * keys.length)];
+      const variant = variants[chosenKey] || {};
+
+      const article = document.querySelector('.about-parchment');
+      const titleEl = document.getElementById('aboutTitle');
+      const mottoEl = document.getElementById('aboutMotto');
+      const bodyEl = document.getElementById('aboutBody');
+      const emblemEl = document.getElementById('aboutEmblem');
+
+      if (article) article.setAttribute('data-variant', chosenKey);
+      if (titleEl && variant.title) titleEl.textContent = variant.title;
+      if (mottoEl) {
+        if (variant.motto) {
+          mottoEl.textContent = variant.motto;
+          mottoEl.style.display = '';
+        } else {
+          mottoEl.style.display = 'none';
+        }
+      }
+      if (bodyEl && variant.lead) {
+        // Split the lead into paragraphs by double newlines or sentence groups.
+        bodyEl.innerHTML = '';
+        const p = document.createElement('p');
+        p.textContent = variant.lead;
+        bodyEl.appendChild(p);
+      }
+      if (emblemEl) {
+        emblemEl.src = `/data/about-emblem-${chosenKey}.png`;
+        emblemEl.alt = `Starstuck Lab emblem, variant ${chosenKey}`;
+      }
+    } catch (err) {
+      console.error('Failed to load about variant:', err);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', applyAboutVariant);
+  } else {
+    applyAboutVariant();
+  }
+</script>
+
+<style>
+  .about-page {
+    padding: 120px 24px 60px;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .about-parchment {
+    position: relative;
+    max-width: 680px;
+    width: 100%;
+    padding: 48px 52px;
+    background: linear-gradient(
+      135deg,
+      #fae5d0 0%,
+      #f4dcc0 25%,
+      #eed7b8 50%,
+      #f4ddbc 75%,
+      #f7dfc0 100%
+    );
+    border-radius: 12px;
+    color: #2b160e;
+    font-family: 'Crimson Pro', Georgia, serif;
+    line-height: 1.75;
+    box-shadow:
+      0 8px 32px rgba(0, 0, 0, 0.45),
+      0 2px 8px rgba(0, 0, 0, 0.25),
+      0 0 0 1px rgba(0, 0, 0, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    overflow: hidden;
+  }
+
+  /* Coffee stain — the only sanctioned decoration on the about card */
+  .about-parchment::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: url('/assets/textures/coffee-stain.png') no-repeat;
+    background-size: 220px auto;
+    background-position: 88% 88%;
+    mix-blend-mode: multiply;
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Paper-grain darken vignette */
+  .about-parchment::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    background: radial-gradient(
+      ellipse 75% 90% at center,
+      transparent 35%,
+      rgba(80, 50, 30, 0.10) 85%,
+      rgba(60, 40, 25, 0.18) 100%
+    );
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+
+  .about-parchment > * {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Centered emblem at the top of the parchment slab. */
+  .about-emblem-wrap {
+    display: flex;
+    justify-content: center;
+    margin: 0 auto 28px;
+  }
+
+  .about-emblem {
+    width: clamp(220px, 38vw, 320px);
+    height: auto;
+    display: block;
+    /* Multiply blend so the emblem sits ON the parchment, picking up
+       its warm cream tone instead of looking like a pasted-on PNG. */
+    mix-blend-mode: multiply;
+    filter: drop-shadow(0 4px 16px rgba(80, 50, 25, 0.35));
+  }
+
+  .about-parchment h1 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-weight: 700;
+    font-size: 38px;
+    line-height: 1.1;
+    color: #2a1d12;
+    margin: 0 0 6px;
+    letter-spacing: -0.01em;
+    text-align: center;
+  }
+
+  .about-parchment .motto {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    color: #4a3420;
+    font-size: 18px;
+    margin: 0 0 22px;
+    text-align: center;
+  }
+
+  .about-parchment p {
+    font-size: 16px;
+    color: #2b160e;
+    line-height: 1.75;
+    margin: 0 0 14px;
+  }
+
+  .about-foot {
+    margin-top: 18px;
+    padding-top: 18px;
+    border-top: 1px dashed rgba(80, 50, 25, 0.25);
+    font-size: 15px;
+    font-style: italic;
+    color: #3d2515;
+  }
+
+  .about-seal {
+    position: absolute;
+    right: 28px;
+    bottom: 24px;
+    width: 48px;
+    height: 48px;
+    opacity: 0.30;
+    color: #8b6235;
+    z-index: 2;
+  }
+
+  @media (max-width: 640px) {
+    .about-page {
+      padding: 90px 16px 50px;
+    }
+
+    .about-parchment {
+      padding: 32px 24px;
+    }
+
+    .about-parchment h1 {
+      font-size: 30px;
+    }
+  }
+</style>

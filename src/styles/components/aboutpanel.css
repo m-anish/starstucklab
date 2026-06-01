@@ -1,12 +1,12 @@
-/* aboutpanel.css – Animation and layout coordination with parchment.css
-   Place this in: site/src/styles/components/aboutpanel.css
-*/
+/* aboutpanel.css – Dark workshop aesthetic, visually distinct from parchment product cards */
 
 /* ===== WRAPPER WITH ANIMATION ===== */
 .about-panel-wrap {
   position: relative;
   z-index: 52;
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: center;
   margin: 2rem auto;
   padding: 0 1rem;
@@ -27,11 +27,68 @@
   visibility: visible;
 }
 
-/* Ensure parchment card inside is visible */
-.about-panel-wrap .parchment {
+/* Eyebrow label above card — gold accent, more prominent */
+.about-panel__eyebrow {
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(201, 185, 122, 0.85); /* warm gold */
+  margin: 0 0 0.6rem 0;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 700;
+  align-self: flex-start;
+  padding-left: 0.25rem;
+}
+
+/* ===== DARK WORKSHOP CARD — overrides parchment inside about panel =====
+   Use body prefix to beat parchment.css's "body .about-panel-wrap .parchment" padding rule */
+body .about-panel-wrap .parchment {
   max-width: 720px;
   width: 100%;
-  padding: 2rem 1.5rem;
+  padding: 1.75rem 1.5rem;
+
+  /* Dark workshop background — contrasts cleanly with bright product cards */
+  background: linear-gradient(160deg,
+    rgba(22, 15, 8, 0.92) 0%,
+    rgba(30, 20, 10, 0.90) 60%,
+    rgba(18, 12, 6, 0.94) 100%
+  );
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+
+  /* Gold/amber border — workshop lantern glow */
+  box-shadow:
+    0 0 0 1px rgba(201, 185, 122, 0.18),
+    0 8px 32px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(201, 185, 122, 0.08);
+  border-radius: 12px;
+}
+
+/* Strip the parchment texture pseudo-elements inside the about panel */
+.about-panel-wrap .parchment::before,
+.about-panel-wrap .parchment::after {
+  display: none;
+}
+
+/* Text colour overrides for dark background */
+.about-panel-wrap .parchment h1,
+.about-panel-wrap .parchment h2,
+.about-panel-wrap .parchment h3,
+.about-panel-wrap .parchment h4,
+.about-panel-wrap .title {
+  color: #f5e6c8 !important; /* warm cream */
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+}
+
+.about-panel-wrap .parchment p,
+.about-panel-wrap .lead {
+  color: rgba(240, 225, 195, 0.88) !important;
+  text-shadow: none;
+}
+
+.about-panel-wrap .motto {
+  color: rgba(201, 185, 122, 0.9) !important; /* gold for the motto */
+  border-top-color: rgba(201, 185, 122, 0.15) !important;
 }
 
 /* ===== EMBLEM LAYOUT ===== */

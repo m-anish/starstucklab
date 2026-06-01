@@ -1,132 +1,79 @@
 ---
-// site/src/components/FeaturedSections.astro
-// Updated to use Astro Content Collections for projects and products (markdown)
-import { getCollection } from 'astro:content';
-import ProjectCard from './ProjectCard.astro';
-import ProductCard from './ProductCard.astro';
+// FeaturedSections.astro — homepage below-hero "constellation preview".
+// Sources from the machines registry (not the shop) and reuses MachineCard so
+// it stays consistent with /machines. Shows one machine per kind to tell the
+// breadth story (a telescope, a machine, a piece of software).
+import { getMachines } from '../lib/machines';
+import MachineCard from './MachineCard.astro';
 import '../styles/components/featured-sections.css';
 
-const base = (Astro.base || Astro.site?.pathname || '/').replace(/\/?$/, '/');
-
-// Load featured projects from content collection (newest 3)
-let featuredProjects: any[] = [];
-try {
-  const allProjects = await getCollection('projects');
-
-  // Sort by date descending
-  const sorted = allProjects.sort((a, b) => {
-    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-    return dateB - dateA;
-  });
-
-  // Take 3 most recent, transform to ProjectCard format
-  featuredProjects = sorted.slice(0, 3).map(entry => ({
-    id: entry.id,
-    slug: entry.data.slug || entry.slug,
-    title: entry.data.title,
-    excerpt: entry.data.excerpt,
-    category: entry.data.category,
-    status: entry.data.status,
-    tags: entry.data.tags || [],
-    date: entry.data.date,
-    image: entry.data.image || `${base}assets/projects/${entry.slug}/hero.webp`,
-    image_fallback: `${base}assets/projects/${entry.slug}/master.png`,
-    url: `${base}projects/${entry.data.slug || entry.slug}`
-  }));
-} catch (e) {
-  console.warn('Could not load projects collection:', e);
-}
-
-// Load featured products from content collection (newest 3)
-let featuredProducts: any[] = [];
-try {
-  const allProducts = await getCollection('products');
-
-  // Sort by date descending
-  const sorted = allProducts.sort((a, b) => {
-    const dateA = a.data.date ? new Date(a.data.date).getTime() : 0;
-    const dateB = b.data.date ? new Date(b.data.date).getTime() : 0;
-    return dateB - dateA;
-  });
-
-  // Take 3 most recent, transform to ProductCard format
-  featuredProducts = sorted.slice(0, 3).map(entry => ({
-    id: entry.id,
-    slug: entry.slug,
-    title: entry.data.title,
-    excerpt: entry.data.excerpt,
-    price: entry.data.price,
-    currency: entry.data.currency || 'INR',
-    status: entry.data.status,
-    tags: entry.data.tags || [],
-    date: entry.data.date,
-    images: entry.data.images,
-    url: `${base}shop/${entry.slug}`
-  }));
-} catch (e) {
-  console.warn('Could not load products collection:', e);
-}
+const machines = getMachines();
+const kinds = ['telescope', 'hardware', 'software'] as const;
+const preview = kinds
+  .map((k) => machines.find((m) => m.kind === k && m.access !== 'soon'))
+  .filter((m): m is NonNullable<typeof m> => Boolean(m));
 ---
 
 <div class="featured-sections-wrap">
-  <!-- Projects Section -->
-  {featuredProjects.length > 0 && (
-    <section class="featured-section featured-card featured-card--projects" id="featured-projects">
+  {preview.length > 0 ? (
+    <section class="featured-section" id="featured-machines">
       <div class="section-header">
-        <h2>Recent Creations from the Bench</h2>
+        <p class="section-tag">From the bench</p>
+        <h2>Small machines, attempting usefulness.</h2>
         <p class="section-lead">
-          Things built between coffee and cosmic indifference.
+          Each one started as a sketch on the back of an envelope and ended
+          somewhere between hardware and confession — a telescope, a box that
+          argues with lightning, an almanac for the night sky.
         </p>
       </div>
-      
+
       <div class="featured-grid">
-        {featuredProjects.map(project => (
-          <ProjectCard project={project} />
-        ))}
+        {preview.map((machine) => <MachineCard machine={machine} />)}
       </div>
-      
+
       <div class="section-footer">
-        <a href={`${base}projects`} class="section-cta">
-          See All Projects <span aria-hidden="true">→</span>
+        <a href="/machines" class="section-cta">
+          See all the machines <span aria-hidden="true">→</span>
         </a>
       </div>
     </section>
-  )}
-  
-  <!-- Shop Preview Section -->
-  {featuredProducts.length > 0 && (
-    <section class="featured-section featured-card featured-card--shop" id="featured-shop">
-      <div class="section-header">
-        <h2>Available Now</h2>
-        <p class="section-lead">
-          Artifacts from the workshop, lightly cursed, ready to ship.
-        </p>
-      </div>
-      
-      <div class="featured-grid">
-        {featuredProducts.map(product => (
-          <ProductCard product={product} />
-        ))}
-      </div>
-      
-      <div class="section-footer">
-        <a href={`${base}shop`} class="section-cta">
-          Browse the Shop <span aria-hidden="true">→</span>
-        </a>
-      </div>
-    </section>
-  )}
-  
-  <!-- Empty State (if no content) -->
-  {featuredProjects.length === 0 && featuredProducts.length === 0 && (
+  ) : (
     <section class="featured-section">
-      <div class="parchment parchment--centered">
-        <p>The workshop is currently being organized. Check back soon for projects and products.</p>
-        <p style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">
-          Add a project with: <code>python3 tools/projects_cli.py add "Project Title"</code>
-        </p>
-      </div>
+      <p class="fs-empty">The workshop is currently between projects. Check back soon.</p>
     </section>
   )}
 </div>
+
+<style>
+/* Header copy for the constellation preview. The grid/section/cta layout comes
+   from featured-sections.css; the cards style themselves (MachineCard). */
+.section-tag {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(248, 244, 232, 0.55);
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+
+.section-lead {
+  font-family: 'Merriweather', Georgia, serif;
+  font-weight: 300;
+  color: rgba(248, 244, 232, 0.78);
+  max-width: 52ch;
+  margin-inline: auto;
+  font-size: 17px;
+  line-height: 1.55;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+}
+
+.fs-empty {
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-style: italic;
+  color: rgba(248, 244, 232, 0.55);
+  text-align: center;
+  padding: 60px 20px;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7);
+}
+</style>

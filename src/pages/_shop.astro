@@ -1,0 +1,344 @@
+---
+// shop.astro — V2: uses StandardPageLayout with workshop background for consistent styling
+import { getCollection } from 'astro:content';
+import StandardPageLayout from '../layouts/StandardPageLayout.astro';
+import '../styles/components/standard-page.css';
+
+const allProducts = await getCollection('products');
+const products = allProducts
+  .filter((p) => p.data.status === 'available')
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+function formatPrice(price: number, currency = 'INR'): string {
+  if (currency === 'INR') return `₹${price.toLocaleString('en-IN')}`;
+  return `${currency} ${price.toLocaleString()}`;
+}
+---
+<StandardPageLayout
+  title="Shop — Starstuck Lab"
+  description="Handmade telescopes built to order in India. Two products. Both very good."
+  backgroundScene="workshop"
+>
+  <main class="shop standard-page">
+    <!-- Header -->
+    <header class="shop__header standard-page-inner">
+      <p class="shop__eyebrow">Shop</p>
+      <h1>Hardware that mostly works.</h1>
+      <p class="shop__subtitle">
+        Two telescopes. Both built to order in a small workshop somewhere in
+        India, where someone cares perhaps too much about collimation tolerances.
+        Lead times depend on weather and mood.
+      </p>
+    </header>
+
+    <!-- Product grid -->
+    <section class="shop__grid-section standard-page-inner">
+      {products.length === 0 ? (
+        <p class="shop__empty">
+          Nothing available right now. Check back shortly — or read the{' '}
+          <a href="/lab">Lab Notes</a> while you wait.
+        </p>
+      ) : (
+        <div class="shop__grid">
+          {products.map((product) => {
+            const { title, tagline, price, currency, stock_status, lead_time, images, excerpt } = product.data;
+            const isBuildToOrder = stock_status === 'build_to_order';
+            const isOutOfStock   = stock_status === 'out_of_stock';
+            return (
+              <a href={`/shop/${product.slug}`} class="pc">
+                <div class="pc__image-wrap">
+                  <span class="pc__gen-badge" aria-hidden="true">✦ generated</span>
+                  {images?.master ? (
+                    <img
+                      src={images.master}
+                      alt={title}
+                      class="pc__image"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div class="pc__placeholder" aria-hidden="true">✦</div>
+                  )}
+                </div>
+                <div class="pc__body">
+                  <div class="pc__badges">
+                    {isBuildToOrder && <span class="pc__badge">Build to Order</span>}
+                    {isOutOfStock   && <span class="pc__badge pc__badge--out">Out of Stock</span>}
+                  </div>
+                  <h2 class="pc__title">{title}</h2>
+                  {tagline && <p class="pc__tagline">{tagline}</p>}
+                  <p class="pc__excerpt">{excerpt}</p>
+                  <div class="pc__footer">
+                    {price && (
+                      <span class="pc__price">{formatPrice(price, currency)}</span>
+                    )}
+                    {isBuildToOrder && lead_time && (
+                      <span class="pc__lead">Ships in {lead_time}</span>
+                    )}
+                    <span class="pc__arrow">View Details →</span>
+                  </div>
+                </div>
+              </a>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  </main>
+</StandardPageLayout>
+
+<style>
+  /* ── Shop header ── */
+  .shop__header {
+    padding-top: var(--space-16, 4rem);
+    padding-bottom: var(--space-10, 2.5rem);
+    text-align: center;
+  }
+
+  .shop__eyebrow {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(248, 244, 232, 0.55);
+    margin: 0 0 var(--space-4, 1rem);
+    font-weight: 600;
+  }
+
+  .shop__subtitle {
+    max-width: 52ch;
+    margin-inline: auto;
+    color: rgba(245, 230, 200, 0.65);
+    font-size: var(--text-base, 1rem);
+    line-height: var(--leading-base, 1.6);
+    font-style: italic;
+  }
+
+  /* ── Grid ── */
+  .shop__grid-section {
+    padding-top: var(--space-6, 1.5rem);
+    padding-bottom: var(--space-24, 6rem);
+  }
+
+  .shop__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: var(--space-8, 2rem);
+  }
+
+  .shop__empty {
+    text-align: center;
+    color: rgba(245, 230, 200, 0.6);
+    padding: var(--space-20, 5rem) 0;
+  }
+
+  .shop__empty a {
+    color: var(--color-accent, #4ec57a);
+  }
+
+  /* ══════════════════════
+     GLASS PRODUCT CARD
+  ══════════════════════ */
+  .pc {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+                border-color 0.25s ease,
+                background 0.25s ease;
+  }
+
+  .pc::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      115deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.10) 50%,
+      transparent 65%
+    );
+    transform: translateX(-100%);
+    transition: transform 0.6s ease;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .pc:hover {
+    transform: translateY(-8px) scale(1.02);
+    border-color: rgba(78, 197, 122, 0.35);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .pc:hover::before {
+    transform: translateX(100%);
+  }
+
+  .pc__image-wrap {
+    position: relative;
+    aspect-ratio: 4/3;
+    overflow: hidden;
+    background: #111 center / cover no-repeat;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .pc__image-wrap::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(78, 197, 122, 0.10) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .pc__gen-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 2;
+    background: rgba(0, 0, 0, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: rgba(255, 255, 255, 0.75);
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+
+  .pc__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+  }
+
+  .pc:hover .pc__image { transform: scale(1.04); }
+
+  .pc__placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 80px;
+    color: rgba(255, 255, 255, 0.20);
+    letter-spacing: -0.05em;
+  }
+
+  .pc__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: 22px;
+  }
+
+  .pc__badges {
+    display: flex;
+    gap: var(--space-2, 0.5rem);
+    margin-bottom: 10px;
+    min-height: 1.5rem;
+  }
+
+  .pc__badge {
+    display: inline-block;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #a6b3cf;
+    background: rgba(139, 157, 195, 0.14);
+    border: 1px solid rgba(139, 157, 195, 0.30);
+    border-radius: 6px;
+    padding: 4px 10px;
+  }
+
+  .pc__badge--out {
+    color: #d4a89c;
+    background: rgba(170, 102, 102, 0.12);
+    border-color: rgba(170, 102, 102, 0.30);
+  }
+
+  .pc__title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: #f8f4e8;
+    margin: 0 0 6px;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  .pc__tagline {
+    font-family: 'Crimson Pro', Georgia, serif;
+    font-style: italic;
+    font-size: 14px;
+    color: rgba(248, 244, 232, 0.75);
+    line-height: 1.5;
+    margin: 0 0 14px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
+  }
+
+  .pc__excerpt {
+    font-family: 'Merriweather', Georgia, serif;
+    font-weight: 300;
+    font-size: 14px;
+    color: rgba(248, 244, 232, 0.72);
+    line-height: 1.55;
+    flex: 1;
+    margin: 0 0 16px;
+  }
+
+  .pc__footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .pc__price {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #f8f4e8;
+  }
+
+  .pc__lead {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    color: rgba(248, 244, 232, 0.55);
+  }
+
+  .pc__arrow {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #4ec57a;
+    transition: color 0.15s ease;
+  }
+
+  .pc:hover .pc__arrow {
+    color: #9be3b3;
+  }
+
+  @media (max-width: 480px) {
+    .shop__grid { grid-template-columns: 1fr; }
+  }
+</style>

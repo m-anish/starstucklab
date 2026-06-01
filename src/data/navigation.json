@@ -1,19 +1,24 @@
 {
   "primary": [
     {
-      "label": "Projects",
-      "href": "/projects",
+      "label": "Machines",
+      "href": "/machines",
       "priority": 1
     },
     {
-      "label": "Shop",
-      "href": "/shop",
+      "label": "Lab Notes",
+      "href": "/lab",
       "priority": 2
+    },
+    {
+      "label": "About",
+      "href": "/about",
+      "priority": 3
     },
     {
       "label": "Contact",
       "href": "/contact",
-      "priority": 3
+      "priority": 4
     }
   ],
   "settings": {

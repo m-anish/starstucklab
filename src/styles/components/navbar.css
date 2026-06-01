@@ -213,12 +213,23 @@
   height: 20px;
 }
 
-/* ===== INDEX PAGE ANIMATED NAV ===== */
+/* ===== INDEX PAGE ANIMATED NAV =====
+   Two control mechanisms:
+   1. `body.hero-mode` hides the nav while the user is on the hero scene
+      (used by the index page until the crossfade midpoint is reached).
+   2. `nav-hidden` / `nav-visible` provide the in-document scroll state
+      and finer transition tuning.
+*/
 
-#pageNav.nav-hidden {
+#pageNav {
+  transition: transform 0.45s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.35s linear;
+}
+
+#pageNav.nav-hidden,
+body.hero-mode #pageNav {
   opacity: 0;
   pointer-events: none;
-  transform: translateY(-100%);
+  transform: translateY(-110%);
 }
 
 #pageNav.nav-visible {

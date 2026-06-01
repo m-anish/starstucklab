@@ -2,468 +2,141 @@
 
 *"Building small machines for an indifferent universe"*
 
-This repository contains the complete **Starstuck Lab** ecosystem:
+Starstuck Lab is a handmade telescope workshop in India. This repository contains the complete site and tooling ecosystem.
 
-- 🌐 **Website**: Astro-powered web presence with dynamic content
-- 🛠️ **CLI Tools**: Comprehensive content management and automation system
-- 🤖 **AI Integration**: Automated content generation and image creation
+→ **Docs:** [`docs/`](docs/) &nbsp;|&nbsp; **Content guide:** [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md) &nbsp;|&nbsp; **Status:** [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md)
 
 ---
 
-## 🚀 Quickstart
+## Tech Stack
 
-### Website Development
+| Layer | Technology |
+|---|---|
+| Framework | [Astro 5](https://astro.build) — SSR, `output: 'server'` |
+| Hosting | [Cloudflare Workers](https://workers.cloudflare.com) via `@astrojs/cloudflare` |
+| CMS | [Keystatic](https://keystatic.com) — local-storage, runs at `/admin` |
+| Payments | [Stripe](https://stripe.com) — Checkout Sessions + webhook |
+| Email | [Resend](https://resend.com) — contact form |
+| Styles | Custom CSS with design tokens (`src/styles/tokens.css`) |
+| CLI tools | Python — content generation, image processing, AI generation |
+
+---
+
+## Quick Start
 
 ```bash
-cd site
 npm install
-npm run dev
+npm run dev        # → http://localhost:4321
 ```
 
-Open [http://localhost:4321](http://localhost:4321)
+**CMS admin** (local dev only): `http://localhost:4321/admin`
 
-### CLI Tools
-
+**CLI tools:**
 ```bash
-cd site/tools
+cd tools
+pip install -r requirements.txt
 
-# Interactive mode
-python cli.py
-
-# Direct commands
-python cli.py projects list
-python cli.py products images --product m42
+python cli.py               # interactive mode
+python cli.py content --help
+python cli.py images --help
 ```
 
 ---
 
-## 📁 Project Structure
+## Deployment
 
-```
-site/
-├── src/                    # Astro website source
-│   ├── components/         # Reusable UI components
-│   ├── layouts/           # Page layouts
-│   ├── pages/             # Route pages
-│   ├── styles/            # CSS and design tokens
-│   └── data/              # Content and configuration
-├── public/                # Static assets
-├── tools/                 # CLI management system
-│   ├── cli.py            # Unified CLI entry point
-│   ├── commands/         # Command modules
-│   ├── lib/              # Shared utilities
-│   ├── deprecated/       # Legacy scripts
-│   └── test_cli.py       # CLI testing
-├── config.yaml           # Application configuration
-└── README.md
-```
-
----
-
-## 🛠️ CLI Tools Overview
-
-The **unified CLI** (`cli.py`) provides comprehensive content management with AI-powered automation.
-
-### Core Commands
-
-#### 📝 Projects Management
-```bash
-# List all projects
-cli.py projects list
-
-# Create new project interactively
-cli.py projects create
-
-# Create project directly
-cli.py projects create "Project Title" --category hardware --status ongoing
-
-# Edit project in text editor
-cli.py projects edit my-project
-
-# Generate AI content for projects
-cli.py projects generate
-```
-
-#### 🛒 Products Management
-```bash
-# List all products with slugs
-cli.py products list
-
-# Create new product with AI content & images (interactive)
-cli.py products create
-
-# Generate AI product descriptions
-cli.py products generate --product telescope
-
-# Generate AI product images for carousel
-cli.py products images --product m42
-```
-
-**Interactive Product Creation Flow:**
-```bash
-cli.py products create
-# 1. Enter product details (title, price, tags, description)
-# 2. "Generate AI content for this product?" → AI generates marketing copy
-# 3. "Generate AI images for this product?" → Creates carousel images
-# 4. Product is ready for e-commerce with content & visuals!
-```
-
-**Product Data Pipeline:**
-- **Source Control**: Products stored in `src/content/products/` (Markdown with frontmatter)
-- **Website Serving**: Processed by Astro content collections (served to frontend)
-- **AI Generation**: Automated content creation with contextual templates
-
-#### 🎨 Content Generation
-```bash
-# Regenerate AI content for pages
-cli.py content regenerate --page about
-
-# Generate About page emblems
-cli.py content generate-emblems
-```
-
-#### 🖼️ Image Processing
-```bash
-# Process images with variants
-cli.py images process --force
-```
-
-#### 🎯 Site Management
-```bash
-# Navigation management
-cli.py site nav list                    # List all navigation items
-cli.py site nav add "Blog" /blog --priority 3
-cli.py site nav remove "Contact"
-cli.py site nav reorder                 # Interactive reordering
-
-# Footer management
-cli.py site footer sections             # List all footer sections
-cli.py site footer list [section]       # List footer links
-cli.py site footer add workbench "Blog" /blog --order 4
-cli.py site footer remove workbench "Blog"
-
-# Page management
-cli.py site pages list                  # List all pages
-cli.py site pages create "About Us"     # Create new page with template
-```
-
-#### ⚙️ Asset Management
-```bash
-# Generate responsive logo variants from master logo
-cli.py assets logos
-
-# Optimize images and assets for web delivery
-cli.py assets optimize
-
-# Show asset information and statistics
-cli.py assets info
-```
-
-#### 🔧 Configuration Management
-```bash
-# Validate configuration file structure and values
-cli.py config validate
-
-# Migrate configuration to latest format
-cli.py config migrate
-
-# Check configuration health with detailed report
-cli.py config health [--fix]
-```
-
-### Configuration
-
-All settings are centralized in `config.yaml`:
-
-```yaml
-# AI settings
-ai:
-  enabled: true
-  provider: openai
-  default_model: gpt-5.1
-
-# Content generation
-content:
-  max_variants: 20
-  prompts:
-    about: [...]
-    hero: [...]
-
-# Project management
-projects:
-  allowed_categories: [Hardware, Software, Art]
-  allowed_status: [ongoing, completed, experimental]
-
-# Product catalog
-products:
-  ai_templates:
-    telescope-blurb: {...}
-    weather-quick: {...}
-```
-
----
-
-## 🌟 Web Admin Interface
-
-The Starstuck Lab CLI includes a **web-based admin interface** that runs locally on the Astro development server. This provides an intuitive graphical interface for content management without needing command-line operations.
-
-### Features
-
-- **📊 Dashboard**: Overview of products, assets, and system health
-- **🛒 Product Management**: List, view, and manage product catalog
-- **🎨 Asset Tools**: Generate logos, optimize images
-- **⚙️ Configuration**: Health checks and validation
-- **🌐 Site Management**: Navigation and footer editing
-
-### Local Development Access
+Hosted on Cloudflare Workers. Deploy with:
 
 ```bash
-# Start development server with admin interface
-npm run dev
-
-# Access admin interface
-open http://localhost:4323/admin
-```
-
-### Admin Interface URLs
-
-- **Dashboard**: `http://localhost:4323/admin`
-- **Products**: `http://localhost:4323/admin/products`
-- **Assets**: `http://localhost:4323/admin/assets`
-- **Site Config**: `http://localhost:4323/admin/site`
-- **System Config**: `http://localhost:4323/admin/config`
-
-### API Endpoints
-
-The admin interface communicates with CLI utilities via REST APIs:
-
-```bash
-# Test API connectivity
-curl http://localhost:4323/api/test
-
-# Get products list
-curl http://localhost:4323/api/cli/products/list.json
-
-# Check configuration health
-curl http://localhost:4323/api/cli/config/health
-
-# Generate logos
-curl -X POST http://localhost:4323/api/cli/assets/logos
-```
-
-### Architecture
-
-- **Frontend**: Astro pages with modern CSS styling
-- **Backend**: Astro API routes executing CLI commands
-- **Integration**: Python subprocess calls to existing CLI tools
-- **Styling**: Organized CSS modules in `src/styles/components/`
-- **Security**: Local development only (no production deployment)
-
-### Current Implementation Status
-
-#### ✅ Phase 1: API Foundation (Complete)
-- CLI executor utility with error handling
-- RESTful API routes for core CLI commands
-- Response formatting and validation
-
-#### ✅ Phase 2: Admin UI Components (Complete)
-- Professional dark theme admin interface
-- Dashboard with real-time statistics
-- Products management table
-- Responsive design for all devices
-- CSS organized in dedicated files
-
-#### 🔄 Phase 3: Authentication & Deployment (Next)
-- Development-only authentication
-- Production build exclusions
-- GitHub Actions integration
-
-#### 🔄 Phase 4: Advanced Features (Future)
-- File upload capabilities
-- Live preview functionality
-- Batch operations
-- Enhanced analytics
-
----
-
-## 🤖 AI Integration
-
-### Centralized AI Module
-All AI functionality is handled through the unified `lib/ai.py` module:
-- **Automatic .env Loading**: API keys loaded from `site/.env`
-- **Provider Agnostic**: Supports OpenAI and Together.ai
-- **Error Handling**: Graceful fallbacks and clear error messages
-
-### Content Generation
-- **About/Hero Pages**: AI-generated dynamic content with variants
-- **Product Descriptions**: Contextual product blurbs based on categories
-- **Project Documentation**: AI-assisted project write-ups
-- **Interactive Creation**: AI content generation built into product creation flow
-
-### Image Generation
-- **Product Photos**: Professional product photography for e-commerce carousels
-- **Emblems**: Custom illustrations for About page variants
-- **Hero Images**: Cinematic landscape illustrations for projects
-- **Batch Processing**: Generate multiple images per product
-
-### Supported Providers
-- **OpenAI**: GPT models for text, DALL-E 3 for images
-- **Together.ai**: Alternative API provider support
-
----
-
-## 📦 Key Features
-
-### ✨ Products System
-- **E-commerce Ready**: Complete product catalog with pricing, specs, images
-- **AI Content**: Automated product descriptions and marketing copy
-- **Image Carousels**: Multiple AI-generated images per product
-- **Category Intelligence**: Smart content generation based on product tags
-- **Interactive Creation**: One-command product creation with AI content & images
-- **Per-Product Images**: Individual image configurations for each product
-
-### 🎨 Content Management
-- **Dynamic Variants**: Multiple versions of content for A/B testing
-- **Mood-Based Tone**: Context-aware content generation
-- **Template System**: Reusable prompts and content structures
-
-### 🔧 Developer Experience
-- **Unified CLI**: Single entry point for all operations
-- **Interactive Mode**: Guided workflows for content creation
-- **Configuration**: Centralized settings with validation
-- **Error Handling**: Graceful fallbacks and clear error messages
-- **AI Module**: Centralized AI functionality with automatic environment loading
-
----
-
-## 🏗️ Architecture Principles
-
-### Configuration Hierarchy
-1. **Application Behavior** → `config.yaml` (how the system works)
-2. **Content & Data** → Markdown files (what content is displayed)
-3. **Assets** → Organized directories (media files)
-
-### Separation of Concerns
-- **Static Assets**: Hero, workshop, shop scenes (always exist)
-- **Dynamic Content**: Products, projects (variable catalog)
-- **Processing Logic**: Shared pipelines in config (reusable)
-- **AI Services**: Centralized in `lib/ai.py` (consistent across commands)
-
-### Future-Proof Design
-- **Extensible Commands**: Easy to add new CLI modules
-- **Provider Agnostic**: Support multiple AI services
-- **Content Migration**: Smooth upgrades from old to new systems
-
----
-
-## 🚀 Deployment
-
-### Environment Setup
-```bash
-# Required API keys
-export OPENAI_API_KEY="your-key-here"
-export TOGETHER_API_KEY="your-key-here"  # Optional
-export TOGETHER_BASE_URL="https://api.together.xyz"  # Optional
-```
-
-### Build Process
-```bash
-# Install dependencies
-npm install
-pip install -r tools/requirements.txt
-
-# Build site
 npm run build
+npx wrangler deploy
+```
 
-# Test CLI
-python tools/test_cli.py
+**Required environment secrets** (set via `wrangler secret put <NAME>`):
+
+| Secret | Purpose |
+|---|---|
+| `STRIPE_SECRET_KEY` | Stripe payments |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook verification |
+| `STRIPE_PRICE_M42` | Stripe Price ID for M42 telescope |
+| `STRIPE_PRICE_ELLI` | Stripe Price ID for Elli telescope |
+| `RESEND_API_KEY` | Contact form emails |
+| `OPENAI_API_KEY` | AI content/image generation (CLI tools) |
+
+---
+
+## Project Structure
+
+```
+starstucklab/
+│
+├── src/
+│   ├── components/        # Reusable Astro components
+│   ├── content/           # Content collections (Astro + Keystatic)
+│   │   ├── products/      # Product markdown files (*.md)
+│   │   └── lab-notes/     # Lab notes / blog posts (*.md)
+│   ├── data/              # JSON config: navigation, footer, hero variants, about
+│   ├── layouts/           # Page layouts (Base, Hero, Standard, Page)
+│   ├── lib/               # Server-side utilities (Stripe, Resend, cart, scenes)
+│   ├── pages/             # Astro routes
+│   │   ├── index.astro    # Homepage with hero scroll transition
+│   │   ├── shop.astro     # Shop listing
+│   │   ├── shop/[slug].astro  # Product detail
+│   │   ├── lab/           # Lab notes listing + detail
+│   │   ├── checkout.astro
+│   │   ├── order.astro    # Post-purchase confirmation
+│   │   ├── contact.astro
+│   │   ├── admin/         # Keystatic CMS admin UI
+│   │   └── api/           # Server endpoints (checkout, webhook, contact)
+│   └── styles/
+│       ├── tokens.css     # Design tokens (colours, spacing, typography)
+│       ├── global.css     # Global resets + base styles
+│       └── components/    # Per-component CSS files
+│
+├── public/
+│   ├── assets/            # Scene images (hero, workshop, shop, products)
+│   ├── data/              # Runtime JSON (hero.json, about.json — served at /data/)
+│   ├── models/m42/        # 3D STL files for the M42 model viewer
+│   └── scripts/           # Client-side scripts
+│
+├── tools/                 # Python CLI for content management
+│   ├── cli.py             # Entry point
+│   ├── commands/          # Subcommands (content, images, products, assets)
+│   ├── lib/               # Shared utilities (AI, config, prompts, paths)
+│   └── deprecated/        # Old scripts kept for reference
+│
+├── config.yaml            # CLI tool configuration (AI, products, images)
+├── keystatic.config.ts    # CMS schema definition
+├── astro.config.mjs       # Astro + Cloudflare adapter config
+└── wrangler.jsonc         # Cloudflare Workers deployment config
 ```
 
 ---
 
-## 🔄 Migration Guide
+## Content Management
 
-### From Legacy Scripts
-The CLI consolidates functionality from deprecated scripts:
+See **[`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md)** for the full guide.
 
-| Legacy Script | New CLI Command |
-|---------------|-----------------|
-| `projects_cli.py` | `cli.py projects` |
-| `regenerate_content.py` | `cli.py content regenerate` |
-| `regenerate_images.py` | `cli.py images process` |
-| `generate_products_json.py` | `cli.py products generate` |
-| `site_cli.py` | `cli.py site` |
-
-### Configuration Migration
-- Move AI prompts from JSON files → `config.yaml`
-- Product templates from `templates.json` → `config.yaml`
-- Image pipelines from `images.json` → `config.yaml`
+**Short version:**
+- Add/edit products → `/admin` in dev, or edit `src/content/products/*.md` directly
+- Write lab notes → `/admin` in dev, or edit `src/content/lab-notes/*.md` directly
+- Navigation → `src/data/navigation.json`
+- Hero text variants → `public/data/hero.json` (AI-generated, update with CLI)
+- About panel copy → `public/data/about.json` (AI-generated, update with CLI)
 
 ---
 
-## 🧪 Testing
+## Documentation
 
-```bash
-# Run CLI tests
-python tools/test_cli.py
-
-# Test specific functionality
-python cli.py check  # Health check
-```
-
----
-
-## 🤝 Contributing
-
-### Adding New Commands
-1. Create `commands/your_feature.py`
-2. Add command to `cli.py` parser
-3. Update `handle_your_feature()` function
-4. Add configuration to `config.yaml`
-5. Update tests
-
-### Code Style
-- Python 3.8+ compatible
-- Type hints encouraged
-- Clear error messages
-- Comprehensive docstrings
+| File | Purpose |
+|---|---|
+| [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md) | How to add products, lab notes, update copy |
+| [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) | V2 roadmap status and next steps |
+| [`docs/AI_CONTEXT.md`](docs/AI_CONTEXT.md) | Machine-readable repo overview for AI assistants |
+| [`CHANGELOG.md`](CHANGELOG.md) | Change history |
 
 ---
 
-## 📚 API Reference
+## License
 
-### CLI Exit Codes
-- `0`: Success
-- `1`: General error
-- `130`: User interrupt (Ctrl+C)
-
-### Configuration Schema
-See `config.yaml` for complete configuration options and defaults.
-
-### File Conventions
-- Products: `src/content/products/{slug}.md` (Markdown with frontmatter)
-- Projects: `src/content/projects/{slug}.md`
-- Assets: `public/assets/{type}-{slug}/`
-- Images: `{prefix}-{slug}-img-{num:02d}.webp`
-
----
-
-## 🧠 Philosophy
-
-**Starstuck Lab** believes in:
-- **Automation over Manual Labor**: AI handles repetitive content tasks
-- **Quality over Quantity**: Thoughtful, contextual content generation
-- **Flexibility over Rigidity**: Configurable systems that adapt
-- **Exploration over Perfection**: Building tools for an indifferent universe
-
----
-
-## ⚡ License
-
-**DWYWBDBM 1.0** — Do What You Want But Don't Blame Me
-
-This project is provided as-is with no warranties. Use at your own risk, but have fun building small machines!
-
----
-
-*Made with ❤️ and a healthy dose of cosmic sarcasm*
+DWYWBDBM-1.0 — Do What You Want But Don't Blame Me.
