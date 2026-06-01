@@ -15,7 +15,7 @@
       "block": "excerpt",
       "public_json_key": "excerpt",
       "description": "One-sentence compelling product description",
-      "prompt": "Generate a compelling one-sentence excerpt (max 18 words) for \"{title}\"{category_clause}.\n\nThe excerpt should be:\n- Poetic and intriguing\n- Slightly melancholic with dry humor\n- Evocative of cosmic existentialism\n- Technical yet elegant\n\nReturn ONLY the excerpt, nothing else.",
+      "prompt": "Generate a compelling one-sentence excerpt (max 18 words) for \"{title}\"{category_clause}.\n\nReturn ONLY the excerpt, nothing else.",
       "temperature": 0.8,
       "max_tokens": 100,
       "variables": [
@@ -28,7 +28,7 @@
       "block": "tagline",
       "public_json_key": "tagline",
       "description": "Short, catchy product tagline",
-      "prompt": "Generate a short, catchy tagline (max 12 words) for \"{title}\"{category_clause}.\n\nThe tagline should be:\n- Memorable and punchy\n- Poetic with dry humor\n- Slightly melancholic\n- Technical yet accessible\n\nReturn ONLY the tagline, nothing else.",
+      "prompt": "Generate a short, catchy tagline (max 12 words) for \"{title}\"{category_clause}.\n\nKeep it memorable and punchy. Return ONLY the tagline, nothing else.",
       "temperature": 0.85,
       "max_tokens": 50,
       "variables": [
@@ -41,7 +41,7 @@
       "block": "description",
       "public_json_key": "description",
       "description": "Rich, detailed product description in markdown",
-      "prompt": "Write a rich, detailed {word_count} word product description in Markdown format for \"{title}\"{category_clause}.\n\n{excerpt_clause}{features_clause}{specs_clause}\nStructure the description with:\n- A compelling opening paragraph (2-3 sentences) that sets the tone\n- Multiple detailed paragraphs covering features and benefits\n- Use **bold** for emphasis on key terms\n- Use *italic* for poetic flourishes\n- Include ## subheadings to organize sections\n- Weave in technical specifications naturally throughout\n\nWriting style:\n- Poetic and evocative with dry humor\n- Technically accurate but accessible and engaging\n- Slightly melancholic with cosmic existential undertones\n- Include vivid metaphors and imagery\n- Focus on the product's unique value and emotional resonance\n- Make it feel like a story, not a spec sheet\n\nReturn ONLY the markdown-formatted description, ready to paste into a CMS.",
+      "prompt": "Write a rich, detailed {word_count} word product description in Markdown format for \"{title}\"{category_clause}.\n\n{excerpt_clause}{features_clause}{specs_clause}\nStructure the description with:\n- A compelling opening paragraph (2-3 sentences) that sets the tone\n- Multiple detailed paragraphs covering features and benefits\n- Use **bold** for emphasis on key terms\n- Use *italic* for poetic flourishes\n- Include ## subheadings to organize sections\n- Weave in technical specifications naturally throughout\n\nWriting style:\n- Technically accurate but accessible and engaging\n- Focus on the product's unique value\n- Make it feel like a story, not a spec sheet\n\nReturn ONLY the markdown-formatted description, ready to paste into a CMS.",
       "temperature": 0.8,
       "max_tokens": 1200,
       "variables": [
