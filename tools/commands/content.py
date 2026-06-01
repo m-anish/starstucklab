@@ -209,13 +209,10 @@ def _regenerate_page(
             temperature = prompt_def.get('temperature', 0.7)
             seed = uuid.uuid4().hex[:8]
             
-            # Build full prompt
-            prompt_text = f"""
-{persona}
-
----
-
-Page: {page_name}
+            # Build the user prompt. The persona/voice is supplied once, as the
+            # system message below — it used to be injected twice per call (here
+            # and as the system role) and the tone was re-stated inline.
+            prompt_text = f"""Page: {page_name}
 Prompt ID: {prompt_id}
 Block: {block}
 Variant: {key}
@@ -223,11 +220,7 @@ Seed: {seed}
 
 {prompt_def['prompt']}
 
-Tone: melancholic, introspective, poetic, single-human narrator.
-Respond only with the content for this block.
-Avoid repetition.
-
----
+Respond only with the content for this block. Avoid repetition.
 """
             
             # Call AI

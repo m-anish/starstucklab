@@ -134,10 +134,22 @@ class PromptTemplateManager:
         return ''
     
     def get_persona(self) -> str:
-        """Get the persona description"""
-        if not self.prompts_data:
-            return ''
-        return self.prompts_data.get('persona', {}).get('description', '')
+        """Get the canonical brand voice.
+
+        Loads the full persona preamble (src/data/persona_preamble.txt), which
+        lives next to the prompts file — this is the single source of truth for
+        the voice. Falls back to the short description in product_prompts.json
+        only if the preamble file is missing.
+        """
+        persona_file = self.prompts_file.parent / "persona_preamble.txt"
+        if persona_file.exists():
+            try:
+                return persona_file.read_text(encoding="utf-8").strip()
+            except OSError:
+                pass
+        if self.prompts_data:
+            return self.prompts_data.get('persona', {}).get('description', '')
+        return ''
     
     def get_options(self, template_id: str) -> Dict[str, Any]:
         """Get generation options for a template"""
