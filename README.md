@@ -1,3 +1,4 @@
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P5P7BMO10)
 # 🌟 Starstuck Lab
 
 *"Building small machines for an indifferent universe"*
