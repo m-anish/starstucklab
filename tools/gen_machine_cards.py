@@ -47,7 +47,7 @@ except ImportError:
     PIL_AVAILABLE = False
 
 # Where index.html tends to live inside a spoke repo, in priority order.
-SITE_SUBDIRS = ["docs", "site", "", "app", "public", "web"]
+SITE_SUBDIRS = ["site", "docs", "", "app", "public", "web"]
 CARD_MAX_WIDTH = 900  # px — card thumbs never render larger than this
 
 
