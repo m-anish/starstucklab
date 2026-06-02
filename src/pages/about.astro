@@ -37,6 +37,12 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
         depend on weather and mood.
       </p>
 
+      <div class="about-support">
+        <span class="about-support-note">If something here was useful, you can keep the lamp on:</span>
+        <a href="https://buymeachai.ezee.li/anishmg" target="_blank" rel="noopener">☕ Buy me a chai</a>
+        <a href="https://ko-fi.com/P5P7BMO10" target="_blank" rel="noopener">♥ Ko-fi</a>
+      </div>
+
       <svg class="about-seal" viewBox="0 0 100 100" fill="currentColor" aria-hidden="true">
         <path d="M50 4l11 32 33 1-27 19 10 32L50 70 23 88l10-32L6 37l33-1z" />
       </svg>
@@ -222,6 +228,39 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     font-size: 15px;
     font-style: italic;
     color: #3d2515;
+  }
+
+  .about-support {
+    margin-top: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .about-support-note {
+    font-size: 14.5px;
+    font-style: italic;
+    color: #4a3420;
+  }
+
+  .about-support a {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 13px;
+    border: 1px solid rgba(120, 85, 40, 0.45);
+    border-radius: 9999px;
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-size: 13.5px;
+    color: #5d3a1e;
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+
+  .about-support a:hover {
+    background: #5d3a1e;
+    color: #f7dfc0;
   }
 
   .about-seal {

@@ -42,6 +42,12 @@ function resolveHref(href: string): string {
       ))}
     </div>
 
+    <div class="footer__support">
+      <span class="footer__support-note">Built on curiosity and caffeine — keep the lab running:</span>
+      <a class="support-btn" href="https://buymeachai.ezee.li/anishmg" target="_blank" rel="noopener">☕ Buy me a chai</a>
+      <a class="support-btn" href="https://ko-fi.com/P5P7BMO10" target="_blank" rel="noopener">♥ Ko-fi</a>
+    </div>
+
     <div class="footer__bottom">
       <p class="footer__copy">&copy; {new Date().getFullYear()} {settings.copyrightText}</p>
       <p class="footer__tagline">Built in a small workshop. Aimed at an indifferent sky.</p>
@@ -98,6 +104,42 @@ function resolveHref(href: string): string {
 
   .footer__link:hover {
     color: var(--color-accent);
+  }
+
+  .footer__support {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .footer__support-note {
+    font-size: var(--text-sm);
+    color: var(--color-muted);
+    font-style: italic;
+    margin-right: var(--space-2);
+  }
+
+  .support-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 15px;
+    border: 1px solid color-mix(in srgb, var(--color-accent, #c9b97a) 45%, transparent);
+    border-radius: var(--radius-full, 9999px);
+    font-family: var(--font-sans);
+    font-size: var(--text-sm);
+    color: var(--color-accent, #c9b97a);
+    text-decoration: none;
+    transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .support-btn:hover {
+    background: var(--color-accent, #c9b97a);
+    color: #0c0c0e;
+    border-color: var(--color-accent, #c9b97a);
   }
 
   .footer__bottom {
