@@ -23,7 +23,7 @@ sync_one() {
   echo "synced → ${target#$GH_ROOT/}"
 }
 
-sync_one "$GH_ROOT/jigawatt"    "$GH_ROOT/jigawatt/docs/assets/kit"
+sync_one "$GH_ROOT/jigawatt"    "$GH_ROOT/jigawatt/site/assets/kit"
 sync_one "$GH_ROOT/lokki"       "$GH_ROOT/lokki/site/assets/kit"
 sync_one "$GH_ROOT/clear-skies" "$GH_ROOT/clear-skies/kit"
 
