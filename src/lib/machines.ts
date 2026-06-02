@@ -33,6 +33,8 @@ export interface Machine {
   accent: string;
   /** Optional card image (web path), e.g. populated by tools/gen_machine_cards.py. */
   image?: string | null;
+  /** How to render the image: "hero"/"generated" fill the thumb; "icon" centers the mark on the accent. */
+  image_kind?: 'hero' | 'icon' | 'generated' | null;
   order: number;
   featured: boolean;
 }

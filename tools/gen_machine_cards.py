@@ -10,22 +10,24 @@ site (jigawatt, lokki, clear-skies, …), this:
   2. Extracts og:title / og:description / og:image as the "facts".
   3. Generates a ~30-word card blurb in the house voice (the canonical
      src/data/persona_preamble.txt) via the hub's AIClient.
-  4. Imports the spoke's og:image into public/assets/machine-<slug>/ (or
-     AI-generates one with --generate-images), optimised to a card thumb.
-  5. Writes `blurb` and `image` back into machines.json.
+  4. Resolves a card image by fallback: the spoke's og:image (hero) → the
+     spoke's device icon/mark → an AI-generated image (opt-in). Each result is
+     tagged image_kind = hero | icon | generated so the card renders it right.
+  5. Writes `blurb`, `image`, and `image_kind` back into machines.json.
 
 The voice comes from one place — persona_preamble.txt — so spoke blurbs read
 like the rest of the family. See kit/VOICE.md.
 
 Usage:
-  python3 tools/gen_machine_cards.py                  # all spokes: blurb + import image
-  python3 tools/gen_machine_cards.py --slug lokki     # just one machine
-  python3 tools/gen_machine_cards.py --no-blurb       # images only (no API key needed)
-  python3 tools/gen_machine_cards.py --generate-images # AI-generate the image instead of importing
-  python3 tools/gen_machine_cards.py --dry-run        # analyse + print; write nothing
+  python3 tools/gen_machine_cards.py                      # all spokes: blurb + image (hero→icon)
+  python3 tools/gen_machine_cards.py --slug lokki         # just one machine
+  python3 tools/gen_machine_cards.py --no-blurb           # images only (no API key needed)
+  python3 tools/gen_machine_cards.py --generate-fallback  # AI image when a spoke has no og:image
+  python3 tools/gen_machine_cards.py --generate-images    # AI image for every machine
+  python3 tools/gen_machine_cards.py --dry-run            # analyse + print; write nothing
 
-Needs OPENAI_API_KEY in .env for blurb generation (and for --generate-images).
-Image *import* works offline against the local sibling repos.
+Needs OPENAI_API_KEY in .env for blurb generation (and any AI image option).
+Hero/icon import works offline against the local sibling repos.
 """
 
 import argparse
@@ -49,6 +51,15 @@ except ImportError:
 # Where index.html tends to live inside a spoke repo, in priority order.
 SITE_SUBDIRS = ["site", "docs", "", "app", "public", "web"]
 CARD_MAX_WIDTH = 900  # px — card thumbs never render larger than this
+
+# Common icon/mark filenames to probe when a spoke has no og:image. Raster is
+# preferred (it optimises to webp); an SVG mark is copied as-is.
+ICON_NAMES = [
+    "icon-512.png", "icon-512.webp", "icon-256.png", "icon-192.png",
+    "apple-touch-icon.png", "icon.png", "logo.png", "favicon.png",
+    "icon.svg", "favicon.svg", "mark.svg", "logo.svg",
+    "assets/mark.svg", "assets/icon.svg", "assets/logo.svg",
+]
 
 
 def _meta(html: str, prop: str) -> str:
@@ -121,10 +132,52 @@ def resolve_og_image(og_image: str, site_dir):
     return None  # caller may still fetch the remote URL
 
 
+def _icon_hrefs(html: str):
+    """hrefs from <link rel="...icon...">, in document order."""
+    hrefs = []
+    for m in re.finditer(r'<link\b[^>]*\brel=["\'][^"\']*icon[^"\']*["\'][^>]*>', html, re.IGNORECASE):
+        href = re.search(r'\bhref=["\']([^"\']+)["\']', m.group(0), re.IGNORECASE)
+        if href:
+            hrefs.append(href.group(1))
+    return hrefs
+
+
+def resolve_icon(html: str, site_dir):
+    """The spoke's best local icon/mark — its og:image fallback. Prefers a larger
+    raster icon (optimises cleanly to webp); falls back to an SVG mark (copied as-is)."""
+    if not site_dir:
+        return None
+    found, seen = [], set()
+    for href in _icon_hrefs(html) + ICON_NAMES:
+        path = (urlparse(href).path if "://" in href else href).lstrip("/")
+        if not path or path in seen:
+            continue
+        seen.add(path)
+        local = site_dir / path
+        if local.exists():
+            found.append(local)
+    if not found:
+        return None
+
+    def rank(p):
+        raster = p.suffix.lower() in (".png", ".jpg", ".jpeg", ".webp")
+        size = next((n for n in (512, 256, 192, 180, 152) if str(n) in p.name), 0)
+        return (raster, size)
+
+    found.sort(key=rank, reverse=True)
+    return found[0]
+
+
 def save_card_image(src_path_or_bytes, slug: str, paths: Paths, ext_hint: str = "webp") -> str:
     """Write the card image under public/assets/machine-<slug>/ and return its web path."""
     out_dir = paths.public_assets / f"machine-{slug}"
     out_dir.mkdir(parents=True, exist_ok=True)
+
+    # SVG marks: copy as-is — they scale and need no raster step.
+    if isinstance(src_path_or_bytes, Path) and src_path_or_bytes.suffix.lower() == ".svg":
+        out = out_dir / f"machine-{slug}.svg"
+        out.write_bytes(src_path_or_bytes.read_bytes())
+        return f"/assets/machine-{slug}/{out.name}"
 
     if PIL_AVAILABLE:
         out = out_dir / f"machine-{slug}.webp"
@@ -181,7 +234,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Generate machine-card blurbs + images from spoke sites.")
     ap.add_argument("--slug", help="Only process this machine slug.")
     ap.add_argument("--no-blurb", action="store_true", help="Skip blurb generation (no API key needed).")
-    ap.add_argument("--generate-images", action="store_true", help="AI-generate the image instead of importing.")
+    ap.add_argument("--generate-images", action="store_true", help="AI-generate the image for every machine.")
+    ap.add_argument("--generate-fallback", action="store_true", help="AI-generate only when a spoke has no og:image (instead of using its icon).")
     ap.add_argument("--dry-run", action="store_true", help="Analyse and print; write nothing.")
     args = ap.parse_args()
 
@@ -245,32 +299,51 @@ def main() -> int:
             except Exception as e:  # noqa: BLE001
                 Output.error(f"  blurb generation failed: {e}")
 
-        # Image
+        # Image — fallback chain: og:image (hero) → AI (--generate-fallback)
+        # → device icon/mark → skip.  --generate-images forces AI for everything.
         try:
-            web_path = None
+            web_path, kind = None, None
+            hero_local = resolve_og_image(facts["image"], site_dir)
             if args.generate_images and client:
-                Output.progress("  generating image…")
+                Output.progress("  generating image (AI)…")
+                kind = "generated"
+                if not args.dry_run:
+                    web_path = save_card_image(gen_image(m, facts, client), slug, paths)
+            elif hero_local:
+                Output.info(f"  importing hero image: {hero_local.name}")
+                kind = "hero"
+                if not args.dry_run:
+                    web_path = save_card_image(hero_local, slug, paths)
+            elif facts["image"]:
+                Output.info(f"  fetching hero image: {facts['image']}")
+                kind = "hero"
+                if not args.dry_run:
+                    import requests
+                    b = requests.get(facts["image"], timeout=30).content
+                    ext = Path(urlparse(facts["image"]).path).suffix.lstrip(".") or "webp"
+                    web_path = save_card_image(b, slug, paths, ext_hint=ext)
+            elif args.generate_fallback and client:
+                Output.progress("  no og:image — generating image (AI)…")
+                kind = "generated"
                 if not args.dry_run:
                     web_path = save_card_image(gen_image(m, facts, client), slug, paths)
             else:
-                local = resolve_og_image(facts["image"], site_dir)
-                if local:
-                    Output.info(f"  importing image: {local.name}")
+                icon = resolve_icon(html, site_dir)
+                if icon:
+                    Output.info(f"  no og:image — using device icon: {icon.name}")
+                    kind = "icon"
                     if not args.dry_run:
-                        web_path = save_card_image(local, slug, paths)
-                elif facts["image"]:
-                    Output.info(f"  fetching image: {facts['image']}")
-                    if not args.dry_run:
-                        import requests
-                        b = requests.get(facts["image"], timeout=30).content
-                        ext = Path(urlparse(facts["image"]).path).suffix.lstrip(".") or "webp"
-                        web_path = save_card_image(b, slug, paths, ext_hint=ext)
+                        web_path = save_card_image(icon, slug, paths)
                 else:
-                    Output.dim("  no og:image — skipping image")
+                    Output.dim("  no og:image or icon — skipping image")
+
             if web_path:
-                Output.success(f"  image → {web_path}")
+                Output.success(f"  image → {web_path}  [{kind}]")
                 m["image"] = web_path
+                m["image_kind"] = kind
                 changed = True
+            elif args.dry_run and kind:
+                Output.dim(f"  (dry run) would set image [{kind}]")
         except Exception as e:  # noqa: BLE001
             Output.error(f"  image step failed: {e}")
 
