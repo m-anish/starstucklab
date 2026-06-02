@@ -1,4 +1,5 @@
-[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/P5P7BMO10) [![Buy Me A Chai](https://buymeachai.ezee.li/assets/images/buymeachai-button.png)](https://buymeachai.ezee.li/anishmg)
+<img src="https://ko-fi.com/img/githubbutton_sm.svg" height="32" alt="Ko-fi">  <img src="https://buymeachai.ezee.li/assets/images/buymeachai-button.png" height="32" alt="Buy Me A Chai">
+
 # 🌟 Starstuck Lab
 
 *"Building small machines for an indifferent universe"*
