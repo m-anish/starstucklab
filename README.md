@@ -1,11 +1,5 @@
-<p align="center">
-  <a href="https://ko-fi.com/P5P7BMO10">
-    <img src="https://ko-fi.com/img/githubbutton_sm.svg" height="36" alt="Support me on Ko-fi">
-  </a>
-  <a href="https://buymeachai.ezee.li/anishmg">
-    <img src="https://buymeachai.ezee.li/assets/images/buymeachai-button.png" height="36" alt="Buy Me A Chai">
-  </a>
-</p>
+[<img src="https://ko-fi.com/img/githubbutton_sm.svg" height="36">](https://ko-fi.com/P5P7BMO10)
+[<img src="https://buymeachai.ezee.li/assets/images/buymeachai-button.png" height="36">](https://buymeachai.ezee.li/anishmg)
 
 # 🌟 Starstuck Lab
 
