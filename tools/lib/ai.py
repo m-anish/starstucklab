@@ -201,23 +201,26 @@ class AIClient:
     def generate_text(self,
                      prompt: str,
                      system_prompt: Optional[str] = None,
-                     model: str = "gpt-4o-mini",
-                     temperature: float = 0.7,
+                     model: str = "gpt-5.1",
+                     temperature: float = None,
                      max_tokens: int = 500) -> str:
-        """Generate text using the configured AI model"""
-        
+        """Generate text via OpenAI chat completions.
+
+        Uses `max_completion_tokens` (gpt-5.x rejects the legacy `max_tokens`).
+        `temperature` is kept for backwards compatibility but is NOT sent —
+        gpt-5.x only accepts the default temperature.
+        """
         messages = []
-        
+
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
-        
+
         messages.append({"role": "user", "content": prompt})
 
         response = self.client.chat.completions.create(
             model=model,
             messages=messages,
-            temperature=temperature,
-            max_tokens=max_tokens
+            max_completion_tokens=max_tokens,
         )
 
         return response.choices[0].message.content.strip()
@@ -225,7 +228,7 @@ class AIClient:
     def generate_with_template(self,
                               template_id: str,
                               context: Dict[str, Any],
-                              model: str = "gpt-4o-mini") -> str:
+                              model: str = "gpt-5.1") -> str:
         """Generate text using a prompt template"""
         if not self.prompt_manager:
             raise ValueError("No prompt manager configured. Provide prompts_file to AIClient.")
@@ -252,24 +255,29 @@ class AIClient:
 
     def generate_image(self,
                       prompt: str,
-                      size: str = "1792x1024",
-                      quality: str = "standard") -> Dict[str, Any]:
-        """Generate an image using DALL-E"""
+                      size: str = "1024x1024",
+                      quality: str = "low") -> Dict[str, Any]:
+        """Generate an image with OpenAI gpt-image-1.
 
+        gpt-image-1 returns base64 (no URL). size ∈ 1024x1024 | 1536x1024 |
+        1024x1536 | auto; quality ∈ low | medium | high | auto.
+        Returns {"b64": <base64 png>, "url": None, "revised_prompt": prompt}.
+        """
         if self.provider != "openai":
             raise ValueError("Image generation only supported with OpenAI provider")
 
         response = self.client.images.generate(
-            model="dall-e-3",
+            model="gpt-image-1",
             prompt=prompt,
             size=size,
             quality=quality,
-            n=1
+            n=1,
         )
 
         return {
-            "url": response.data[0].url,
-            "revised_prompt": getattr(response.data[0], 'revised_prompt', prompt)
+            "b64": response.data[0].b64_json,
+            "url": None,
+            "revised_prompt": getattr(response.data[0], "revised_prompt", prompt),
         }
 
 

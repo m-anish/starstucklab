@@ -223,11 +223,11 @@ Seed: {seed}
 Respond only with the content for this block. Avoid repetition.
 """
             
-            # Call AI
+            # Call AI (text). gpt-5.x only accepts the default temperature, so
+            # don't send one.
             try:
                 res = client.chat.completions.create(
                     model=model,
-                    temperature=temperature,
                     messages=[
                         {"role": "system", "content": persona},
                         {"role": "user", "content": prompt_text},
@@ -377,10 +377,10 @@ def _generate_emblems_for_about(client, paths: Paths, force: bool = False) -> bo
                 
                 # Generate image
                 result = client.images.generate(
-                    model="dall-e-3",
+                    model="gpt-image-1",
                     prompt=prompt,
                     size="1024x1024",
-                    quality="standard",
+                    quality="low",
                     n=1
                 )
                 

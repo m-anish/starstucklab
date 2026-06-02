@@ -324,16 +324,24 @@ def cmd_generate_images(args):
         Output.progress(f"Generating image {image_count} using product_image template...")
 
         try:
-            # Generate using template-enhanced prompt
+            # Generate using template-enhanced prompt (gpt-image-1 → base64)
             result = ai_helper.generate_product_image(prompt, product_data, 'photo')
-            image_url = result["url"]
             revised_prompt = result.get("revised_prompt", prompt)
+            image_b64 = result.get("b64")
 
-            if image_url:
+            if image_b64:
                 filename = f"product-{product_slug}-img-{image_count:02d}.webp"
                 image_path = assets_dir / filename
 
-                success = _download_and_save_image(image_url, image_path)
+                try:
+                    import base64 as _b64
+                    from io import BytesIO as _BytesIO
+                    from PIL import Image as _PILImage
+                    _PILImage.open(_BytesIO(_b64.b64decode(image_b64))).convert("RGB").save(image_path, "WEBP", quality=80)
+                    success = True
+                except Exception as _save_err:
+                    Output.error(f"❌ Failed to save image: {_save_err}")
+                    success = False
                 if success:
                     image_entry = {
                         "filename": filename,

@@ -31,6 +31,7 @@ Hero/icon import works offline against the local sibling repos.
 """
 
 import argparse
+import base64
 import json
 import re
 import sys
@@ -213,8 +214,10 @@ def gen_blurb(machine: dict, facts: dict, persona: str, client) -> str:
         "Write a single blurb of about 25-35 words for its card. Return only the "
         "blurb text — no surrounding quotes, no preamble."
     )
+    # max_tokens is sent as max_completion_tokens; leave headroom for gpt-5.1's
+    # reasoning so the short blurb isn't truncated to empty.
     return client.generate_text(
-        prompt=user, system_prompt=persona, model="gpt-5.1", temperature=0.7, max_tokens=120
+        prompt=user, system_prompt=persona, model="gpt-5.1", max_tokens=500
     ).strip().strip('"')
 
 
@@ -225,9 +228,9 @@ def gen_image(machine: dict, facts: dict, client) -> bytes:
         "Restrained, atmospheric, slightly melancholic; muted palette; one clear subject; "
         "no text, no logos, no words."
     )
-    result = client.generate_image(prompt=prompt, size="1792x1024", quality="standard")
-    import requests
-    return requests.get(result["url"], timeout=60).content
+    # gpt-image-1 returns base64 (no URL). 1536x1024 ≈ the card's landscape thumb.
+    result = client.generate_image(prompt=prompt, size="1536x1024", quality="low")
+    return base64.b64decode(result["b64"])
 
 
 def main() -> int:
