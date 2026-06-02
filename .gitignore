@@ -37,6 +37,8 @@ Thumbs.db
 __pycache__/
 *.pyc
 tools/__pycache__/
+.venv/
+venv/
 
 # Ignore site environment file
 .env
