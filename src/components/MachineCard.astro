@@ -12,7 +12,7 @@ const cta = machineCta(machine.access);
 
 <article class="mc" style={`--card-accent: ${machine.accent}`}>
   {machine.image && (
-    <div class="mc__thumb">
+    <div class={`mc__thumb${machine.image_kind === 'icon' ? ' mc__thumb--icon' : ''}`}>
       <img src={machine.image} alt={machine.name} loading="lazy" />
     </div>
   )}
@@ -60,13 +60,16 @@ const cta = machineCta(machine.access);
     display: flex;
     flex-direction: column;
     width: 100%;
-    background: rgba(255, 255, 255, 0.04);
+    /* faint wash of the product's accent — each card is subtly its own colour */
+    background: color-mix(in srgb, var(--card-accent, #c9b97a) 7%, rgba(255, 255, 255, 0.04));
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid color-mix(in srgb, var(--card-accent, #c9b97a) 22%, rgba(255, 255, 255, 0.12));
     border-radius: var(--radius-lg, 12px);
     overflow: hidden;
     padding: var(--space-6, 1.5rem);
+    /* thin accent hairline along the top edge */
+    box-shadow: inset 0 2px 0 color-mix(in srgb, var(--card-accent, #c9b97a) 40%, transparent);
     transition:
       transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.1),
       border-color 0.25s ease,
@@ -94,8 +97,9 @@ const cta = machineCta(machine.access);
   .mc:hover {
     transform: translateY(-8px) scale(1.02);
     border-color: var(--card-accent, rgba(201, 185, 122, 0.35));
-    background: rgba(255, 255, 255, 0.06);
+    background: color-mix(in srgb, var(--card-accent, #c9b97a) 10%, rgba(255, 255, 255, 0.06));
     box-shadow:
+      inset 0 2px 0 color-mix(in srgb, var(--card-accent, #c9b97a) 60%, transparent),
       0 8px 32px rgba(0, 0, 0, 0.55),
       0 0 24px color-mix(in srgb, var(--card-accent, #c9b97a) 18%, transparent);
   }
@@ -123,6 +127,30 @@ const cta = machineCta(machine.access);
 
   .mc:hover .mc__thumb img {
     transform: scale(1.04);
+  }
+
+  /* Icon/mark fallback: center the spoke's glyph on its accent, don't crop it. */
+  .mc__thumb--icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background:
+      radial-gradient(circle at 50% 45%,
+        color-mix(in srgb, var(--card-accent, #c9b97a) 26%, transparent),
+        transparent 70%),
+      color-mix(in srgb, var(--card-accent, #c9b97a) 12%, #111);
+  }
+
+  .mc__thumb--icon img {
+    width: auto;
+    height: 64%;
+    max-width: 58%;
+    object-fit: contain;
+    filter: drop-shadow(0 2px 10px rgba(0, 0, 0, 0.5));
+  }
+
+  .mc:hover .mc__thumb--icon img {
+    transform: scale(1.06);
   }
 
   /* ── Badges ── */
