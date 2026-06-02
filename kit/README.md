@@ -27,7 +27,7 @@ band quote, and the signature motion effects stay per-spoke on purpose.
 ## How a spoke adopts it
 
 1. **Vendor the CSS:** run `bash kit/sync-kit.sh` from the hub repo. It copies
-   `tokens.css` + `base.css` into the spoke (e.g. `jigawatt/docs/assets/kit/`).
+   `tokens.css` + `base.css` into the spoke (e.g. `jigawatt/site/assets/kit/`).
 2. **Link in this order** (the spoke's own stylesheet loads *last* so its token
    overrides and any bespoke rules win):
    ```html
