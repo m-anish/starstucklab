@@ -34,7 +34,7 @@
       "slug": "jigawatt",
       "name": "jigawatt",
       "tagline": "A small machine that disagrees with lightning.",
-      "blurb": "Listens for lightning and opens the mains contactor before the thunder finishes its sentence. Unit 001, made on purpose, living in a wall.",
+      "blurb": "Jigawatt is a stubborn little box of hardware that second-guesses storms, catching their tantrums in copper and code, then turning them into something quieter, smaller, and slightly more reasonable.",
       "kind": "hardware",
       "access": "read",
       "status": "Unit 001 · Brooding",
@@ -43,13 +43,15 @@
       "repo": "https://github.com/m-anish/jigawatt",
       "accent": "#ffb000",
       "order": 3,
-      "featured": false
+      "featured": false,
+      "image": "/assets/machine-jigawatt/machine-jigawatt.webp",
+      "image_kind": "generated"
     },
     {
       "slug": "lokki",
       "name": "lokki",
       "tagline": "Coordinated light for places that try to be quiet.",
-      "blurb": "A coordinator and up to eight leaves that agree on light over LoRa — no cloud, no broker, no recurring fee. For venues that would rather not be seen switching anything on.",
+      "blurb": "lokki threads small, listening lights through rooms that prefer whispers. Hardware that notices when to glow and when to dim, leaving corners intact and noise where it belongs: outside the beam.",
       "kind": "hardware",
       "access": "enquire",
       "status": "By enquiry",
@@ -58,13 +60,15 @@
       "repo": "https://github.com/m-anish/lokki",
       "accent": "#c66a44",
       "order": 4,
-      "featured": false
+      "featured": false,
+      "image": "/assets/machine-lokki/machine-lokki.webp",
+      "image_kind": "generated"
     },
     {
       "slug": "clear-skies",
       "name": "Clear Skies",
       "tagline": "A monthly guide to what's up there.",
-      "blurb": "An offline night-sky almanac for a small telescope at ~32°N. A new edition each month; works with no signal, which is rather the point.",
+      "blurb": "Clear Skies is a quietly pragmatic sky map: each month’s positions, paths, and timings laid out like pencil notes in the margin of the night, for anyone still looking up between obligations.",
       "kind": "software",
       "access": "open",
       "status": "Monthly · June 2026",
@@ -73,7 +77,9 @@
       "repo": "https://github.com/m-anish/clear-skies",
       "accent": "#f0c040",
       "order": 5,
-      "featured": false
+      "featured": false,
+      "image": "/assets/machine-clear-skies/machine-clear-skies.webp",
+      "image_kind": "generated"
     },
     {
       "slug": "sirious",
