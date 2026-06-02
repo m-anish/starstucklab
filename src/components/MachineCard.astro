@@ -61,10 +61,10 @@ const cta = machineCta(machine.access);
     flex-direction: column;
     width: 100%;
     /* faint wash of the product's accent — each card is subtly its own colour */
-    background: color-mix(in srgb, var(--card-accent, #c9b97a) 7%, rgba(255, 255, 255, 0.04));
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, var(--card-accent, #c9b97a) 22%, rgba(255, 255, 255, 0.12));
+    background: color-mix(in srgb, var(--card-accent, #c9b97a) 9%, var(--glass-bg, rgba(20, 18, 16, 0.62)));
+    backdrop-filter: blur(var(--glass-blur, 5px));
+    -webkit-backdrop-filter: blur(var(--glass-blur, 5px));
+    border: 1px solid color-mix(in srgb, var(--card-accent, #c9b97a) 22%, var(--glass-border, rgba(255, 255, 255, 0.10)));
     border-radius: var(--radius-lg, 12px);
     overflow: hidden;
     padding: var(--space-6, 1.5rem);
@@ -95,9 +95,12 @@ const cta = machineCta(machine.access);
   }
 
   .mc:hover {
-    transform: translateY(-8px) scale(1.02);
+    /* lift only — no scale(): the outward growth got clipped by the page's
+       overflow-x:hidden at the grid edges. The glow + border brighten give the
+       hover feedback instead. */
+    transform: translateY(-8px);
     border-color: var(--card-accent, rgba(201, 185, 122, 0.35));
-    background: color-mix(in srgb, var(--card-accent, #c9b97a) 10%, rgba(255, 255, 255, 0.06));
+    background: color-mix(in srgb, var(--card-accent, #c9b97a) 13%, var(--glass-bg-hover, rgba(26, 23, 20, 0.70)));
     box-shadow:
       inset 0 2px 0 color-mix(in srgb, var(--card-accent, #c9b97a) 60%, transparent),
       0 8px 32px rgba(0, 0, 0, 0.55),

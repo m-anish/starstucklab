@@ -243,6 +243,18 @@
   transition: opacity 320ms ease;
 }
 
+/* Dim the workshop behind the post-zoom content so the cards + about panel read
+   clearly. Lives inside .post-zoom (z-index 50) so it fades in with it and never
+   darkens the hero. z-index -1 keeps it behind the cards but above the workshop. */
+.post-zoom::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: rgba(5, 6, 10, 0.42);
+  pointer-events: none;
+}
+
 /* Performance optimization */
 .post-zoom section {
   content-visibility: auto;

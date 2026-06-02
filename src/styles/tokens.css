@@ -26,8 +26,14 @@
   --color-parchment-muted:#6b5840;    /* warm brown muted */
   --color-price-green:    #2d6a4f;    /* forest green price */
   --color-price-green-light: #40916c;
-  --color-scene-overlay:  rgba(8, 6, 2, 0.45);   /* darkening overlay on scene */
+  --color-scene-overlay:  rgba(8, 6, 2, 0.52);   /* darkening wash over scene bg (legibility) */
   --color-scene-overlay-light: rgba(8, 6, 2, 0.25);
+
+  /* ── Matte "coloured glass" surface (cards, panels) — less see-through, less blur ── */
+  --glass-bg:        rgba(20, 18, 16, 0.62);   /* warm near-black, fairly opaque = matte */
+  --glass-bg-hover:  rgba(26, 23, 20, 0.70);
+  --glass-border:    rgba(255, 255, 255, 0.10);
+  --glass-blur:      5px;
 
   /* ── Typography ── */
   --font-sans:    system-ui, -apple-system, 'Segoe UI', sans-serif;

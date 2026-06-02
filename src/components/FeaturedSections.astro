@@ -27,13 +27,11 @@ const preview = kinds
         </p>
       </div>
 
-      <div class="featured-grid">
+      <div class="featured-grid featured-grid--preview">
         {preview.map((machine) => <MachineCard machine={machine} />)}
-      </div>
-
-      <div class="section-footer">
-        <a href="/machines" class="section-cta">
-          See all the machines <span aria-hidden="true">→</span>
+        <a href="/machines" class="see-more-tile" aria-label="See all the machines">
+          <span class="see-more-tile__label">See all the machines</span>
+          <span class="see-more-tile__arrow" aria-hidden="true">→</span>
         </a>
       </div>
     </section>
@@ -47,6 +45,67 @@ const preview = kinds
 <style>
 /* Header copy for the constellation preview. The grid/section/cta layout comes
    from featured-sections.css; the cards style themselves (MachineCard). */
+
+/* 2×2 preview grid: the 3 machine cards + the "see more" tile as the 4th cell. */
+.featured-grid--preview {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  justify-items: stretch;
+  max-width: 920px;
+  margin-inline: auto;
+}
+
+@media (max-width: 720px) {
+  .featured-grid--preview {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* "See all" call-to-action, sized + styled to sit as the 4th tile. */
+.see-more-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 180px;
+  padding: var(--space-6, 1.5rem);
+  text-decoration: none;
+  border: 1px dashed color-mix(in srgb, var(--color-accent, #c9b97a) 35%, var(--glass-border, rgba(255, 255, 255, 0.14)));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--glass-bg, rgba(20, 18, 16, 0.62));
+  backdrop-filter: blur(var(--glass-blur, 5px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 5px));
+  color: rgba(248, 244, 232, 0.82);
+  transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1.1),
+              border-color 0.25s ease, background 0.25s ease, color 0.2s ease;
+}
+
+.see-more-tile:hover {
+  transform: translateY(-6px);
+  border-color: var(--color-accent, #c9b97a);
+  background: var(--glass-bg-hover, rgba(26, 23, 20, 0.70));
+  color: #f8f4e8;
+}
+
+.see-more-tile__label {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  max-width: 12ch;
+}
+
+.see-more-tile__arrow {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 1.7rem;
+  color: var(--color-accent, #c9b97a);
+  transition: transform 0.25s ease;
+}
+
+.see-more-tile:hover .see-more-tile__arrow {
+  transform: translateX(8px);
+}
+
 .section-tag {
   font-family: 'Space Grotesk', system-ui, sans-serif;
   font-size: 11px;

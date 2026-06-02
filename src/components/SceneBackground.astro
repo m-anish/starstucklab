@@ -55,6 +55,18 @@ const MEDIA_QUERIES = {
     pointer-events: none;
     user-select: none;
   }
+
+  /* Dimming wash over the scene so foreground text/cards stay legible. Sits
+     above the image (z1) and below the page content (z2). */
+  .scene-background::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    background: var(--color-scene-overlay, rgba(8, 6, 2, 0.52));
+    z-index: 1;
+    pointer-events: none;
+  }
 </style>
 
 
