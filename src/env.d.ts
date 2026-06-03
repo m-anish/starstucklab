@@ -11,6 +11,9 @@ interface ImportMetaEnv {
   readonly RESEND_FROM_EMAIL: string;  // e.g. "Starstuck Lab <orders@starstucklab.com>"
   readonly ADMIN_EMAIL: string;        // where order notifications go
 
+  // Cloudflare Turnstile (contact-form spam protection)
+  readonly TURNSTILE_SECRET_KEY: string;
+
   // OpenAI (for Python CLI / AI generation — not used at runtime)
   readonly OPENAI_API_KEY?: string;
 }

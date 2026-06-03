@@ -48,6 +48,14 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
             <textarea id="message" name="message" rows={6} required placeholder="Type quietly."></textarea>
           </div>
 
+          <!-- Honeypot — hidden from humans; bots that fill it are silently dropped -->
+          <div class="contact-form__hp" aria-hidden="true">
+            <label for="company">Company</label>
+            <input id="company" name="company" type="text" tabindex="-1" autocomplete="off" />
+          </div>
+
+          <div class="cf-turnstile" data-sitekey="0x4AAAAAADeWcKHXGm3diIuI" data-theme="light"></div>
+
           <div id="form-status" class="form-status" hidden></div>
 
           <button type="submit" id="submit-btn" class="contact-form__submit">
@@ -59,6 +67,8 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
       <p class="contact-foot">
         Or simply write to <a href="mailto:hello@starstucklab.com">hello@starstucklab.com</a>. The workshop is one-person and answers in its own time.
       </p>
+
+      <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     </article>
   </main>
 </StandardPageLayout>
@@ -176,6 +186,19 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
   /* ── Form ── */
   .contact-form {
     margin-bottom: 22px;
+  }
+
+  /* Honeypot — removed from view but still in the DOM for bots to fill */
+  .contact-form__hp {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .cf-turnstile {
+    margin: 8px 0 4px;
   }
 
   .contact-form__fieldset {
@@ -351,6 +374,8 @@ import StandardPageLayout from '../layouts/StandardPageLayout.astro';
     } catch (err: any) {
       showStatus(`Failed to send: ${err.message}. Try emailing directly.`, 'error');
     } finally {
+      // Reset Turnstile so a fresh token is issued for any subsequent submit
+      (window as any).turnstile?.reset();
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = originalLabel ?? 'Send';

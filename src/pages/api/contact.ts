@@ -8,11 +8,42 @@ export const POST: APIRoute = async ({ request, locals }) => {
     const email = String(data.get('email') ?? '').trim();
     const message = String(data.get('message') ?? '').trim();
 
+    // Honeypot: humans never see/fill this field. Pretend success so bots don't retry.
+    if (String(data.get('company') ?? '').trim()) {
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     if (!name || !email || !message) {
       return new Response(JSON.stringify({ error: 'All fields are required' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
+    }
+
+    // Cloudflare Turnstile. Enforced wherever TURNSTILE_SECRET_KEY is set (prod);
+    // skipped in local dev when it isn't, so the form still works without the secret.
+    const turnstileSecret = readRuntimeEnv('TURNSTILE_SECRET_KEY', locals);
+    if (turnstileSecret) {
+      const verify = new FormData();
+      verify.append('secret', turnstileSecret);
+      verify.append('response', String(data.get('cf-turnstile-response') ?? ''));
+      const ip = request.headers.get('CF-Connecting-IP');
+      if (ip) verify.append('remoteip', ip);
+
+      const verifyRes = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+        method: 'POST',
+        body: verify,
+      });
+      const outcome = (await verifyRes.json()) as { success: boolean };
+      if (!outcome.success) {
+        return new Response(JSON.stringify({ error: 'Spam verification failed. Please try again.' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
     }
 
     const resend = getResend(locals);
