@@ -1,7 +1,22 @@
 import { Resend } from 'resend';
 
-export function getResend(): Resend {
-  const key = import.meta.env.RESEND_API_KEY;
+/**
+ * Read an env var across every runtime, in priority order:
+ *   1. Cloudflare SSR secrets  (locals.runtime.env) — set via `wrangler secret put`
+ *   2. Astro build-time vars    (import.meta.env)    — local dev `.env`
+ *   3. Node                     (process.env)
+ *
+ * Cloudflare secrets are ONLY visible on locals.runtime.env at request time —
+ * import.meta.env never sees them — so SSR routes must pass `locals` through.
+ * Mirrors the fallback chain in src/pages/api/openai.ts.
+ */
+export function readRuntimeEnv(name: string, locals?: App.Locals): string | undefined {
+  const runtimeEnv = (locals as any)?.runtime?.env;
+  return runtimeEnv?.[name] ?? (import.meta.env as any)[name] ?? (globalThis as any).process?.env?.[name];
+}
+
+export function getResend(locals?: App.Locals): Resend {
+  const key = readRuntimeEnv('RESEND_API_KEY', locals);
   if (!key) throw new Error('RESEND_API_KEY is not set');
   return new Resend(key);
 }

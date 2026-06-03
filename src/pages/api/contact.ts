@@ -1,7 +1,7 @@
 import type { APIRoute } from 'astro';
-import { getResend } from '../../lib/resend';
+import { getResend, readRuntimeEnv } from '../../lib/resend';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   try {
     const data = await request.formData();
     const name = String(data.get('name') ?? '').trim();
@@ -15,9 +15,9 @@ export const POST: APIRoute = async ({ request }) => {
       });
     }
 
-    const resend = getResend();
-    const from = import.meta.env.RESEND_FROM_EMAIL ?? 'Starstuck Lab <hello@starstucklab.com>';
-    const to = import.meta.env.ADMIN_EMAIL ?? 'hello@starstucklab.com';
+    const resend = getResend(locals);
+    const from = readRuntimeEnv('RESEND_FROM_EMAIL', locals) ?? 'Starstuck Lab <hello@starstucklab.com>';
+    const to = readRuntimeEnv('ADMIN_EMAIL', locals) ?? 'hello@starstucklab.com';
 
     await resend.emails.send({
       from,

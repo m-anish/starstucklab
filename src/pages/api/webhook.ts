@@ -1,14 +1,14 @@
 import type { APIRoute } from 'astro';
 import { getStripe } from '../../lib/stripe';
-import { getResend, orderConfirmationHtml, adminOrderNotificationHtml } from '../../lib/resend';
+import { getResend, readRuntimeEnv, orderConfirmationHtml, adminOrderNotificationHtml } from '../../lib/resend';
 import type { OrderConfirmationData } from '../../lib/resend';
 
-export const POST: APIRoute = async ({ request }) => {
+export const POST: APIRoute = async ({ request, locals }) => {
   const stripe = getStripe();
-  const resend = getResend();
+  const resend = getResend(locals);
 
   const sig = request.headers.get('stripe-signature');
-  const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET;
+  const webhookSecret = readRuntimeEnv('STRIPE_WEBHOOK_SECRET', locals);
 
   if (!sig || !webhookSecret) {
     return new Response('Missing signature or webhook secret', { status: 400 });
@@ -56,8 +56,8 @@ export const POST: APIRoute = async ({ request }) => {
       total,
     };
 
-    const fromEmail = import.meta.env.RESEND_FROM_EMAIL ?? 'Starstuck Lab <orders@starstucklab.com>';
-    const adminEmail = import.meta.env.ADMIN_EMAIL ?? 'hello@starstucklab.com';
+    const fromEmail = readRuntimeEnv('RESEND_FROM_EMAIL', locals) ?? 'Starstuck Lab <orders@starstucklab.com>';
+    const adminEmail = readRuntimeEnv('ADMIN_EMAIL', locals) ?? 'hello@starstucklab.com';
 
     // Send confirmation to customer
     await resend.emails.send({
