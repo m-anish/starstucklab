@@ -75,7 +75,7 @@
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   max-width: 400px;
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(8px);   /* trimmed from 10px (3% bg still needs some frosting) */
 }
 
 .price-label {
@@ -322,7 +322,7 @@
 
 .feature-card {
   background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(8px);   /* trimmed from 12px */
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-xl);
   padding: var(--space-10);

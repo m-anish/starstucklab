@@ -33,7 +33,7 @@
   --glass-bg:        rgba(20, 18, 16, 0.62);   /* warm near-black, fairly opaque = matte */
   --glass-bg-hover:  rgba(26, 23, 20, 0.70);
   --glass-border:    rgba(255, 255, 255, 0.10);
-  --glass-blur:      5px;
+  --glass-blur:      3px;   /* lighter: --glass-bg is ~0.62 opaque so these matte cards barely need blur, and Blink re-blurs each card's backdrop every scroll frame (MachineCard ×6 on /machines) */
 
   /* ── Typography ── */
   --font-sans:    system-ui, -apple-system, 'Segoe UI', sans-serif;

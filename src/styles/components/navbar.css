@@ -12,9 +12,13 @@
   left: 0;
   right: 0;
   z-index: 1000;
-  background: rgba(0, 0, 0, 0.55);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  /* Solid-ish dark bar instead of a translucent blur. backdrop-filter on a
+     fixed bar forces Blink (Chrome/Brave) to re-snapshot + re-blur the content
+     behind it on every scroll frame, on every page — the main cross-page cost
+     on Chromium/Intel. A near-opaque bar drops that entirely; Safari/WebKit
+     was fine either way. (--nav-compact-bg is already ~0.90 opaque, so this
+     stays on-brand.) */
+  background: rgba(6, 8, 10, 0.85);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -150,7 +154,8 @@
   right: 0;
   min-width: 160px;
   background: rgba(0, 0, 0, 0.95);
-  backdrop-filter: blur(10px);
+  /* No backdrop blur: this dropdown is 95% opaque (blur is invisible) and only
+     appears on click, so the blur was pure cost. */
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 6px;

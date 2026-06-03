@@ -309,8 +309,12 @@
 
 /* ===== SHOOTING STARS (hero, Studio-Ghibli flavor) =====
    Visible only on the hero (before crossfade starts). The SVG sits behind
-   the overlay and above the bg layers; `mix-blend-mode: screen` keeps the
-   streak riding naturally over the painted Milky Way. */
+   the overlay and above the bg layers. The streaks are near-white over a
+   dark sky, so they read fine with normal compositing — we deliberately do
+   NOT use `mix-blend-mode: screen` here: a full-viewport blend layer forces
+   Blink (Chrome/Brave) to re-blend the entire screen every composite,
+   which is smooth in WebKit/Safari but very janky in Chromium, especially
+   on Intel Macs. The visual difference for near-white streaks is negligible. */
 #shootingStars {
   position: fixed;
   inset: 0;
@@ -318,7 +322,6 @@
   height: 100%;
   z-index: 17; /* above vignette, below overlay */
   pointer-events: none;
-  mix-blend-mode: screen;
   transition: opacity 600ms linear;
 }
 

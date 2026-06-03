@@ -7,7 +7,7 @@
 .product-nav {
   position: relative;
   background: rgba(248, 244, 232, 0.95);
-  backdrop-filter: blur(10px);
+  /* No backdrop blur: this bar is 95% opaque, so the blur was invisible cost. */
   border-bottom: 1px solid rgba(80, 50, 25, 0.2);
   padding: 10px 0;
   opacity: 0;

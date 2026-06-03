@@ -186,8 +186,13 @@
 
 /* Individual glass cards for featured sections */
 .featured-card {
-  backdrop-filter: blur(18px) saturate(130%);
-  -webkit-backdrop-filter: blur(18px) saturate(130%);
+  /* blur(18px) saturate(130%) was the single most expensive backdrop-filter
+     on the homepage: Blink re-rasterises the blurred backdrop every scroll
+     frame (cost grows ~with radius²), and saturate() adds another pass.
+     Dropped to a lighter blur with no saturate — near-identical over the
+     dimmed fixed workshop image, far cheaper to scroll in Chrome/Brave. */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.02));
   border: 1px solid rgba(255,255,255,0.12);
   border-radius: 20px;
