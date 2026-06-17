@@ -84,17 +84,19 @@
     {
       "slug": "sirious",
       "name": "Sirious",
-      "tagline": "An astro object locator.",
-      "blurb": "Point it at the sky and it tells you what you're looking at — or where to find what you came for. Still on the bench.",
-      "kind": "software",
-      "access": "soon",
-      "status": "Coming soon",
-      "url": null,
-      "external": false,
-      "repo": null,
-      "accent": "#aac8f0",
+      "tagline": "A push-to finder with opinions about your aim.",
+      "blurb": "Sirious learns the sky from two stars, then guides a manual telescope to anything you ask for with a single red arrow that never spoils your night vision. It manages this competently — and with the faint Victorian disappointment of something that expected rather better of you.",
+      "kind": "hardware",
+      "access": "read",
+      "status": "Field testing · 2026",
+      "url": "https://sirious.starstucklab.com",
+      "external": true,
+      "repo": "https://github.com/m-anish/sirious",
+      "accent": "#ff5b50",
       "order": 6,
-      "featured": false
+      "featured": false,
+      "image": "/assets/machine-sirious/machine-sirious.webp",
+      "image_kind": "generated"
     }
   ]
 }
