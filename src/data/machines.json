@@ -82,6 +82,23 @@
       "image_kind": "generated"
     },
     {
+      "slug": "forsyth",
+      "name": "forsyth",
+      "tagline": "The relative who always knew it would rain.",
+      "blurb": "Forsyth scatters small solar-fed weather stations across kilometres of sky-watching country — wind, rain, air, lightning — murmuring over LoRa to one patient coordinator. It never says \"I told you so.\" It doesn't have to.",
+      "kind": "hardware",
+      "access": "read",
+      "status": "Station 000 · Expecting rain",
+      "url": "https://forsyth.starstucklab.com",
+      "external": true,
+      "repo": "https://github.com/m-anish/forsyth",
+      "accent": "#7fa2c4",
+      "order": 7,
+      "featured": false,
+      "image": "/assets/machine-forsyth/machine-forsyth.webp",
+      "image_kind": "generated"
+    },
+    {
       "slug": "sirious",
       "name": "Sirious",
       "tagline": "A push-to finder with opinions about your aim.",
