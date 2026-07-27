@@ -114,6 +114,23 @@
       "featured": false,
       "image": "/assets/machine-sirious/machine-sirious.webp",
       "image_kind": "generated"
+    },
+    {
+      "slug": "kuhu",
+      "name": "kuhu",
+      "tagline": "A soft call before the power turns.",
+      "blurb": "kuhu passes along what the lineman already knows — the power steps out at four — as one quiet note on your phone, in your language. Then it goes back to saying nothing.",
+      "kind": "software",
+      "access": "read",
+      "status": "Season 0 · Clearing its throat",
+      "url": "https://kuhu.starstucklab.com",
+      "external": true,
+      "repo": "https://github.com/m-anish/kuhu",
+      "accent": "#8fb573",
+      "order": 8,
+      "featured": false,
+      "image": "/assets/machine-kuhu/machine-kuhu.webp",
+      "image_kind": "hero"
     }
   ]
 }

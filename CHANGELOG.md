@@ -6,6 +6,14 @@ All notable changes to Starstuck Lab are documented here.
 
 ## [Unreleased — v2-overhaul branch]
 
+### 2026-07-27 — kuhu joins the machines grid
+
+**Added**
+- kuhu card in `src/data/machines.json` — a power-cut notice service (Season 0 · Clearing its throat), linking to kuhu.starstucklab.com with card image imported from the spoke's og image via `gen_machine_cards.py`.
+- kuhu added to `kit/sync-kit.sh` spoke list.
+
+---
+
 ### 2026-07-27 — New Machine Playbook
 
 **Added**
