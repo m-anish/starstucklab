@@ -136,6 +136,7 @@ See **[`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md)** for the full guide.
 | [`docs/CONTENT_GUIDE.md`](docs/CONTENT_GUIDE.md) | How to add products, lab notes, update copy |
 | [`docs/PROJECT_STATUS.md`](docs/PROJECT_STATUS.md) | V2 roadmap status and next steps |
 | [`docs/AI_CONTEXT.md`](docs/AI_CONTEXT.md) | Machine-readable repo overview for AI assistants |
+| [`docs/NEW_MACHINE_PLAYBOOK.md`](docs/NEW_MACHINE_PLAYBOOK.md) | Bootstrap prompt for starting a new machine in the family (naming → repo → hub card → GitHub) |
 | [`CHANGELOG.md`](CHANGELOG.md) | Change history |
 
 ---

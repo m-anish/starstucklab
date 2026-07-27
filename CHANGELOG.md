@@ -6,6 +6,14 @@ All notable changes to Starstuck Lab are documented here.
 
 ## [Unreleased — v2-overhaul branch]
 
+### 2026-07-27 — New Machine Playbook
+
+**Added**
+- `docs/NEW_MACHINE_PLAYBOOK.md` — a reusable bootstrap prompt for spinning up a new machine in the family. Carries the process (naming → explore → scaffold repo → hub card → GitHub) and the conventions (voice, kit adoption, card contract, README archetype) so a new project only needs a short description to get started. Modeled on `forsyth-fable5-brief.md`, generalized.
+- README docs table links the playbook.
+
+---
+
 ### 2026-04-09 — Hero scroll fix, dvh units, doc pruning
 
 **Fixed**
