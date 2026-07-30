@@ -6,6 +6,15 @@ All notable changes to Starstuck Lab are documented here.
 
 ## [Unreleased — v2-overhaul branch]
 
+### 2026-07-30 — gliim joins the machines grid
+
+**Added**
+- gliim card in `src/data/machines.json` — knob-controlled lighting for large indoor spaces (Unit 000 · Trying), linking to gliim.starstucklab.com, accent `#9b8ec4` (dusk violet, previously unused in the family).
+- `public/machines/gliim.jpg` — card image, the hall render from the spoke's hero.
+- gliim added to `kit/sync-kit.sh` spoke list.
+
+---
+
 ### 2026-07-27 — kuhu joins the machines grid
 
 **Added**

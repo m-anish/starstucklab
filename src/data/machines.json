@@ -131,6 +131,23 @@
       "featured": false,
       "image": "/assets/machine-kuhu/machine-kuhu.webp",
       "image_kind": "hero"
+    },
+    {
+      "slug": "gliim",
+      "name": "gliim",
+      "tagline": "The dim-witted gnome that tries.",
+      "blurb": "Lighting for rooms that outgrew the switch by the door. One knob per light, a panel at every entrance — some sharing a thin cable, some managing without one. Nothing to select, nothing to remember.",
+      "kind": "hardware",
+      "access": "read",
+      "status": "Unit 000 · Trying",
+      "url": "https://gliim.starstucklab.com",
+      "external": true,
+      "repo": "https://github.com/m-anish/gliim",
+      "accent": "#9b8ec4",
+      "image": "/machines/gliim.jpg",
+      "image_kind": "hero",
+      "order": 9,
+      "featured": false
     }
   ]
 }

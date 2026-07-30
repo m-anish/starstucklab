@@ -28,6 +28,7 @@ sync_one "$GH_ROOT/lokki"       "$GH_ROOT/lokki/site/assets/kit"
 sync_one "$GH_ROOT/sirious"     "$GH_ROOT/sirious/site/assets/kit"
 sync_one "$GH_ROOT/clear-skies" "$GH_ROOT/clear-skies/kit"
 sync_one "$GH_ROOT/kuhu"        "$GH_ROOT/kuhu/site/assets/kit"
+sync_one "$GH_ROOT/gliim"       "$GH_ROOT/gliim/site/assets/kit"
 
 echo
 echo "done."
