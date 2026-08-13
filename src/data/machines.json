@@ -136,7 +136,7 @@
       "slug": "gliim",
       "name": "gliim",
       "tagline": "The dim-witted gnome that tries.",
-      "blurb": "Lighting for rooms that outgrew the switch by the door. One knob per light, a panel at every entrance — some sharing a thin cable, some managing without one. Nothing to select, nothing to remember.",
+      "blurb": "Lighting for rooms that outgrew the switch by the door. One knob per row of lights, a panel at every entrance — some sharing a thin cable, some managing without one. Nothing to select, nothing to remember.",
       "kind": "hardware",
       "access": "read",
       "status": "Unit 000 · Trying",
